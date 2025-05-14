@@ -36,3 +36,61 @@ Connor likes doing README files so he can do that (Edit this as you like).
 - Always make sure you pull from github before commiting unless you want to cause yourself tears
 
 
+
+## Prelim Usage
+
+**API**
+- Clone Repo
+```git clone https://github.com/u23608821/COS221_Assignment_5```
+- Swap to API branch
+```git checkout API```
+- Open a terminal in root
+- Make run.sh executable
+```chmod +x run.sh```
+- Run temporary server and API
+```./run.sh```
+- Use postman (or browser) to use API
+
+**API Commands**
+- Post to `http://localhost:3000/api`
+- Register
+```json
+{
+  "type": "Register",
+  "name": "name",
+  "surname": "surname",
+  "phone_number": "123 456 7890",
+  "email": "email@gmail.com",
+  "password":" P@s5w0rD",
+  "street_number" : "123",
+  "street_name": "street name",
+  "suburb": "suburb",
+  "city": "city",
+  "zip_code": "456",
+  "user_type": "type", //Customer or Admin
+  //Customer
+  "profile_picture": "path.path",
+  //Admin
+  "salary": 8000,
+  "Position": "Manager
+}
+```
+
+- Login
+```json
+{
+  "type": "Login",
+  "email": "emailad@gmail.com",
+  "password":" P@s5w0rD" 
+}
+```
+
+- TestResponse
+```json
+{
+  "type": "Test",
+  "hello": "hello",
+  "world": "world"
+}
+```
+
