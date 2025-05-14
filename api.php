@@ -1,5 +1,17 @@
 <?php
 
+/*
+ ____                                                      __  __                            
+/\  _`\        __                                         /\ \/\ \                           
+\ \ \L\ \_ __ /\_\    ___ ___      __     _ __   __  __   \ \ \/'/'     __   __  __    ____  
+ \ \ ,__/\`'__\/\ \ /' __` __`\  /'__`\  /\`'__\/\ \/\ \   \ \ , <    /'__`\/\ \/\ \  /',__\ 
+  \ \ \/\ \ \/ \ \ \/\ \/\ \/\ \/\ \L\.\_\ \ \/ \ \ \_\ \   \ \ \\`\ /\  __/\ \ \_\ \/\__, `\
+   \ \_\ \ \_\  \ \_\ \_\ \_\ \_\ \__/.\_\\ \_\  \/`____ \   \ \_\ \_\ \____\\/`____ \/\____/
+    \/_/  \/_/   \/_/\/_/\/_/\/_/\/__/\/_/ \/_/   `/___/> \   \/_/\/_/\/____/ `/___/> \/___/ 
+                                                     /\___/                      /\___/      
+                                                     \/__/                       \/__/       
+*/
+
 function loadEnv($path)
 {
     if (!file_exists($path))
@@ -128,6 +140,16 @@ class API
             $this->sendResponse('passwordError', 'Password does not meet requirements');
         }
         else{
+            //check if email is unique
+            $emailcheck = $conn->prepare("SELECT * FROM User WHERE email = ?");
+            $emailcheck->bindParam("s", $email);
+            $emailcheck->execute();
+
+            if($emailcheck->get_result()->fetch_assoc())
+            {
+                $this->sendResponse("error","Email already exists");
+            }   
+
             //All good so we can insert the user
             //set api key
             $apikey = base64_encode(random_bytes(32));

@@ -1,4 +1,4 @@
-//temporary such that tests can be done on postman
+//temporary such that 'e2e' tests can be done on postman
 
 const express = require('express');
 const cors = require('cors');
