@@ -191,6 +191,12 @@ class API
 
         $email = isset($requestData["email"]) ? trim($requestData["email"]) : "";
         $password = isset($requestData["password"]) ? trim($requestData["password"]) :"";
+
+        if(empty($email) || empty($password)){
+            $this->sendResponse("error","All fields must be valid");
+        }
+
+
         $stmt = $conn->prepare("SELECT * FROM User WHERE email=?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
