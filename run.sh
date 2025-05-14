@@ -62,13 +62,23 @@ echo "=== Starting servers ==="
 
 # Start Node.js server
 echo "Starting Node.js server in background..."
-node server.js &
+node server.js > node.log 2>&1 &
+NODE_PID=$!
 
 # Start PHP server
 echo "Starting PHP server at http://localhost:8000"
 cd src/private/
-php -S localhost:8000 &
+php -S localhost:8000 > php.log 2>&1 &
+PHP_PID=$!
 
 echo "All servers are up."
+echo "Servers started: PHP=$PHP_PID, Node=$NODE_PID"
 echo "Node.js: http://localhost:3000"
 echo "PHP: http://localhost:8000/api.php"
+
+
+# Trap Ctrl+C and shutdown everything cleanly
+trap 'echo "Stopping servers..."; kill $NODE_PID $PHP_PID; wait; exit' SIGINT SIGTERM
+
+# Wait for both to keep script running
+wait

@@ -32,17 +32,3 @@ app.post('/api', async (req, res) => {
 });
 
 
-function shutdown()
-{
-    console.log('\n Shuttinf down server...');
-
-    app.close(() => {
-        console.log('Node server closed.');
-    });
-
-    process.exit(0);
-
-}
-
-process.on('SIGNINT', shutdown); // ctrl c
-process.on('SIGTERM', shutdown); //kill
