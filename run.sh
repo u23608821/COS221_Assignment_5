@@ -67,7 +67,6 @@ NODE_PID=$!
 
 # Start PHP server
 echo "Starting PHP server at http://localhost:8000"
-cd src/private/
 php -S localhost:8000 > php.log 2>&1 &
 PHP_PID=$!
 
