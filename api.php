@@ -176,10 +176,8 @@ class API
 
     public function Login($requestData)
     {
-        //same function for login as logout
-
         try {
-            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName);
+            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
 
             if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
@@ -188,13 +186,60 @@ class API
             echo "Connection failed: " . $e->getMessage();
             exit;
         }
+
+
+
+        $email = isset($requestData["email"]) ? trim($requestData["email"]) : "";
+        $password = isset($requestData["password"]) ? trim($requestData["password"]) :"";
+        $stmt = $conn->prepare("SELECT * FROM User WHERE email=?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+
+        $result = $stmt->get_result()->fetch_assoc();
+        //echo("Email: ".$result["email"] );
+        //echo("Password: ".$result["password"] );
+        if (password_verify($password, $result["password"])) {
+            $cookie_email = $result["email"];
+            $cookie_name = $result["name"]; //To use when displaying the users profile
+            $cookie_surname = $result["surname"];
+            $cookie_key = $result["apikey"];
+
+            setcookie("userapikey", $cookie_key, time() + (259200 * 30), "/"); //set for 3 days
+            setcookie("useremail", $cookie_email, time() + (259200 * 30), "/"); //set for 3 days
+            setcookie("username", $cookie_name, time() + (259200 * 30), "/"); //set for 3 days
+            setcookie("usersurname", $cookie_surname, time() + (259200 * 30), "/"); //set for 3 days
+
+
+            $this->sendResponse(
+                "success"
+                ,
+                [
+                    'apikey' => $result["apikey"]
+                    ,
+                    'username' => $result["name"]
+                    ,
+                    'surname' => $result["surname"]
+                    ,
+                    'email' => $result["email"]
+                ]
+            );
+        } else {
+            $this->sendResponse("error", "Unknown email or password");
+        }
+
+
+        $stmt->close();
+        $conn->close();
+
+
+   
     }
     public function ViewAllProducts($requestData)
     {
 
         try {
-            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName);
 
+            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
             if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
             }
@@ -207,8 +252,8 @@ class API
     {
 
         try {
-            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName);
 
+            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
             if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
             }
@@ -221,8 +266,8 @@ class API
     {
 
         try {
-            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName);
 
+            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
             if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
             }
@@ -235,8 +280,8 @@ class API
     {
 
         try {
-            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName);
 
+            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
             if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
             }
@@ -249,8 +294,8 @@ class API
     {
 
         try {
-            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName);
 
+            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
             if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
             }
@@ -263,8 +308,8 @@ class API
     {
 
         try {
-            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName);
 
+            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
             if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
             }
@@ -277,8 +322,8 @@ class API
     {
         //filter based on whatever
         try {
-            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName);
 
+            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
             if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
             }
