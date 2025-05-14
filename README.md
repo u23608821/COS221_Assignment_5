@@ -41,14 +41,22 @@ Connor likes doing README files so he can do that (Edit this as you like).
 
 **API**
 - Clone Repo
-```git clone https://github.com/u23608821/COS221_Assignment_5```
+```
+git clone https://github.com/u23608821/COS221_Assignment_5
+```
 - Swap to API branch
-```git checkout API```
+```
+git checkout API
+```
 - Open a terminal in root
 - Make run.sh executable
-```chmod +x run.sh```
+```
+chmod +x run.sh
+```
 - Run temporary server and API
-```./run.sh```
+```
+./run.sh
+```
 - Use postman (or browser) to use API
 
 **API Commands**
@@ -72,7 +80,7 @@ Connor likes doing README files so he can do that (Edit this as you like).
   "profile_picture": "path.path",
   //Admin
   "salary": 8000,
-  "Position": "Manager
+  "Position": "Manager"
 }
 ```
 
