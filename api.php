@@ -275,6 +275,14 @@ class API
             echo "Connection failed: " . $e->getMessage();
             exit;
         }
+
+        $stmt = $conn->prepare("SELECT * FROM Product");
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if($result->fetch_assoc())
+        {   
+            $this->sendResponse("success", $result);
+        }
     }
     public function RateProduct($requestData)
     {
@@ -361,6 +369,20 @@ class API
         }
     }
 
+    public function ViewSupplier($requestData)
+    {
+        //filter based on whatever
+        try {
+
+            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
+            if ($conn->connect_error) {
+                die("Connection failed: " . $conn->connect_error);
+            }
+        } catch (mysqli_sql_exception $e) {
+            echo "Connection failed: " . $e->getMessage();
+            exit;
+        }
+    }
 
 
 
@@ -403,6 +425,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $api->FilterProducts($requestData);
         }else if ($requestData['type'] === "UpdateAdmin") { //update or delete through here
             $api->FilterProducts($requestData);
+        }else if ($requestData['type'] === "ViewSupplier") { //update or delete through here
+            $api->ViewSupplier($requestData);
         } else {
             echo "please specify type";
         }
