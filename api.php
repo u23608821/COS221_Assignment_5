@@ -458,39 +458,69 @@ class API
             if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
             }
-            $id = isset($requestData["id"]) ? $requestData["id"] : "";
-            $name = $requestData["name"] ?? "";
-            $surname = $requestData["surname"] ?? "";
-            $phone_number = $requestData["phone_number"] ?? "";
-            $apikey = $requestData["apikey"] ?? "";
-            $email = $requestData["email"] ?? "";
-            $password = $requestData["password"] ?? "";
-            $street_number = $requestData["street_number"] ?? "";
-            $street_name = $requestData["street_name"] ?? "";
-            $suburb = $requestData["suburb"] ?? "";
-            $city = $requestData["city"] ?? "";
-            $zip_code = $requestData["zip_code"] ?? "";
-            $user_type = $requestData["user_type"] ?? ""; 
-            //needs a check to make sure they can change their info. If user type is changed it makes a lot of problematic changes
 
-            $profile_picture = $requestData["profile_picture"] ?? "";
+
+            $fields = [];
+            $cusFields =[];
+            $values = [];
+            $custValues = [];
+            $types = "";
+            $custTypes = "";
+            $fieldMap = [
+                "name" => "s",
+                "surname" => "s",
+                "phone_number" => "s",
+                "apikey" => "s",
+                "email" => "s",
+                "password" => "s",
+                "street_number" => "s",
+                "street_name" => "s",
+                "suburb" => "s",
+                "city" => "s",
+                "zip_code" => "s",
+                "user_type" => "s"
+            ];
+            $cusFieldMap = [
+
+                "profile_picture" => "s"
+            ];
+
+            foreach ($fieldMap as $key => $type) {
+                if (isset($requestData[$key])) {
+                    $fields[] = "$key = ?";
+                    $values[] = $requestData[$key];
+                    $types .= $type;
+                }
+            }
+
+            foreach ($cusFieldMap as $key => $type) {
+                if (isset($requestData[$key])) {
+                    $cusFields[] = "$key = ?";
+                    $custValues[] = $requestData[$key];
+                    $custTypes .= $type;
+                }
+            }
+
+            if(count($fields) > 0 && id !== "")
+            {
 
             $conn->begin_transaction();
 
             // Update User table
-            $userSql = "UPDATE User SET name=?, surname=?, phone_number=?, apikey=?, email=?, password=?, street_number=?, street_name=?, suburb=?, city=?, zip_code=?, user_type=? WHERE id=?";
+            $userSql = "UPDATE User SET ". implode(", ", $fields) . "WHERE id=?";
             $userStmt = $conn->prepare($userSql);
-            $userStmt->bind_param("ssssssssssssi", $name, $surname, $phone_number, $apikey, $email, $password, $street_number, $street_name, $suburb, $city, $zip_code, $user_type, $id);
+            $userStmt->bind_param($types, $values);
             $userStmt->execute();
 
             // Update Admin table
-            $custSql = "UPDATE Customer SET profile_picture=? WHERE user_id=?";
-            $cusStmt = $conn->prepare($custSql);
-            $cusStmt->bind_param("si", $profile_picture, $id); // d for double (salary), s for string, i for int
-            $cusStmt->execute();
+            $adminSql = "UPDATE Admin SET " . implode(", ", $cusFields) ." WHERE user_id=?";
+            $adminStmt = $conn->prepare($adminSql);
+            $adminStmt->bind_param($custTypes, $custValues); // d for double (salary), s for string, i for int
+            $adminStmt->execute();
 
             $conn->commit();
 
+            }
         } catch (Exception $e) {
             if (isset($conn)) {
                 $conn->rollback();
