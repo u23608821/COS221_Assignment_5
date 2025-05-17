@@ -300,7 +300,6 @@ class API
     }
     public function AddProduct($requestData)
     {
-
         try {
 
             $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
@@ -342,7 +341,6 @@ class API
     }
     public function ViewRatings($requestData)
     {
-
         try {
 
             $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
@@ -382,7 +380,21 @@ class API
             echo "Connection failed: " . $e->getMessage();
             exit;
         }
+
+        $productid = isset( $requestData["id"] ) ? $requestData["id"] :"";
+        $retailid = isset( $requestData["retailer_id"] ) ? $requestData["retailer_id"] : "";
+        
+        $stmt = $conn->prepare("SELECT * FROM Retailer WHERE id = ?");
+        $stmt->bind_param("i", $retailid);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if($result->fetch_assoc())
+        {   
+            $this->sendResponse("success", $result);
+        }
+        $this->sendResponse("error","No results found");
     }
+
 
 
 
@@ -401,6 +413,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $requestData = json_decode(file_get_contents('php://input'), true);
 
     if (isset($requestData['type'])) {
+        //api key checks should be done in function so that it can be tested if admins/customers/all can do it
         if ($requestData['type'] === "Test") {
             $api->TestResponse($requestData);
         } else if ($requestData['type'] === "Login") {
