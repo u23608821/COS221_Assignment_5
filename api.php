@@ -93,6 +93,7 @@ class API
 
 
             $this->sendResponse("Success", "Hello world back to you!");
+            $conn->close();
         } catch (mysqli_sql_exception $e) {
             echo "Connection failed: " . $e->getMessage();
             exit;
@@ -270,6 +271,8 @@ class API
             if (!empty($result)) {
                 $this->sendResponse("success", $result);
             }
+            $stmt->close();
+            $conn->close();
         } catch (mysqli_sql_exception $e) {
             echo "Connection failed: " . $e->getMessage();
             exit;
@@ -340,7 +343,16 @@ class API
                 die("Connection failed: " . $conn->connect_error);
             }
 
-            $productid = isset($requestData["product_id"]) ? $requestData["product_id"] :"";
+            $productid = isset($requestData["product_id"]) ? $requestData["product_id"] : 0;
+            $stmt = $conn->prepare("SELECT * FROM Rating WHERE product_id=?");
+            $stmt->bind_param("i", $productid);
+            $stmt->execute();
+            $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            if(!empty($result)) {
+                $this->sendResponse("success", $result);
+            }
+            $stmt->close();
+            $conn->close();
         } catch (mysqli_sql_exception $e) {
             echo "Connection failed: " . $e->getMessage();
             exit;
@@ -432,6 +444,8 @@ class API
 
             $conn->commit();
 
+            $conn->close();
+
             }
         } catch (Exception $e) {
             if (isset($conn)) {
@@ -522,6 +536,8 @@ class API
 
             $conn->commit();
 
+            $conn->close();
+
             }
         } catch (Exception $e) {
             if (isset($conn)) {
@@ -562,11 +578,14 @@ class API
         $stmt = $conn->prepare("SELECT * FROM Retailer WHERE id = ?");
         $stmt->bind_param("i", $retailid);
         $stmt->execute();
-        $result = $stmt->get_result();
-        if ($result->fetch_assoc()) {
-            $this->sendResponse("success", "Got results", $result);
+        $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);        
+        if (!empty($result)) {
+            $this->sendResponse("success",  $result);
         }
         $this->sendResponse("error", "No results found");
+
+        $stmt->close();
+        $conn->close();
     }
 
 
