@@ -288,6 +288,20 @@ class API
             if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
             }
+            $productid = isset($requestData["product_id"]) ? $requestData["product_id"] :"";
+            $score = isset($requestData["score"]) ? $requestData["score"] : 5;
+            $description = isset($requestData["description"]) ? $requestData["description"] :"";
+            $userid = isset($requestData["user_id"]) ? $requestData["user_id"] :"";
+
+            $sqlInsert = $conn->prepare("INSERT INTO Rating(score, description, user_id, product_id) VALUES (?,?,?,?)");
+            $sqlInsert->bind_param("isii", $score, $description,$userid, $productid);
+            $sqlInsert->execute();
+            $result = $sqlInsert->get_result();
+            if(!empty($result)){
+                $this->sendResponse("success", "Inserted rating");
+            }
+
+            $conn->close();
         } catch (mysqli_sql_exception $e) {
             echo "Connection failed: " . $e->getMessage();
             exit;
