@@ -412,7 +412,7 @@ class API
                 }
             }
 
-            if(count($fields) > 0 && id !== "")
+            if(count($fields) > 0 && isset($fieldMap['id']))
             {
 
             $conn->begin_transaction();
@@ -426,7 +426,7 @@ class API
             // Update Admin table
             $adminSql = "UPDATE Admin SET " . implode(", ", $adminFields) ." WHERE user_id=?";
             $adminStmt = $conn->prepare($adminSql);
-            $adminStmt->bind_param($adminTypes, $adminValues); // d for double (salary), s for string, i for int
+            $adminStmt->bind_param($adminTypes, $adminValues, $fieldMap['id']); // d for double (salary), s for string, i for int
             $adminStmt->execute();
 
             $conn->commit();
@@ -435,7 +435,7 @@ class API
         } catch (Exception $e) {
             if (isset($conn)) {
                 $conn->rollback();
-            }
+            } 
             echo "Update failed: " . $e->getMessage();
         } finally {
             if (isset($userStmt))
@@ -501,7 +501,7 @@ class API
                 }
             }
 
-            if(count($fields) > 0 && id !== "")
+            if(count($fields) > 0 && isset($fieldMap['id']))
             {
 
             $conn->begin_transaction();
@@ -515,7 +515,7 @@ class API
             // Update Admin table
             $adminSql = "UPDATE Admin SET " . implode(", ", $cusFields) ." WHERE user_id=?";
             $adminStmt = $conn->prepare($adminSql);
-            $adminStmt->bind_param($custTypes, $custValues); // d for double (salary), s for string, i for int
+            $adminStmt->bind_param($custTypes, $custValues, $fieldMap['id']); // d for double (salary), s for string, i for int
             $adminStmt->execute();
 
             $conn->commit();
