@@ -65,7 +65,7 @@ class API
             'timestamp' => time() * 1000 // Convert to milliseconds
         ];
         if (!empty($message)) {
-            $response['data'] = $message;
+            $response['message'] = $message;
         } elseif (!empty($data)) {
             $response['data'] = $data;
         }
@@ -265,8 +265,9 @@ class API
             }
             $stmt = $conn->prepare("SELECT * FROM Product");
             $stmt->execute();
-            $result = $stmt->get_result();
-            if ($result->fetch_assoc()) {
+            $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            //$data = $result->fetch_all(MYSQLI_ASSOC);
+            if (!empty($result)) {
                 $this->sendResponse("success", $result);
             }
         } catch (mysqli_sql_exception $e) {
@@ -436,6 +437,7 @@ class API
             if (isset($conn)) {
                 $conn->rollback();
             } 
+            $this->sendResponse("error", $e->getMessage());
             echo "Update failed: " . $e->getMessage();
         } finally {
             if (isset($userStmt))
@@ -525,6 +527,8 @@ class API
             if (isset($conn)) {
                 $conn->rollback();
             }
+                        $this->sendResponse("error", $e->getMessage());
+
             echo "Update failed: " . $e->getMessage();
         } finally {
             if (isset($userStmt))
@@ -560,7 +564,7 @@ class API
         $stmt->execute();
         $result = $stmt->get_result();
         if ($result->fetch_assoc()) {
-            $this->sendResponse("success", $result);
+            $this->sendResponse("success", "Got results", $result);
         }
         $this->sendResponse("error", "No results found");
     }
