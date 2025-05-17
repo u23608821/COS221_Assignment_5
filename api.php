@@ -338,6 +338,8 @@ class API
             if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
             }
+
+            $productid = isset($requestData["product_id"]) ? $requestData["product_id"] :"";
         } catch (mysqli_sql_exception $e) {
             echo "Connection failed: " . $e->getMessage();
             exit;
@@ -367,39 +369,69 @@ class API
             if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
             }
-            $id = isset($requestData["id"]) ? $requestData["id"] : "";
-            $name = $requestData["name"] ?? "";
-            $surname = $requestData["surname"] ?? "";
-            $phone_number = $requestData["phone_number"] ?? "";
-            $apikey = $requestData["apikey"] ?? "";
-            $email = $requestData["email"] ?? "";
-            $password = $requestData["password"] ?? "";
-            $street_number = $requestData["street_number"] ?? "";
-            $street_name = $requestData["street_name"] ?? "";
-            $suburb = $requestData["suburb"] ?? "";
-            $city = $requestData["city"] ?? "";
-            $zip_code = $requestData["zip_code"] ?? "";
-            $user_type = $requestData["user_type"] ??  "";
 
-            $salary = $requestData["salary"] ?? "";
-            $position = $requestData["position"] ?? "";
+            $fields = [];
+            $adminFields =[];
+            $values = [];
+            $adminValues = [];
+            $types = "";
+            $adminTypes = "";
+            $fieldMap = [
+                "name" => "s",
+                "surname" => "s",
+                "phone_number" => "s",
+                "apikey" => "s",
+                "email" => "s",
+                "password" => "s",
+                "street_number" => "s",
+                "street_name" => "s",
+                "suburb" => "s",
+                "city" => "s",
+                "zip_code" => "s",
+                "user_type" => "s"
+            ];
+            $adminFieldMap = [
+
+                "salary" => "d",
+                "position" => "s"
+            ];
+
+            foreach ($fieldMap as $key => $type) {
+                if (isset($requestData[$key])) {
+                    $fields[] = "$key = ?";
+                    $values[] = $requestData[$key];
+                    $types .= $type;
+                }
+            }
+
+            foreach ($adminFieldMap as $key => $type) {
+                if (isset($requestData[$key])) {
+                    $adminFields[] = "$key = ?";
+                    $adminValues[] = $requestData[$key];
+                    $adminTypes .= $type;
+                }
+            }
+
+            if(count($fields) > 0 && id !== "")
+            {
 
             $conn->begin_transaction();
 
             // Update User table
-            $userSql = "UPDATE User SET name=?, surname=?, phone_number=?, apikey=?, email=?, password=?, street_number=?, street_name=?, suburb=?, city=?, zip_code=?, user_type=? WHERE id=?";
+            $userSql = "UPDATE User SET ". implode(", ", $fields) . "WHERE id=?";
             $userStmt = $conn->prepare($userSql);
-            $userStmt->bind_param("ssssssssssssi", $name, $surname, $phone_number, $apikey, $email, $password, $street_number, $street_name, $suburb, $city, $zip_code, $id);
+            $userStmt->bind_param($types, $values);
             $userStmt->execute();
 
             // Update Admin table
-            $adminSql = "UPDATE Admin SET salary=?, position=? WHERE user_id=?";
+            $adminSql = "UPDATE Admin SET " . implode(", ", $adminFields) ." WHERE user_id=?";
             $adminStmt = $conn->prepare($adminSql);
-            $adminStmt->bind_param("dsi", $salary, $position, $id); // d for double (salary), s for string, i for int
+            $adminStmt->bind_param($adminTypes, $adminValues); // d for double (salary), s for string, i for int
             $adminStmt->execute();
 
             $conn->commit();
 
+            }
         } catch (Exception $e) {
             if (isset($conn)) {
                 $conn->rollback();
