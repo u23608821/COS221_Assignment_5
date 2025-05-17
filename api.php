@@ -379,6 +379,7 @@ class API
             $suburb = $requestData["suburb"] ?? "";
             $city = $requestData["city"] ?? "";
             $zip_code = $requestData["zip_code"] ?? "";
+            $user_type = $requestData["user_type"] ??  "";
 
             $salary = $requestData["salary"] ?? "";
             $position = $requestData["position"] ?? "";
@@ -386,9 +387,9 @@ class API
             $conn->begin_transaction();
 
             // Update User table
-            $userSql = "UPDATE User SET name=?, surname=?, phone_number=?, apikey=?, email=?, password=?, street_number=?, street_name=?, suburb=?, city=?, zip_code=? WHERE id=?";
+            $userSql = "UPDATE User SET name=?, surname=?, phone_number=?, apikey=?, email=?, password=?, street_number=?, street_name=?, suburb=?, city=?, zip_code=?, user_type=? WHERE id=?";
             $userStmt = $conn->prepare($userSql);
-            $userStmt->bind_param("sssssssssssi", $name, $surname, $phone_number, $apikey, $email, $password, $street_number, $street_name, $suburb, $city, $zip_code, $id);
+            $userStmt->bind_param("ssssssssssssi", $name, $surname, $phone_number, $apikey, $email, $password, $street_number, $street_name, $suburb, $city, $zip_code, $id);
             $userStmt->execute();
 
             // Update Admin table
@@ -425,10 +426,55 @@ class API
             if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
             }
-        } catch (mysqli_sql_exception $e) {
-            echo "Connection failed: " . $e->getMessage();
-            exit;
+            $id = isset($requestData["id"]) ? $requestData["id"] : "";
+            $name = $requestData["name"] ?? "";
+            $surname = $requestData["surname"] ?? "";
+            $phone_number = $requestData["phone_number"] ?? "";
+            $apikey = $requestData["apikey"] ?? "";
+            $email = $requestData["email"] ?? "";
+            $password = $requestData["password"] ?? "";
+            $street_number = $requestData["street_number"] ?? "";
+            $street_name = $requestData["street_name"] ?? "";
+            $suburb = $requestData["suburb"] ?? "";
+            $city = $requestData["city"] ?? "";
+            $zip_code = $requestData["zip_code"] ?? "";
+            $user_type = $requestData["user_type"] ?? ""; 
+            //needs a check to make sure they can change their info. If user type is changed it makes a lot of problematic changes
+
+            $profile_picture = $requestData["profile_picture"] ?? "";
+
+            $conn->begin_transaction();
+
+            // Update User table
+            $userSql = "UPDATE User SET name=?, surname=?, phone_number=?, apikey=?, email=?, password=?, street_number=?, street_name=?, suburb=?, city=?, zip_code=?, user_type=? WHERE id=?";
+            $userStmt = $conn->prepare($userSql);
+            $userStmt->bind_param("ssssssssssssi", $name, $surname, $phone_number, $apikey, $email, $password, $street_number, $street_name, $suburb, $city, $zip_code, $user_type, $id);
+            $userStmt->execute();
+
+            // Update Admin table
+            $custSql = "UPDATE Customer SET profile_picture=? WHERE user_id=?";
+            $cusStmt = $conn->prepare($custSql);
+            $cusStmt->bind_param("si", $profile_picture, $id); // d for double (salary), s for string, i for int
+            $cusStmt->execute();
+
+            $conn->commit();
+
+        } catch (Exception $e) {
+            if (isset($conn)) {
+                $conn->rollback();
+            }
+            echo "Update failed: " . $e->getMessage();
+        } finally {
+            if (isset($userStmt))
+                $userStmt->close();
+            if (isset($cusStmt))
+                $cusStmt->close();
+            if (isset($conn))
+                $conn->close();
         }
+
+
+
     }
     public function ViewSupplier($requestData)
     {
