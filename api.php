@@ -76,27 +76,27 @@ class API
     public function TestResponse($requestData)
     {
         try {
-            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, (int)$this->dbPort);
+            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, (int) $this->dbPort);
 
             if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
             }
+            $hello = isset($requestData['hello']) ? trim($requestData['hello']) : '';
+            $world = isset($requestData['world']) ? trim($requestData['world']) : '';
+
+            if (empty($hello) || empty($world)) {
+                $this->sendResponse('error', "missing required fields");
+            }
+
+            file_put_contents("debug.json", json_encode($requestData, JSON_PRETTY_PRINT));
+
+
+
+            $this->sendResponse("Success", "Hello world back to you!");
         } catch (mysqli_sql_exception $e) {
             echo "Connection failed: " . $e->getMessage();
             exit;
         }
-        $hello = isset($requestData['hello']) ? trim($requestData['hello']) : '';
-        $world = isset($requestData['world']) ? trim($requestData['world']) : '';
-
-        if (empty($hello) || empty($world)) {
-            $this->sendResponse('error', "missing required fields");
-        }
-
-        file_put_contents("debug.json", json_encode($requestData, JSON_PRETTY_PRINT));
-
-
-
-        $this->sendResponse("Success", "Hello world back to you!");
 
     }
 
@@ -109,90 +109,82 @@ class API
             if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
             }
+            $name = isset($requestData["name"]) ? trim($requestData["name"]) : "";
+            $surname = isset($requestData["surname"]) ? trim($requestData["surname"]) : "";
+            $phone_number = isset($requestData["phone_number"]) ? trim($requestData["phone_number"]) : "";
+            $email = isset($requestData["email"]) ? trim($requestData["email"]) : "";
+            $password = isset($requestData["password"]) ? trim($requestData["password"]) : "";
+            $street_number = isset($requestData["street_number"]) ? trim($requestData["street_number"]) : "";
+            $street_name = isset($requestData["street_name"]) ? trim($requestData["street_name"]) : "";
+            $suburb = isset($requestData["suburb"]) ? trim($requestData["suburb"]) : "";
+            $city = isset($requestData["city"]) ? trim($requestData["city"]) : "";
+            $zip_code = isset($requestData["zip_code"]) ? trim($requestData["zip_code"]) : "";
+            $user_type = isset($requestData["user_type"]) ? trim($requestData["user_type"]) : "";
+
+
+
+            //must have unique email
+            if (empty($name) || empty($surname) || empty($phone_number) || empty($email) || empty($password)) {
+                $this->sendResponse('error', 'Missing required fields');
+            } elseif (!preg_match('/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/', $email)) {
+                $this->sendResponse('emailError', 'Invalid email address');
+            } elseif (!preg_match("/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/", $password)) {
+                $this->sendResponse('passwordError', 'Password does not meet requirements');
+            } else {
+                //check if email is unique
+                $emailcheck = $conn->prepare("SELECT * FROM User WHERE email = ?");
+                $emailcheck->bindParam("s", $email);
+                $emailcheck->execute();
+
+                if ($emailcheck->get_result()->fetch_assoc()) {
+                    $this->sendResponse("error", "Email already exists");
+                }
+
+                //All good so we can insert the user
+                //set api key
+                $apikey = base64_encode(random_bytes(32));
+                $password = password_hash($password, PASSWORD_DEFAULT);
+                $sqlInsert = $conn->prepare("INSERT INTO User(name,surname, phone_number,apikey, email, password, street_number, street_name, suburb,city,zip_code, user_type) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
+                $sqlInsert->bind_param("ssssssssssss", $name, $surname, $phone_number, $apikey, $email, $password, $street_number, $street_name, $suburb, $city, $zip_code, $user_type);
+
+                if ($sqlInsert->execute()) {
+                    $user_id = mysqli_insert_id($conn);
+                    if ($user_type === "Customer") {
+                        $pfp = isset($requestData["profile_picture"]) ? trim($requestData["profile_picture"]) : "";
+                        $insertC = $conn->prepare("INSERT INTO Customer(user_id, profile_picture) VALUES (?,?)");
+                        $insertC->bind_param("is", $user_id, $pfp);
+                        $insertC->execute();
+                        $insertC->close();
+                    } else if ($user_type === "Admin") {
+                        $salary = isset($requestData["salary"]) ? trim($requestData["salary"]) : "";
+                        $position = isset($requestData["position"]) ? trim($requestData["position"]) : "";
+                        $insertA = $conn->prepare("INSERT INTO Admin(user_id, salary, position) VALUES (?,?,?)");
+                        $insertA->bind_param("ids", $user_id, $salary, $position);
+                        $insertA->execute();
+                        $insertA->close();
+                    } else {
+                        $this->sendResponse("error", "user type unrecognized");
+                        return;
+                    }
+                } else {
+                    $this->sendResponse("error", "User registration failed");
+                }
+
+                $sqlInsert->close();
+                $conn->close();
+
+
+            }
+
+            $this->sendResponse("success", "Inserted new user");
+
+
+
         } catch (mysqli_sql_exception $e) {
             echo "Connection failed: " . $e->getMessage();
             $this->sendResponse("error", $e->getMessage());
             exit;
         }
-
-        $name = isset($requestData["name"]) ? trim($requestData["name"]) : "";
-        $surname = isset($requestData["surname"]) ? trim($requestData["surname"]) :"";
-        $phone_number = isset($requestData["phone_number"]) ? trim($requestData["phone_number"]) :"";
-        $email = isset($requestData["email"]) ? trim($requestData["email"]) :"";
-        $password = isset($requestData["password"]) ? trim($requestData["password"]) :"";
-        $street_number = isset($requestData["street_number"]) ? trim($requestData["street_number"]) :"";
-        $street_name = isset($requestData["street_name"]) ? trim($requestData["street_name"]) :"";
-        $suburb = isset($requestData["suburb"]) ? trim($requestData["suburb"]) : "";
-        $city = isset($requestData["city"]) ? trim($requestData["city"]) :"";
-        $zip_code = isset($requestData["zip_code"]) ? trim($requestData["zip_code"]) : "";
-        $user_type = isset($requestData["user_type"]) ? trim($requestData["user_type"]) : "";
-
-
-
-        //must have unique email
-        if(empty($name) || empty($surname) || empty($phone_number) || empty($email) || empty($password)) {
-            $this->sendResponse('error', 'Missing required fields');
-        }
-        elseif (!preg_match('/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/', $email)) {
-            $this->sendResponse('emailError', 'Invalid email address');
-        }
-        elseif (!preg_match("/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/", $password)) {
-            $this->sendResponse('passwordError', 'Password does not meet requirements');
-        }
-        else{
-            //check if email is unique
-            $emailcheck = $conn->prepare("SELECT * FROM User WHERE email = ?");
-            $emailcheck->bindParam("s", $email);
-            $emailcheck->execute();
-
-            if($emailcheck->get_result()->fetch_assoc())
-            {
-                $this->sendResponse("error","Email already exists");
-            }   
-
-            //All good so we can insert the user
-            //set api key
-            $apikey = base64_encode(random_bytes(32));
-            $password = password_hash($password, PASSWORD_DEFAULT);
-            $sqlInsert = $conn->prepare("INSERT INTO User(name,surname, phone_number,apikey, email, password, street_number, street_name, suburb,city,zip_code, user_type) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
-            $sqlInsert->bind_param("ssssssssssss", $name, $surname, $phone_number, $apikey, $email, $password, $street_number, $street_name, $suburb, $city, $zip_code, $user_type);
-
-            if( $sqlInsert->execute() ) {
-                $user_id = mysqli_insert_id( $conn );
-                if($user_type === "Customer")
-                {
-                    $pfp = isset($requestData["profile_picture"]) ? trim($requestData["profile_picture"]) :"";
-                    $insertC = $conn->prepare("INSERT INTO Customer(user_id, profile_picture) VALUES (?,?)");
-                    $insertC->bind_param("is",$user_id, $pfp);
-                    $insertC->execute();
-                    $insertC->close();
-                }
-                else if($user_type === "Admin")
-                {
-                    $salary = isset($requestData["salary"]) ? trim($requestData["salary"]) : "";
-                    $position = isset($requestData["position"]) ? trim($requestData["position"]) : "";
-                    $insertA = $conn->prepare("INSERT INTO Admin(user_id, salary, position) VALUES (?,?,?)");
-                    $insertA->bind_param("ids", $user_id, $salary, $position);
-                    $insertA->execute();
-                    $insertA->close();
-                }else
-                {
-                    $this->sendResponse("error","user type unrecognized");
-                    return;
-                }
-                }else{
-                    $this->sendResponse("error","User registration failed");
-                }
-
-            $sqlInsert->close();
-            $conn->close();
-
-
-        }
-
-    $this->sendResponse("success","Inserted new user");
-
-
 
     }
 
@@ -204,6 +196,54 @@ class API
             if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
             }
+            $email = isset($requestData["email"]) ? trim($requestData["email"]) : "";
+            $password = isset($requestData["password"]) ? trim($requestData["password"]) : "";
+
+            if (empty($email) || empty($password)) {
+                $this->sendResponse("error", "All fields must be valid");
+            }
+
+
+            $stmt = $conn->prepare("SELECT * FROM User WHERE email=?");
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+
+            $result = $stmt->get_result()->fetch_assoc();
+            //echo("Email: ".$result["email"] );
+            //echo("Password: ".$result["password"] );
+            if (password_verify($password, $result["password"])) {
+                $cookie_email = $result["email"];
+                $cookie_name = $result["name"]; //To use when displaying the users profile
+                $cookie_surname = $result["surname"];
+                $cookie_key = $result["apikey"];
+
+                setcookie("userapikey", $cookie_key, time() + (259200 * 30), "/"); //set for 3 days
+                setcookie("useremail", $cookie_email, time() + (259200 * 30), "/"); //set for 3 days
+                setcookie("username", $cookie_name, time() + (259200 * 30), "/"); //set for 3 days
+                setcookie("usersurname", $cookie_surname, time() + (259200 * 30), "/"); //set for 3 days
+
+
+                $this->sendResponse(
+                    "success"
+                    ,
+                    [
+                        'apikey' => $result["apikey"]
+                        ,
+                        'username' => $result["name"]
+                        ,
+                        'surname' => $result["surname"]
+                        ,
+                        'email' => $result["email"]
+                    ]
+                );
+            } else {
+                $this->sendResponse("error", "Unknown email or password");
+            }
+
+
+            $stmt->close();
+            $conn->close();
+
         } catch (mysqli_sql_exception $e) {
             echo "Connection failed: " . $e->getMessage();
             exit;
@@ -211,56 +251,8 @@ class API
 
 
 
-        $email = isset($requestData["email"]) ? trim($requestData["email"]) : "";
-        $password = isset($requestData["password"]) ? trim($requestData["password"]) :"";
-
-        if(empty($email) || empty($password)){
-            $this->sendResponse("error","All fields must be valid");
-        }
 
 
-        $stmt = $conn->prepare("SELECT * FROM User WHERE email=?");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-
-        $result = $stmt->get_result()->fetch_assoc();
-        //echo("Email: ".$result["email"] );
-        //echo("Password: ".$result["password"] );
-        if (password_verify($password, $result["password"])) {
-            $cookie_email = $result["email"];
-            $cookie_name = $result["name"]; //To use when displaying the users profile
-            $cookie_surname = $result["surname"];
-            $cookie_key = $result["apikey"];
-
-            setcookie("userapikey", $cookie_key, time() + (259200 * 30), "/"); //set for 3 days
-            setcookie("useremail", $cookie_email, time() + (259200 * 30), "/"); //set for 3 days
-            setcookie("username", $cookie_name, time() + (259200 * 30), "/"); //set for 3 days
-            setcookie("usersurname", $cookie_surname, time() + (259200 * 30), "/"); //set for 3 days
-
-
-            $this->sendResponse(
-                "success"
-                ,
-                [
-                    'apikey' => $result["apikey"]
-                    ,
-                    'username' => $result["name"]
-                    ,
-                    'surname' => $result["surname"]
-                    ,
-                    'email' => $result["email"]
-                ]
-            );
-        } else {
-            $this->sendResponse("error", "Unknown email or password");
-        }
-
-
-        $stmt->close();
-        $conn->close();
-
-
-   
     }
     public function ViewAllProducts($requestData)
     {
@@ -271,18 +263,17 @@ class API
             if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
             }
+            $stmt = $conn->prepare("SELECT * FROM Product");
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($result->fetch_assoc()) {
+                $this->sendResponse("success", $result);
+            }
         } catch (mysqli_sql_exception $e) {
             echo "Connection failed: " . $e->getMessage();
             exit;
         }
 
-        $stmt = $conn->prepare("SELECT * FROM Product");
-        $stmt->execute();
-        $result = $stmt->get_result();
-        if($result->fetch_assoc())
-        {   
-            $this->sendResponse("success", $result);
-        }
     }
     public function RateProduct($requestData)
     {
@@ -367,6 +358,78 @@ class API
         }
     }
 
+    public function UpdateAdmin($requestData)
+    {
+        //filter based on whatever
+        try {
+
+            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
+            if ($conn->connect_error) {
+                die("Connection failed: " . $conn->connect_error);
+            }
+            $id = isset($requestData["id"]) ? $requestData["id"] : "";
+            $name = $requestData["name"] ?? "";
+            $surname = $requestData["surname"] ?? "";
+            $phone_number = $requestData["phone_number"] ?? "";
+            $apikey = $requestData["apikey"] ?? "";
+            $email = $requestData["email"] ?? "";
+            $password = $requestData["password"] ?? "";
+            $street_number = $requestData["street_number"] ?? "";
+            $street_name = $requestData["street_name"] ?? "";
+            $suburb = $requestData["suburb"] ?? "";
+            $city = $requestData["city"] ?? "";
+            $zip_code = $requestData["zip_code"] ?? "";
+
+            $salary = $requestData["salary"] ?? "";
+            $position = $requestData["position"] ?? "";
+
+            $conn->begin_transaction();
+
+            // Update User table
+            $userSql = "UPDATE User SET name=?, surname=?, phone_number=?, apikey=?, email=?, password=?, street_number=?, street_name=?, suburb=?, city=?, zip_code=? WHERE id=?";
+            $userStmt = $conn->prepare($userSql);
+            $userStmt->bind_param("sssssssssssi", $name, $surname, $phone_number, $apikey, $email, $password, $street_number, $street_name, $suburb, $city, $zip_code, $id);
+            $userStmt->execute();
+
+            // Update Admin table
+            $adminSql = "UPDATE Admin SET salary=?, position=? WHERE user_id=?";
+            $adminStmt = $conn->prepare($adminSql);
+            $adminStmt->bind_param("dsi", $salary, $position, $id); // d for double (salary), s for string, i for int
+            $adminStmt->execute();
+
+            $conn->commit();
+
+        } catch (Exception $e) {
+            if (isset($conn)) {
+                $conn->rollback();
+            }
+            echo "Update failed: " . $e->getMessage();
+        } finally {
+            if (isset($userStmt))
+                $userStmt->close();
+            if (isset($adminStmt))
+                $adminStmt->close();
+            if (isset($conn))
+                $conn->close();
+        }
+
+
+
+    }
+    public function UpdateCustomer($requestData)
+    {
+        //filter based on whatever
+        try {
+
+            $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
+            if ($conn->connect_error) {
+                die("Connection failed: " . $conn->connect_error);
+            }
+        } catch (mysqli_sql_exception $e) {
+            echo "Connection failed: " . $e->getMessage();
+            exit;
+        }
+    }
     public function ViewSupplier($requestData)
     {
         //filter based on whatever
@@ -381,18 +444,17 @@ class API
             exit;
         }
 
-        $productid = isset( $requestData["id"] ) ? $requestData["id"] :"";
-        $retailid = isset( $requestData["retailer_id"] ) ? $requestData["retailer_id"] : "";
-        
+        $productid = isset($requestData["id"]) ? $requestData["id"] : "";
+        $retailid = isset($requestData["retailer_id"]) ? $requestData["retailer_id"] : "";
+
         $stmt = $conn->prepare("SELECT * FROM Retailer WHERE id = ?");
         $stmt->bind_param("i", $retailid);
         $stmt->execute();
         $result = $stmt->get_result();
-        if($result->fetch_assoc())
-        {   
+        if ($result->fetch_assoc()) {
             $this->sendResponse("success", $result);
         }
-        $this->sendResponse("error","No results found");
+        $this->sendResponse("error", "No results found");
     }
 
 
@@ -434,11 +496,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $api->ViewRatings($requestData);
         } else if ($requestData['type'] === "FilterProducts") {
             $api->FilterProducts($requestData);
-        }else if ($requestData['type'] === "UpdateCustomer") { //update or delete through here
-            $api->FilterProducts($requestData);
-        }else if ($requestData['type'] === "UpdateAdmin") { //update or delete through here
-            $api->FilterProducts($requestData);
-        }else if ($requestData['type'] === "ViewSupplier") { //update or delete through here
+        } else if ($requestData['type'] === "UpdateCustomer") { //update or delete through here
+            $api->UpdateCustomer($requestData);
+        } else if ($requestData['type'] === "UpdateAdmin") { //update or delete through here
+            $api->UpdateAdmin($requestData);
+        } else if ($requestData['type'] === "ViewSupplier") { //update or delete through here
             $api->ViewSupplier($requestData);
         } else {
             echo "please specify type";
