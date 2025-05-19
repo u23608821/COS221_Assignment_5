@@ -1,11 +1,8 @@
-# COS221_Assignment_5
-
-
-Connor likes doing README files so he can do that (Edit this as you like).
+# COS221 Assignment 5
 
 ## Getting started
 
-**Please make sure that you have signed into github in your vs code using your tuks account before doing the following and if you have not used github before and you are using Windows, please ensure you install git first**
+**Please make sure that you have signed into GitHub in your Visual Studio Code using your Tuks account before doing the following. Please ensure that Git is installed on your system first**
 
 1. Cloning the repository:
    - Open your terminal in whatever file directory on you computer you want to save this reposity to and paste the following:
