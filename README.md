@@ -24,9 +24,10 @@ Connor likes doing README files so he can do that (Edit this as you like).
 
 ## Commiting, Pulling and Pushing to GitHub
 
-**Number 1 rule: PLEASE DO NOT COMMIT, MERGE OR BRANCH DIRECTLY TO THE MASETER BRANCH**
+**Number 1 rule: PLEASE DO NOT COMMIT, MERGE OR BRANCH DIRECTLY TO THE MASETER/DEV BRANCH**
 
-- The master branch will be our "production ready' branch hence once things are commited to master, it should not be changed
+- The master branch will be our "production ready" branch hence once things are commited to master, it should not be changed
+- The dev branch will be for features that are nearly ready to be merged to master. This branch will probably still contain small bugs that with still need to be fixed.
 
 - Please create your own seperate branches to work on and then you may pull the code from which ever other branches you need code from. This will help save us many headaches from merge conflicts:
   - `git pull origin <branch name>`
