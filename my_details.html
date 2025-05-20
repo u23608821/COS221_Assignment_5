@@ -324,7 +324,103 @@
       
       color: var(--text-light)
     }
+
+
+
+
+
+    .details-form {
+      background-color: rgb(238, 243, 255);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 2rem 5rem;
+      max-width: 800px;
+      margin-left: 0;
+      margin-right: auto;  
+    }
+
+    .form-row,
+    .address-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      flex: 1;
+    }
+
+    .form-group.small {
+      flex: 0.3;
+      min-width: 100px;
+    }
+
+    .form-group.large {
+      flex: 1.5;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #4b5563;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"] {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #e5e7eb;
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+      font-family: 'Inter', sans-serif;
+      background-color: white;
+    }
+
+    .save-btn {
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 1.5rem;
+      transition: background-color 0.2s ease;
+    }
+
+    .save-btn:hover {
+      background-color: #2563eb;
+    }
    
+    .dark input[type="text"],
+    .dark input[type="email"],
+    .dark input[type="tel"] {
+      background-color: #374151;
+      border-color: #4b5563;
+      color: white;
+    }
+
+    .dark label {
+      color: #d1d5db;
+    }
+
+    .dark .details-form {
+      background-color: rgba(30, 50, 80, 0.747);
+    }
+
+    .address-heading {
+      margin-bottom: 1rem; 
+      color: var(--text-dark);
+    }
+
+    .dark .address-heading {
+        color: var(--text-light);
+    }
+
   </style>
 </head>
 <body class="light">
@@ -360,6 +456,64 @@
     <h1 class="page-header">My Details</h1>
     <p class="page-subheader">View and edit your personal information here.</p>
 
+    <div class="details-form">
+      <form>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input type="text" id="firstName" value="John" />
+          </div>
+          <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input type="text" id="lastName" value="Doe" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" value="+27 12 345 6789" />
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" value="john.doe@example.com" />
+          </div>
+        </div>
+
+        <h4 class="address-heading">Address</h4>
+
+        <div class="address-row">
+          <div class="form-group small">
+            <label for="streetNumber">Street No.</label>
+            <input type="text" id="streetNumber" value="123" />
+          </div>
+          <div class="form-group large">
+            <label for="streetName">Street Name</label>
+            <input type="text" id="streetName" value="Main Street" />
+          </div>
+        </div>
+
+        <div class="address-row">
+          <div class="form-group">
+            <label for="suburb">Suburb</label>
+            <input type="text" id="suburb" value="Sunnyville" />
+          </div>
+          <div class="form-group">
+            <label for="city">City</label>
+            <input type="text" id="city" value="Johannesburg" />
+          </div>
+        </div>
+
+        <div class="address-row">
+          <div class="form-group small">
+            <label for="postalCode">Postal Code</label>
+            <input type="text" id="postalCode" value="2000" />
+          </div>
+        </div>
+
+        <button type="submit" class="save-btn">Save</button>
+      </form>
+    </div>
   </main>
   
   <footer class="footer">
