@@ -26,9 +26,8 @@ function buildPasswordRegex({ minLength = 8, upper = true, lower = true, digit =
     if (upper) pattern += "(?=.*[A-Z])";
     if (digit) pattern += "(?=.*\\d)";
     if (special) pattern += "(?=.*[\\W_])";
-    pattern += `.{${
-        minLength
-    },}$`;
+    pattern += `.{${minLength
+        },}$`;
     return new RegExp(pattern);
 }
 
@@ -43,13 +42,21 @@ window.addEventListener("load", () => {
 
         // Get full name and split into name and surname
         const fullName = document.getElementById("name")?.value.trim() || "";
-        const [name, ...surnameParts] = fullName.split(" ");
-        const surname = surnameParts.join(" ");
+        const nameParts = fullName.split(" ").filter(part => part.length > 0);
+
+        if (nameParts.length < 2) {
+            alert("Please enter both your first name and surname.");
+            return;
+        }
+
+        const surname = nameParts.pop(); // Last word is the surname
+        const name = nameParts.join(" "); // Everything else is the first name
+
         const email = document.getElementById("email")?.value.trim() || "";
         const password = document.getElementById("password")?.value.trim() || "";
         const user_type = document.getElementById("accountType")?.value.trim() || "";
 
-        if (!fullName){
+        if (!fullName) {
             alert("Please fill in your full name.");
             return;
         }
@@ -84,40 +91,64 @@ window.addEventListener("load", () => {
             return;
         }
 
+        // Set required fields and null for optional fields
         const payload = {
             type: "Register",
             name,
             surname,
-            phone_number,
+            phone_number: null,
             email,
             password,
-            street_number,
-            street_name,
-            suburb,
-            city,
-            zip_code,
+            street_number: null,
+            street_name: null,
+            suburb: null,
+            city: null,
+            zip_code: null,
             user_type
         };
 
-        try {
-            const response = await fetch("/api.php", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            });
+        console.log('Sending registration request:', payload);
+        const xhr = new XMLHttpRequest();
 
-            const result = await response.json();
+        xhr.open('POST', 'https://wheatley.cs.up.ac.za/u24634434/COS221/api.php', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
 
-            if (result.status === "success") {
-                alert("Registration successful! You can now log in.");
-                window.location.href = "/login.html";
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                try {
+                    const result = JSON.parse(xhr.responseText);
+                    console.log('Registration response:', result);
+
+                    if (result.status === 'success') {
+                        alert("Registration successful! You can now log in.");
+                        window.location.href = "login.html";
+                    } else if (result.status === 'emailError') {
+                        alert("Invalid email format. Please check your email address.");
+                    } else if (result.status === 'passwordError') {
+                        alert("Password does not meet requirements. Password must:\n- Be at least 8 characters long\n- Include uppercase and lowercase letters\n- Include numbers\n- Include special characters (#?!@$%^&*-)");
+                    } else {
+                        alert(result.message || "Registration failed.");
+                    }
+                } catch (e) {
+                    console.error('Error parsing response:', xhr.responseText);
+                    alert("An error occurred while processing the server response.");
+                }
             } else {
-                alert(result.message || "Registration failed.");
+                console.error('Server response:', xhr.status, xhr.responseText);
+                if (xhr.status === 401) {
+                    alert("Authentication error. Please check your credentials or try again later.");
+                } else {
+                    alert("Server error: " + xhr.status + ". Please try again later.");
+                }
             }
-        } catch (err) {
-            alert("An error occurred during registration. Please try again.");
-        }
+        };
+
+        xhr.onerror = function () {
+            console.error('Request failed');
+            alert("Could not connect to the server. Please check your connection and try again.");
+        };
+
+        // Send the request
+        xhr.send(JSON.stringify(payload));
     });
 });
