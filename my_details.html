@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Orders</title>
+  <title>My Details</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <style>
@@ -300,17 +300,29 @@
       box-shadow: 0 -1px 60px rgba(0, 0, 0, 0.26);
     }
 
-    /* Orders page specific styles */
     .page-header {
       font-size: 2rem;
       font-weight: 600;
       margin-top: 3rem;
-      margin-bottom: 2rem;
+      margin-bottom: -0.5rem; 
       color: #3480fa; 
     }
 
     .dark .page-header {
       color: var(--text-light);
+    }
+    .page-subheader {
+      font-size: 1rem;
+      margin-bottom: 2rem;
+      
+      color: var(--gray-dark)
+    }
+   
+    .dark .page-subheader {
+      font-size: 1rem;
+      margin-bottom: 2rem;
+      
+      color: var(--text-light)
     }
    
   </style>
@@ -346,6 +358,7 @@
   
   <main>
     <h1 class="page-header">My Details</h1>
+    <p class="page-subheader">View and edit your personal information here.</p>
 
   </main>
   
