@@ -1,10 +1,11 @@
-// Asthetics 
-const accountBtn = document.getElementById("accountBtn");
-const accountMenu = document.getElementById("accountMenu");
-const themeToggle = document.getElementById("themeToggle");
-const themeIcon = document.getElementById("themeIcon");
-const menuToggle = document.getElementById("menuToggle");
-const navLinks = document.getElementById("navLinks");
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DOM elements
+    const accountBtn = document.getElementById("accountBtn");
+    const accountMenu = document.getElementById("accountMenu");
+    const themeToggle = document.getElementById("themeToggle");
+    const themeIcon = document.getElementById("themeIcon");
+    const menuToggle = document.getElementById("menuToggle");
+    const navLinks = document.getElementById("navLinks");
 
 function updateIcon() {
     themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
@@ -43,7 +44,8 @@ window.addEventListener("click", function (e) {
     }
 });
 
-updateIcon();
+    updateIcon();
+}); // End of DOMContentLoaded
 
 function setCookie(name, value, days) {
     const d = new Date();
