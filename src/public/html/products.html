@@ -1,39 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Reviews</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>All Products</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter :wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined " rel="stylesheet" />
+  <link rel="stylesheet" href="../styles/mt_reviews.css">
+  <script src="../scripts/my_reviews.js"></script>
 </head>
-<body>
-  <!-- Header -->
-  <header>
-    <nav>
-      <div class="logo"><img src="logo.png" alt="Logo"></div>
-      <ul>
-        <li><a href="#">All Products</a></li>
-        <li><a href="#">Top-Rated Products</a></li>
-      </ul>
-      <div class="user">User</div>
-    </nav>
-  </header>
 
-  <!-- Main Content -->
+<body class="light">
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-left">
+        <a href="#" class="logo">
+          <img src="https://URL_HERE.co.za/" alt="Logo Placeholder" />
+        </a>
+        <span class="menu-toggle" id="menuToggle">☰</span>
+        <ul class="nav-links" id="navLinks">
+          <li><a href="#">All Products</a></li>
+          <li><a href="#">Top-Rated Products</a></li>
+        </ul>
+      </div>
+      <div class="nav-actions">
+        <div class="dropdown">
+          <button class="btn-user dropdown-toggle" id="accountBtn" aria-haspopup="true"
+            aria-expanded="false">User</button>
+          <div class="dropdown-menu" id="accountMenu" aria-label="Account options">
+            <a href="#"><span>Profile Settings</span></a>
+            <a href="#"><span>My Reviews</span></a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="signout"><span>Sign Out</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
   <main>
-    <h1>My Reviews</h1>
-    <p>All products you have personally reviewed can be viewed here.</p>
+    <h1 class="page-header">All Products</h1>
+    <p class="page-subheader">Explore all available products.</p>
 
-    <!-- Product List Container -->
-    <div id="product-list"></div>
+    <div class="products-container" id="products-list">
+      <div class="review-box">
+        <div class="product-image">
+          <span>Product Image</span>
+        </div>
+        <div class="review-main-content">
+          <div class="review-text-content">
+            <h3 class="review-title">Wireless Headphones</h3>
+            <p class="review-date">Reviewed on 12 May 2025</p>
+            <div class="stars">
+              <span class="star filled">★</span>
+              <span class="star filled">★</span>
+              <span class="star filled">★</span>
+              <span class="star filled">★</span>
+              <span class="star">★</span>
+            </div>
+            <h4 class="review-heading">Review</h4>
+            <div class="review-text">
+              This product exceeded my expectations. The quality is outstanding and it arrived sooner than expected. I
+              would definitely recommend it to others looking for a reliable solution.
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
   </main>
 
-  <!-- Footer -->
-  <footer>
-    <p>&copy; 2025 The Primary Keys Group</p>
+  <footer class="footer">
+    <div class="footer-container">
+      <span class="footer-left">© 2025 The Primary Keys Group</span>
+      <button class="btn" id="themeToggle" title="Toggle theme">
+        <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+      </button>
+    </div>
   </footer>
 
-  <!-- JavaScript -->
-  <script src="scripts/products.js"></script>
 </body>
+
 </html>
