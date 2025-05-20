@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Details</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles/my_details.css">
+  <script src="../scripts/my_details.js"></script>
+</head>
+
+
+<body class="light">
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-left">
+        <a href="#" class="logo">
+          <img src="https://URL_HERE.co.za/" alt="Logo Placeholder" />
+        </a>
+        <span class="menu-toggle" id="menuToggle">☰</span>
+        <ul class="nav-links" id="navLinks">
+          <li><a href="#">All Products</a></li>
+          <li><a href="#">Top-Rated Products</a></li>
+        </ul>
+      </div>
+      <div class="nav-actions">
+
+        <div class="dropdown">
+          <button class="btn-user dropdown-toggle" id="accountBtn" aria-haspopup="true"
+            aria-expanded="false">User</button>
+          <div class="dropdown-menu" id="accountMenu" aria-label="Account options">
+            <a href="#"><span>My Details</span></a>
+            <a href="#"><span>My Reviews</span></a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="signout"><span>Sign Out</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+
+  <main>
+    <h1 class="page-header">My Details</h1>
+    <p class="page-subheader">View and edit your personal information here.</p>
+
+    <div class="details-form">
+      <form>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input type="text" id="firstName" value="John" />
+          </div>
+          <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input type="text" id="lastName" value="Doe" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" value="+27 12 345 6789" />
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" value="john.doe@example.com" />
+          </div>
+        </div>
+
+        <h4 class="address-heading">Address</h4>
+
+        <div class="address-row">
+          <div class="form-group small">
+            <label for="streetNumber">Street No.</label>
+            <input type="text" id="streetNumber" value="123" />
+          </div>
+          <div class="form-group large">
+            <label for="streetName">Street Name</label>
+            <input type="text" id="streetName" value="Main Street" />
+          </div>
+        </div>
+
+        <div class="address-row">
+          <div class="form-group">
+            <label for="suburb">Suburb</label>
+            <input type="text" id="suburb" value="Sunnyville" />
+          </div>
+          <div class="form-group">
+            <label for="city">City</label>
+            <input type="text" id="city" value="Johannesburg" />
+          </div>
+        </div>
+
+        <div class="address-row">
+          <div class="form-group small">
+            <label for="postalCode">Postal Code</label>
+            <input type="text" id="postalCode" value="2000" />
+          </div>
+        </div>
+
+        <button type="submit" class="save-btn">Save</button>
+      </form>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <span class="footer-left">© 2025 The Primary Keys Group </span>
+      <button class="btn" id="themeToggle" title="Toggle theme">
+        <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+      </button>
+    </div>
+  </footer>
+
+</body>
+
+</html>

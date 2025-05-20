@@ -1,0 +1,224 @@
+ :root {
+     --primary: #3b82f6;
+     --gray-light: #f3f4f6;
+     --gray: #9ca3af;
+     --text-dark: #111827;
+     --text-light: #ffffff;
+     --radius: 1.5rem;
+     --shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+ }
+
+ * {
+     box-sizing: border-box;
+ }
+
+ html,
+ body {
+     height: 100%;
+     overflow-x: hidden;
+     margin: 0;
+ }
+
+ body {
+     font-family: 'Inter', sans-serif;
+     /* background-color: rgb(54, 115, 179); */
+     background: linear-gradient(180deg, #3480fa 0%, #74b3ff 100%);
+     color: var(--text-dark);
+     display: flex;
+     flex-direction: column;
+ }
+
+ /* 
+    
+    Not sure how to make the body this gradient: 
+
+    background: linear-gradient(180deg, #234781 0%, #456a98 100%); 
+
+    when the theme is dark 
+    
+    */
+
+
+ main {
+     flex: 1;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+ }
+
+ .login-box {
+     background-color: white;
+     padding: 2rem 2.5rem;
+     border-radius: var(--radius);
+     box-shadow: var(--shadow);
+     width: 100%;
+     max-width: 400px;
+ }
+
+ .login-box h1 {
+     text-align: center;
+     font-size: 1.8rem;
+     color: #3480fa;
+     margin-bottom: 0.25rem;
+ }
+
+ .login-box p.subtitle {
+     text-align: center;
+     color: var(--gray);
+     font-size: 0.9rem;
+     margin-bottom: 1.5rem;
+ }
+
+ .form-group {
+     margin-bottom: 1.2rem;
+ }
+
+ label {
+     display: block;
+     margin-bottom: 0.4rem;
+     font-size: 0.95rem;
+     font-weight: 500;
+ }
+
+ input[type="text"],
+ input[type="password"] {
+     width: 100%;
+     padding: 0.5rem 0.75rem;
+     border: 1px solid #ccc;
+     border-radius: 0.5rem;
+     font-size: 1rem;
+     font-family: 'Inter', sans-serif;
+ }
+
+ button {
+     display: block;
+     width: 100%;
+     background-color: #3480fa;
+     color: white;
+     border: none;
+     padding: 0.75rem;
+     font-size: 1rem;
+     border-radius: 0.5rem;
+     font-family: 'Inter', sans-serif;
+     cursor: pointer;
+     transition: background-color 0.2s ease;
+ }
+
+ button:hover {
+     background-color: #3480fa;
+ }
+
+ .footer {
+     background-color: #e5e7eb;
+     padding: 1rem 2rem;
+     font-family: 'Inter', sans-serif;
+     font-size: 16px;
+ }
+
+ .footer-container {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+ }
+
+ .footer-left,
+ .footer-right {
+     color: var(--text-dark);
+ }
+
+ .footer-right {
+     text-decoration: underline;
+ }
+
+ .footer-right .material-symbols-outlined {
+     font-size: 18px;
+     margin-right: 6px;
+     vertical-align: middle;
+ }
+
+ .dark {
+     background-color: #1f2937;
+     color: #ffffff;
+ }
+
+ .dark .login-box {
+     background-color: #374151;
+     color: #ffffff;
+ }
+
+ .dark .login-box p.subtitle {
+     color: #d1d5db;
+ }
+
+ .dark input[type="text"],
+ .dark input[type="password"] {
+     background-color: #1f2937;
+     color: #ffffff;
+     border-color: #4b5563;
+ }
+
+ .dark label {
+     color: #f3f4f6;
+ }
+
+ .dark .footer {
+     background-color: #2d3a4d;
+ }
+
+ .dark .footer-left,
+ .dark .footer-right {
+     color: #ffffff;
+ }
+
+ .select-wrapper {
+     position: relative;
+ }
+
+ .select-wrapper select {
+     width: 100%;
+     padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+     border: 1px solid #ccc;
+     border-radius: 0.5rem;
+     font-size: 1rem;
+     font-family: 'Inter', sans-serif;
+     appearance: none;
+     background-color: #fff;
+     color: var(--text-dark);
+ }
+
+ .select-wrapper .arrow {
+     position: absolute;
+     top: 50%;
+     right: 0.75rem;
+     transform: translateY(-50%);
+     pointer-events: none;
+     color: #666;
+     font-size: 1rem;
+ }
+
+ .dark .select-wrapper select {
+     background-color: #1f2937;
+     color: #ffffff;
+     border-color: #4b5563;
+ }
+
+
+
+
+ .select-wrapper select:invalid {
+     color: var(--gray);
+ }
+
+ /* Ensure selected options get the normal text color */
+ .select-wrapper select option {
+     color: var(--text-dark);
+ }
+
+ /* Dark mode adjustments */
+ .dark .select-wrapper select:invalid {
+     color: #9ca3af;
+ }
+
+ .dark .select-wrapper select option {
+     color: #ffffff;
+ }
