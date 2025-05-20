@@ -49,13 +49,17 @@ window.addEventListener("load", () => {
         const password = document.getElementById("password")?.value.trim() || "";
         const user_type = document.getElementById("accountType")?.value.trim() || "";
 
-        // Basic validation
         if (!fullName){
             alert("Please fill in your full name.");
             return;
         }
         if (!email) {
             alert("Please fill in your email.");
+            return;
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            alert("Invalid email format!");
             return;
         }
         if (!password) {
