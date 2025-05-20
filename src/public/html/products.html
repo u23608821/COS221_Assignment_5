@@ -1,36 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>All Products</title>
-  <link rel="stylesheet" href="styles.css"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Reviews</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <!-- Header -->
   <header>
     <nav>
-      <div class="nav-left">
-        <h1>🛒</h1>
-        <a href="index.html" class="active">All Products</a>
-        <a href="top_rated.html">Top-Rated Products</a>
-      </div>
-      <div class="nav-right">
-        <span>User</span>
-      </div>
+      <div class="logo"><img src="logo.png" alt="Logo"></div>
+      <ul>
+        <li><a href="#">All Products</a></li>
+        <li><a href="#">Top-Rated Products</a></li>
+      </ul>
+      <div class="user">User</div>
     </nav>
   </header>
 
+  <!-- Main Content -->
   <main>
-    <h2>All Products</h2>
-    <p>Browse through our full product selection below.</p>
-    <div id="product-list" class="card-container"></div>
+    <h1>My Reviews</h1>
+    <p>All products you have personally reviewed can be viewed here.</p>
+
+    <!-- Product List Container -->
+    <div id="product-list"></div>
   </main>
 
+  <!-- Footer -->
   <footer>
-    © 2025 The Primary Keys Group
+    <p>&copy; 2025 The Primary Keys Group</p>
   </footer>
 
-  <script src="script.js"></script>
-  <script>loadProducts();</script>
+  <!-- JavaScript -->
+  <script src="scripts/products.js"></script>
 </body>
 </html>
