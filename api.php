@@ -134,7 +134,7 @@ class API
             } else {
                 //check if email is unique
                 $emailcheck = $conn->prepare("SELECT * FROM User WHERE email = ?");
-                $emailcheck->bindParam("s", $email);
+                $emailcheck->bind_param("s", $email);
                 $emailcheck->execute();
 
                 if ($emailcheck->get_result()->fetch_assoc()) {
