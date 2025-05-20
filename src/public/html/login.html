@@ -16,7 +16,7 @@
 			<h1>Login</h1>
 			<p class="subtitle">To access this webpage, please enter your username and password.</p>
 
-			<form>
+			<form onsubmit="event.preventDefault(); clickLogin();">
 				<div class="form-group">
 					<label for="username">Email</label>
 					<input type="text" id="username" placeholder="Enter email address" />

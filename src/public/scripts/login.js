@@ -25,8 +25,8 @@ function clickLogin() {
             console.log(responseData);
             if (responseData.status === 'success') {
                 // Store the API key in DOM storage
-                document.cookie = "apiKey=" + responseData.data.apikey + "; path=/; max-age=86400";
-                document.cookie = "email=" + responseData.data.email + "; path=/; max-age=86400";
+                document.cookie = "apiKey=" + responseData.data.apikey;
+                document.cookie = "email=" + responseData.data.email;
                 // Redirect the user to index.php
                 window.location.href = 'index.php'; // Will redirect to products page when products page is created
             } else {
