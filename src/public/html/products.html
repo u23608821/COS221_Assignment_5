@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>All Products</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter :wght@400;600&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined " rel="stylesheet" />
-  <link rel="stylesheet" href="../styles/mt_reviews.css">
-  <script src="../scripts/my_reviews.js"></script>
+  <title>All Products - PriceCompare</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles/products.css">
+  <script src="../scripts/products.js"></script>
 </head>
 
 <body class="light">
@@ -16,12 +16,13 @@
     <div class="container">
       <div class="nav-left">
         <a href="#" class="logo">
-          <img src="https://URL_HERE.co.za/" alt="Logo Placeholder" />
+          <img src="https://URL_HERE.co.za/" alt="PriceCompare Logo" />
         </a>
         <span class="menu-toggle" id="menuToggle">☰</span>
         <ul class="nav-links" id="navLinks">
           <li><a href="#">All Products</a></li>
           <li><a href="#">Top-Rated Products</a></li>
+          <li><a href="#">Trending Deals</a></li>
         </ul>
       </div>
       <div class="nav-actions">
@@ -40,34 +41,151 @@
   </nav>
 
   <main>
+    <div class="search-container">
+      <div class="search-box">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input type="text" placeholder="Search for products..." class="search-input">
+        <button class="search-btn">Search</button>
+      </div>
+      <div class="filter-options">
+        <select class="filter-select">
+          <option value="">All Categories</option>
+          <option value="electronics">Electronics</option>
+          <option value="home">Home & Kitchen</option>
+          <option value="fashion">Fashion</option>
+        </select>
+        <select class="filter-select">
+          <option value="">Sort By</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+          <option value="rating">Rating</option>
+        </select>
+      </div>
+    </div>
+
     <h1 class="page-header">All Products</h1>
-    <p class="page-subheader">Explore all available products.</p>
+    <p class="page-subheader">Compare prices from multiple retailers</p>
 
     <div class="products-container" id="products-list">
+      <!-- Product 1 -->
       <div class="product-box">
         <div class="product-image">
-          <span>Product Image</span>
+          <img src="/src/private/resources/dummyHeadphones.avif" alt="Wireless Headphones">
         </div>
-        <div class="product-description">
-          <div class="productdes-text">
-            <h3 class="products-title">Wireless Headphones</h3>
-
-            <h4 class="review-heading">Review</h4>
-            <div class="review-text">
-              This product exceeded my expectations. The quality is outstanding and it arrived sooner than expected. I
-              would definitely recommend it to others looking for a reliable solution.
+        <div class="product-content">
+          <div class="product-info">
+            <h3 class="product-title">Sony WH-1000XM4 Wireless Noise Cancelling Headphones</h3>
+            <div class="product-rating">
+              <span class="material-symbols-outlined">star</span>
+              <span class="material-symbols-outlined">star</span>
+              <span class="material-symbols-outlined">star</span>
+              <span class="material-symbols-outlined">star</span>
+              <span class="material-symbols-outlined">star_half</span>
+              <span class="rating-text">4.7 (1,243 reviews)</span>
+            </div>
+            <p class="product-description">Industry-leading noise cancellation, 30-hour battery life, touch controls, and hands-free calling.</p>
+          </div>
+          <div class="price-comparison">
+            <div class="retailer-price">
+              <span class="retailer-name">Amazon</span>
+              <span class="price">$348.00</span>
+              <button class="buy-btn">Buy Now</button>
+            </div>
+            <div class="retailer-price">
+              <span class="retailer-name">Best Buy</span>
+              <span class="price">$349.99</span>
+              <button class="buy-btn">Buy Now</button>
+            </div>
+            <div class="retailer-price">
+              <span class="retailer-name">Walmart</span>
+              <span class="price">$379.00</span>
+              <button class="buy-btn">Buy Now</button>
             </div>
           </div>
-
         </div>
       </div>
 
+      <!-- Product 2 -->
+      <div class="product-box">
+        <div class="product-image">
+          <img src="/src/private/resources/dummyAppleWatch.png" alt="Smart Watch">
+        </div>
+        <div class="product-content">
+          <div class="product-info">
+            <h3 class="product-title">Apple Watch Series 8 (GPS, 41mm)</h3>
+            <div class="product-rating">
+              <span class="material-symbols-outlined">star</span>
+              <span class="material-symbols-outlined">star</span>
+              <span class="material-symbols-outlined">star</span>
+              <span class="material-symbols-outlined">star</span>
+              <span class="material-symbols-outlined">star</span>
+              <span class="rating-text">4.9 (892 reviews)</span>
+            </div>
+            <p class="product-description">Advanced health sensors, crash detection, always-on Retina display, and water resistant.</p>
+          </div>
+          <div class="price-comparison">
+            <div class="retailer-price">
+              <span class="retailer-name">Apple Store</span>
+              <span class="price">$399.00</span>
+              <button class="buy-btn">Buy Now</button>
+            </div>
+            <div class="retailer-price">
+              <span class="retailer-name">Amazon</span>
+              <span class="price">$379.99</span>
+              <button class="buy-btn">Buy Now</button>
+            </div>
+            <div class="retailer-price">
+              <span class="retailer-name">Target</span>
+              <span class="price">$389.00</span>
+              <button class="buy-btn">Buy Now</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Product 3 -->
+      <div class="product-box">
+        <div class="product-image">
+          <img src="/src/private/resources/dummyCoffee.jpg" alt="Coffee Maker">
+        </div>
+        <div class="product-content">
+          <div class="product-info">
+            <h3 class="product-title">Ninja CE251 Programmable Brewer</h3>
+            <div class="product-rating">
+              <span class="material-symbols-outlined">star</span>
+              <span class="material-symbols-outlined">star</span>
+              <span class="material-symbols-outlined">star</span>
+              <span class="material-symbols-outlined">star</span>
+              <span class="material-symbols-outlined">star_half</span>
+              <span class="rating-text">4.5 (3,421 reviews)</span>
+            </div>
+            <p class="product-description">10-cup programmable coffee maker with delay brew, thermal flavor extraction, and permanent filter.</p>
+          </div>
+          <div class="price-comparison">
+            <div class="retailer-price">
+              <span class="retailer-name">Walmart</span>
+              <span class="price">$89.00</span>
+              <button class="buy-btn">Buy Now</button>
+            </div>
+            <div class="retailer-price">
+              <span class="retailer-name">Amazon</span>
+              <span class="price">$99.99</span>
+              <button class="buy-btn">Buy Now</button>
+            </div>
+            <div class="retailer-price">
+              <span class="retailer-name">Kohl's</span>
+              <span class="price">$119.00</span>
+              <button class="buy-btn">Buy Now</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 
   <footer class="footer">
     <div class="footer-container">
-      <span class="footer-left">© 2025 The Primary Keys Group</span>
+      <span class="footer-left">© 2025 PriceCompare - The Primary Keys Group</span>
       <button class="btn" id="themeToggle" title="Toggle theme">
         <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
       </button>
