@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="../styles/products.css">
-  <script src="../scripts/products.js"></script>
+  <script src="../scripts/products.js"></script>  
 </head>
 
 <body class="light">
@@ -20,7 +20,7 @@
         </a>
         <span class="menu-toggle" id="menuToggle">☰</span>
         <ul class="nav-links" id="navLinks">
-          <li><a href="#">All Products</a></li>
+          <li><a href="/products.html">All Products</a></li>
           <li><a href="#">Top-Rated Products</a></li>
           <li><a href="#">Trending Deals</a></li>
         </ul>
@@ -30,10 +30,10 @@
           <button class="btn-user dropdown-toggle" id="accountBtn" aria-haspopup="true"
             aria-expanded="false">User</button>
           <div class="dropdown-menu" id="accountMenu" aria-label="Account options">
-            <a href="#"><span>Profile Settings</span></a>
-            <a href="#"><span>My Reviews</span></a>
+            <a href="/my_details.html"><span>My Details</span></a>
+            <a href="/my_reviews.html"><span>My Reviews</span></a>
             <div class="dropdown-divider"></div>
-            <a href="#" class="signout"><span>Sign Out</span></a>
+            <a href="/login.html" class="signout"><span>Sign Out</span></a>
           </div>
         </div>
       </div>
@@ -193,6 +193,74 @@
   </footer>
 
 </body>
+
+<script>
+  const accountBtn = document.getElementById("accountBtn");
+  const accountMenu = document.getElementById("accountMenu");
+  const themeToggle = document.getElementById("themeToggle");
+  const themeIcon = document.getElementById("themeIcon");
+  const menuToggle = document.getElementById("menuToggle");
+  const navLinks = document.getElementById("navLinks");
+
+  function updateIcon() {
+      themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
+  }
+
+  function applySavedTheme() {
+      const savedTheme = getCookie("theme");
+      if (savedTheme === "dark") {
+          document.body.classList.add("dark");
+      } else {
+          document.body.classList.remove("dark");
+      }
+      updateIcon();
+  }
+
+  window.addEventListener("load", applySavedTheme);
+
+  accountBtn.addEventListener("click", function () {
+      accountMenu.classList.toggle("show");
+  });
+
+  themeToggle.addEventListener("click", function () {
+      document.body.classList.toggle("dark");
+      const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
+      setCookie("theme", newTheme, 30);
+      updateIcon();
+  });
+
+  menuToggle.addEventListener("click", function () {
+      navLinks.classList.toggle("show");
+  });
+
+  window.addEventListener("click", function (e) {
+      if (!accountBtn.contains(e.target) && !accountMenu.contains(e.target)) {
+          accountMenu.classList.remove("show");
+      }
+  });
+
+  updateIcon();
+
+  function setCookie(name, value, days) {
+      const d = new Date();
+      d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+      let expires = "expires=" + d.toUTCString();
+      document.cookie = name + "=" + value + ";" + expires + ";path=/";
+  }
+
+  function getCookie(name) {
+      let cname = name + "=";
+      let decodedCookie = decodeURIComponent(document.cookie);
+      let ca = decodedCookie.split(';');
+      for (let i = 0; i < ca.length; i++) {
+          let c = ca[i].trim();
+          if (c.indexOf(cname) === 0) {
+              return c.substring(cname.length, c.length);
+          }
+      }
+      return "";
+  }
+</script>
 
 
 
