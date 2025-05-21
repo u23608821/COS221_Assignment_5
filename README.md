@@ -33,6 +33,10 @@
 - Please never merge into a branch directly (unless its between your own personal branches), rather create a pull request.
 - Always make sure you pull from github before commiting unless you want to cause yourself tears
 
+## Branches
+- When you create a new branch, please pull the dev branch into your branch before you start working on anything. This helps so that conflicts are less frequent and we are all working with the same file structure.
+- Please don't work in somebody else's branch if you are not going to clearly communicate with them. It is reccommended that each person has their own branch. 
+- If you have merged your branch and no longer need your branch, please delete it so that we don't have random floating branches
 
 
 ## Prelim Usage
