@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>All Products - PriceCompare</title>
+  <title>Pick 'n Price—All Products</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="../styles/products.css">
@@ -15,8 +15,8 @@
   <nav class="navbar">
     <div class="container">
       <div class="nav-left">
-        <a href="#" class="logo">
-          <img src="https://URL_HERE.co.za/" alt="PriceCompare Logo" />
+        <a href="../html/products.html" class="logo">
+          <img src="https://URL_HERE.co.za/" alt="Pick 'n Price Logo" />
         </a>
         <span class="menu-toggle" id="menuToggle">☰</span>
         <ul class="nav-links" id="navLinks">
@@ -26,13 +26,16 @@
       </div>
       <div class="nav-actions">
         <div class="dropdown">
-          <button class="btn-user dropdown-toggle" id="accountBtn" aria-haspopup="true"
-            aria-expanded="false">User</button>
+          <button class="btn-user dropdown-toggle" id="accountBtn" aria-haspopup="true" aria-expanded="false">
+            <span class="material-symbols-outlined user-icon">account_circle</span>
+            <span class="user-text">User</span>
+            <span class="material-symbols-outlined arrow-icon">arrow_drop_down</span>
+          </button>
           <div class="dropdown-menu" id="accountMenu" aria-label="Account options">
             <a href="../html/my_details.html"><span>My Details</span></a>
             <a href="../html/my_reviews.html"><span>My Reviews</span></a>
             <div class="dropdown-divider"></div>
-            <a href="src/public/html/login.html" class="signout"><span>Sign Out</span></a>
+            <a href="../html/login.php" class="signout"><span>Sign Out</span></a>
           </div>
         </div>
       </div>
@@ -40,8 +43,8 @@
   </nav>
 
   <main>
-    <h1 class="page-header">Products</h1>
-<p class="page-subheader">View all products and compare the prices across different retailers.</p>
+    <h1 class="page-header">All Products</h1>
+<p class="page-subheader">View all products and compare their prices across different retailers.</p>
 
 <div class="search-container">
   <div class="search-box">
@@ -60,7 +63,17 @@
       <option value="">Sort By</option>
       <option value="price-low">Price: Low to High</option>
       <option value="price-high">Price: High to Low</option>
-      <option value="rating">Rating</option>
+      <option value="rating">Rating: Best to Worst </option>
+      <option value="rating">Rating: Worst to Best </option>
+      <option value="price-high">Name: A–Z</option>
+      <option value="price-high">Name: Z–A</option>
+    </select>
+    <select class="filter-select">
+      <option value="">Price Range</option>
+      <option value="range">R0,00–R99,99</option>
+      <option value="range">R100,00–R999,99</option>
+      <option value="range">R1000,00–R9999,99</option>
+      <option value="range">R10000,00–R99999,99</option>
     </select>
   </div>
 </div>
@@ -85,7 +98,8 @@
             </div>
             <div class="best-price">
                 <span class="best-price-label">Best Price</span>
-                <span class="best-price-value">$348.00</span>
+                <span class="best-price-value">R348.00</span>
+                <span class="retailer-label">From Retailer Name</span>
             </div>
             <button class="compare-btn">Compare Prices</button>
         </div>
@@ -110,7 +124,8 @@
             </div>
             <div class="best-price">
                 <span class="best-price-label">Best Price</span>
-                <span class="best-price-value">$379.99</span>
+                <span class="best-price-value">R379.99</span>
+                <span class="retailer-label">From Retailer Name</span>
             </div>
             <button class="compare-btn">Compare Prices</button>
         </div>
@@ -135,7 +150,34 @@
             </div>
             <div class="best-price">
                 <span class="best-price-label">Best Price</span>
-                <span class="best-price-value">$89.00</span>
+                <span class="best-price-value">R89.00</span>
+                <span class="retailer-label">From Retailer Name</span>
+            </div>
+            <button class="compare-btn">Compare Prices</button>
+        </div>
+    </div>
+
+    <!-- Product 4 -->
+    <div class="product-box">
+        <div class="product-image">
+            <img src="/src/private/resources/dummyLaptop.avif" alt="Laptop">
+        </div>
+        <div class="product-content">
+            <div class="product-info">
+                <h3 class="product-title">Dell XPS 13 Touchscreen Laptop</h3>
+                <div class="product-rating">
+                    <span class="material-symbols-outlined">star</span>
+                    <span class="material-symbols-outlined">star</span>
+                    <span class="material-symbols-outlined">star</span>
+                    <span class="material-symbols-outlined">star</span>
+                    <span class="material-symbols-outlined">star_half</span>
+                    <span class="rating-text">4.6 (2,158)</span>
+                </div>
+            </div>
+            <div class="best-price">
+                <span class="best-price-label">Best Price</span>
+                <span class="best-price-value">R1,099.00</span>
+                <span class="retailer-label">From Retailer Name</span>
             </div>
             <button class="compare-btn">Compare Prices</button>
         </div>
@@ -145,7 +187,7 @@
 
   <footer class="footer">
     <div class="footer-container">
-      <span class="footer-left">© 2025 Pick n Price - The Primary Keys Group</span>
+      <span class="footer-left">© 2025 Pick 'n Price, The Primary Keys Group</span>
       <button class="btn" id="themeToggle" title="Toggle theme">
         <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
       </button>

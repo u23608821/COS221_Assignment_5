@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Administrator Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles/Admin.css">
+</head>
+
+<body class="light">
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-left">
+        <a href="#" class="logo">
+          <img src="https://URL_HERE.co.za/" alt="Logo Placeholder" />
+        </a>
+        <span class="menu-toggle" id="menuToggle">☰</span>
+        <ul class="nav-links" id="navLinks">
+          <li><a href="#">Products</a></li>
+          <li><a href="#">Retailers</a></li>
+          <li><a href="#">Users</a></li>
+        </ul>
+      </div>
+      <div class="nav-actions">
+        <div class="dropdown">
+          <button class="btn-user dropdown-toggle" id="accountBtn" aria-haspopup="true" aria-expanded="false">
+            <span class="material-symbols-outlined user-icon">account_circle</span>
+            <span class="user-text">Administrator</span>
+            <span class="material-symbols-outlined arrow-icon">arrow_drop_down</span>
+          </button>
+          <div class="dropdown-menu" id="accountMenu" aria-label="Account options">
+            <a href="../html/login.php" class="signout"><span>Sign Out</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Quick Add User -->
+    <div class="admin-card">
+      <div class="card-header">
+        <span class="material-symbols-outlined">group_add</span>
+        <h3>Quick Add User</h3>
+      </div>
+      <div class="card-content">
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" id="userName" placeholder="First name">
+        </div>
+        <div class="form-group">
+          <label>Surname</label>
+          <input type="text" id="userSurname" placeholder="Last name">
+        </div>
+        <div class="form-group">
+          <label>User Type</label>
+          <select id="userType">
+            <option value="customer">Customer</option>
+            <option value="staff">Staff</option>
+          </select>
+        </div>
+        <button class="btn-primary" onclick="addUser()">
+          <span class="material-symbols-outlined">person_add</span> Add User
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Edit Product -->
+    <div class="admin-card">
+      <div class="card-header">
+        <span class="material-symbols-outlined">edit</span>
+        <h3>Quick Edit Product Price</h3>
+      </div>
+      <div class="card-content">
+        <div class="form-group">
+          <label>Product ID</label>
+
+          <input type="text" id="productIdSearch" placeholder="Enter product ID">
+          <label for="new-price">New Price</label>
+
+          <input type="text" id="new-price" placeholder="Enter New Price">
+          <button class="btn-primary" onclick="editPrice()">
+            <span class="material-symbols-outlined">edit</span> Update
+          </button>
+        </div>
+
+        <div id="productEditContainer" class="hidden">
+          <div class="product-edit-preview">
+            <div class="product-image-preview">
+              <img id="productImagePreview" src="placeholder.jpg" alt="Product image">
+            </div>
+            <div class="product-details">
+              <h4 id="productTitlePreview">Product Name</h4>
+              <div class="form-group">
+                <label>New Price (R)</label>
+                <input type="number" id="productNewPrice" placeholder="Enter new price">
+              </div>
+              <button class="btn-primary" onclick="updateProductPrice()">
+                <span class="material-symbols-outlined">save</span> Update Price
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Reviews -->
+    <div class="admin-card">
+      <div class="card-header">
+        <span class="material-symbols-outlined">reviews</span>
+        <h3>Recent Reviews</h3>
+      </div>
+      <div class="card-content">
+        <div class="reviews-list">
+          <!-- Review Item 1 -->
+          <div class="review-item">
+            <div class="review-meta">
+              <div class="stars">★★★★☆</div>
+              <span>on Smartphone X</span>
+            </div>
+            <p class="review-text">"Good but battery life could be better..."</p>
+            <button class="btn-danger" onclick="deleteReview(102)">
+              <span class="material-symbols-outlined">delete</span> Delete
+            </button>
+          </div>
+
+          <!-- Review Item 2 -->
+          <div class="review-item">
+            <div class="review-meta">
+              <div class="stars">★★★★★</div>
+              <span>on Wireless Earbuds</span>
+            </div>
+            <p class="review-text">"Excellent sound quality and battery life!"</p>
+            <button class="btn-danger" onclick="deleteReview(103)">
+              <span class="material-symbols-outlined">delete</span> Delete
+            </button>
+          </div>
+
+          <!-- Review Item 3 -->
+          <div class="review-item">
+            <div class="review-meta">
+              <div class="stars">★★★☆☆</div>
+              <span>on Smart Watch</span>
+            </div>
+            <p class="review-text">"Decent features but the strap is uncomfortable"</p>
+            <button class="btn-danger" onclick="deleteReview(104)">
+              <span class="material-symbols-outlined">delete</span> Delete
+            </button>
+          </div>
+
+          <!-- Review Item 4 -->
+          <div class="review-item">
+            <div class="review-meta">
+              <div class="stars">★★★★☆</div>
+              <span>on 4K TV</span>
+            </div>
+            <p class="review-text">"Great picture quality but speakers could be better"</p>
+            <button class="btn-danger" onclick="deleteReview(105)">
+              <span class="material-symbols-outlined">delete</span> Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <span class="footer-left">© 2025 Pick 'n Price, The Primary Keys Group </span>
+      <button class="btn" id="themeToggle" title="Toggle theme">
+        <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+      </button>
+    </div>
+  </footer>
+
+  <script src="../scripts/Admin.js"></script>
+</body>
+
+</html>
