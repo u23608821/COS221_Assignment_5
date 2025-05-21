@@ -383,7 +383,7 @@ main {
     color: var(--text-dark);
     margin: 0;
     line-height: 1.2rem;
-    max-height: 2.4rem; /* 2 lines */
+    min-height: 2.4rem; /* Ensures 2 lines min */
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -395,6 +395,7 @@ main {
     flex-direction: column;
     gap: 0.5rem;
     margin-bottom: 1rem;
+    min-height: 5rem
 }
 
 
