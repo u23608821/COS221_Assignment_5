@@ -28,9 +28,6 @@ function loadEnv($path)
 loadEnv(__DIR__ . '/.env');
 
 
-header("Access-Control-Allow-Origin: *"); //allow all cors
-header("Content-Type: application/json");
-header("Access-Control-Allow-Methods: POST");
 
 
 
@@ -98,7 +95,6 @@ class API
             echo "Connection failed: " . $e->getMessage();
             exit;
         }
-
     }
 
     public function Register($requestData)
@@ -124,9 +120,15 @@ class API
 
 
 
-            //must have unique email
-            if (empty($name) || empty($surname) || empty($phone_number) || empty($email) || empty($password)) {
-                $this->sendResponse('error', 'Missing required fields');
+            //must have unique email  || empty($surname) || empty($email) || empty($password)
+            if (empty($name)) {
+                $this->sendResponse('error', 'Missing required fields: name');
+            } elseif (empty($surname)) {
+                $this->sendResponse('error', 'Missing required fields: surname');
+            } elseif (empty($email)) {
+                $this->sendResponse('error', 'Missing required fields: email');
+            } elseif (empty($password)) {
+                $this->sendResponse('error', 'Missing required fields: password');
             } elseif (!preg_match('/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/', $email)) {
                 $this->sendResponse('emailError', 'Invalid email address');
             } elseif (!preg_match("/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/", $password)) {
@@ -150,13 +152,13 @@ class API
 
                 if ($sqlInsert->execute()) {
                     $user_id = mysqli_insert_id($conn);
-                    if ($user_type === "Customer") {
+                    if ($user_type === "customer") {
                         $pfp = isset($requestData["profile_picture"]) ? trim($requestData["profile_picture"]) : "";
                         $insertC = $conn->prepare("INSERT INTO Customer(user_id, profile_picture) VALUES (?,?)");
                         $insertC->bind_param("is", $user_id, $pfp);
                         $insertC->execute();
                         $insertC->close();
-                    } else if ($user_type === "Admin") {
+                    } else if ($user_type === "admin") {
                         $salary = isset($requestData["salary"]) ? trim($requestData["salary"]) : "";
                         $position = isset($requestData["position"]) ? trim($requestData["position"]) : "";
                         $insertA = $conn->prepare("INSERT INTO Admin(user_id, salary, position) VALUES (?,?,?)");
@@ -164,7 +166,7 @@ class API
                         $insertA->execute();
                         $insertA->close();
                     } else {
-                        $this->sendResponse("error", "user type unrecognized");
+                        $this->sendResponse("error", "user type unrecognized: " . $user_type);
                         return;
                     }
                 } else {
@@ -173,20 +175,14 @@ class API
 
                 $sqlInsert->close();
                 $conn->close();
-
-
             }
 
             $this->sendResponse("success", "Inserted new user");
-
-
-
         } catch (mysqli_sql_exception $e) {
             echo "Connection failed: " . $e->getMessage();
             $this->sendResponse("error", $e->getMessage());
             exit;
         }
-
     }
 
     public function Login($requestData)
@@ -225,15 +221,11 @@ class API
 
 
                 $this->sendResponse(
-                    "success"
-                    ,
+                    "success",
                     [
-                        'apikey' => $result["apikey"]
-                        ,
-                        'username' => $result["name"]
-                        ,
-                        'surname' => $result["surname"]
-                        ,
+                        'apikey' => $result["apikey"],
+                        'username' => $result["name"],
+                        'surname' => $result["surname"],
                         'email' => $result["email"]
                     ]
                 );
@@ -244,16 +236,10 @@ class API
 
             $stmt->close();
             $conn->close();
-
         } catch (mysqli_sql_exception $e) {
             echo "Connection failed: " . $e->getMessage();
             exit;
         }
-
-
-
-
-
     }
     public function ViewAllProducts($requestData)
     {
@@ -277,7 +263,6 @@ class API
             echo "Connection failed: " . $e->getMessage();
             exit;
         }
-
     }
     public function RateProduct($requestData)
     {
@@ -288,16 +273,16 @@ class API
             if ($conn->connect_error) {
                 die("Connection failed: " . $conn->connect_error);
             }
-            $productid = isset($requestData["product_id"]) ? $requestData["product_id"] :"";
+            $productid = isset($requestData["product_id"]) ? $requestData["product_id"] : "";
             $score = isset($requestData["score"]) ? $requestData["score"] : 5;
-            $description = isset($requestData["description"]) ? $requestData["description"] :"";
-            $userid = isset($requestData["user_id"]) ? $requestData["user_id"] :"";
+            $description = isset($requestData["description"]) ? $requestData["description"] : "";
+            $userid = isset($requestData["user_id"]) ? $requestData["user_id"] : "";
 
             $sqlInsert = $conn->prepare("INSERT INTO Rating(score, description, user_id, product_id) VALUES (?,?,?,?)");
-            $sqlInsert->bind_param("isii", $score, $description,$userid, $productid);
+            $sqlInsert->bind_param("isii", $score, $description, $userid, $productid);
             $sqlInsert->execute();
             $result = $sqlInsert->get_result();
-            if(!empty($result)){
+            if (!empty($result)) {
                 $this->sendResponse("success", "Inserted rating");
             }
 
@@ -362,7 +347,7 @@ class API
             $stmt->bind_param("i", $productid);
             $stmt->execute();
             $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-            if(!empty($result)) {
+            if (!empty($result)) {
                 $this->sendResponse("success", $result);
             }
             $stmt->close();
@@ -398,7 +383,7 @@ class API
             }
 
             $fields = [];
-            $adminFields =[];
+            $adminFields = [];
             $values = [];
             $adminValues = [];
             $types = "";
@@ -439,32 +424,30 @@ class API
                 }
             }
 
-            if(count($fields) > 0 && isset($fieldMap['id']))
-            {
+            if (count($fields) > 0 && isset($fieldMap['id'])) {
 
-            $conn->begin_transaction();
+                $conn->begin_transaction();
 
-            // Update User table
-            $userSql = "UPDATE User SET ". implode(", ", $fields) . "WHERE id=?";
-            $userStmt = $conn->prepare($userSql);
-            $userStmt->bind_param($types, $values);
-            $userStmt->execute();
+                // Update User table
+                $userSql = "UPDATE User SET " . implode(", ", $fields) . "WHERE id=?";
+                $userStmt = $conn->prepare($userSql);
+                $userStmt->bind_param($types, $values);
+                $userStmt->execute();
 
-            // Update Admin table
-            $adminSql = "UPDATE Admin SET " . implode(", ", $adminFields) ." WHERE user_id=?";
-            $adminStmt = $conn->prepare($adminSql);
-            $adminStmt->bind_param($adminTypes, $adminValues, $fieldMap['id']); // d for double (salary), s for string, i for int
-            $adminStmt->execute();
+                // Update Admin table
+                $adminSql = "UPDATE Admin SET " . implode(", ", $adminFields) . " WHERE user_id=?";
+                $adminStmt = $conn->prepare($adminSql);
+                $adminStmt->bind_param($adminTypes, $adminValues, $fieldMap['id']); // d for double (salary), s for string, i for int
+                $adminStmt->execute();
 
-            $conn->commit();
+                $conn->commit();
 
-            $conn->close();
-
+                $conn->close();
             }
         } catch (Exception $e) {
             if (isset($conn)) {
                 $conn->rollback();
-            } 
+            }
             $this->sendResponse("error", $e->getMessage());
             echo "Update failed: " . $e->getMessage();
         } finally {
@@ -475,9 +458,6 @@ class API
             if (isset($conn))
                 $conn->close();
         }
-
-
-
     }
     public function UpdateCustomer($requestData)
     {
@@ -491,7 +471,7 @@ class API
 
 
             $fields = [];
-            $cusFields =[];
+            $cusFields = [];
             $values = [];
             $custValues = [];
             $types = "";
@@ -531,33 +511,31 @@ class API
                 }
             }
 
-            if(count($fields) > 0 && isset($fieldMap['id']))
-            {
+            if (count($fields) > 0 && isset($fieldMap['id'])) {
 
-            $conn->begin_transaction();
+                $conn->begin_transaction();
 
-            // Update User table
-            $userSql = "UPDATE User SET ". implode(", ", $fields) . "WHERE id=?";
-            $userStmt = $conn->prepare($userSql);
-            $userStmt->bind_param($types, $values);
-            $userStmt->execute();
+                // Update User table
+                $userSql = "UPDATE User SET " . implode(", ", $fields) . "WHERE id=?";
+                $userStmt = $conn->prepare($userSql);
+                $userStmt->bind_param($types, $values);
+                $userStmt->execute();
 
-            // Update Admin table
-            $adminSql = "UPDATE Admin SET " . implode(", ", $cusFields) ." WHERE user_id=?";
-            $adminStmt = $conn->prepare($adminSql);
-            $adminStmt->bind_param($custTypes, $custValues, $fieldMap['id']); // d for double (salary), s for string, i for int
-            $adminStmt->execute();
+                // Update Admin table
+                $adminSql = "UPDATE Admin SET " . implode(", ", $cusFields) . " WHERE user_id=?";
+                $adminStmt = $conn->prepare($adminSql);
+                $adminStmt->bind_param($custTypes, $custValues, $fieldMap['id']); // d for double (salary), s for string, i for int
+                $adminStmt->execute();
 
-            $conn->commit();
+                $conn->commit();
 
-            $conn->close();
-
+                $conn->close();
             }
         } catch (Exception $e) {
             if (isset($conn)) {
                 $conn->rollback();
             }
-                        $this->sendResponse("error", $e->getMessage());
+            $this->sendResponse("error", $e->getMessage());
 
             echo "Update failed: " . $e->getMessage();
         } finally {
@@ -568,9 +546,6 @@ class API
             if (isset($conn))
                 $conn->close();
         }
-
-
-
     }
     public function ViewSupplier($requestData)
     {
@@ -592,7 +567,7 @@ class API
         $stmt = $conn->prepare("SELECT * FROM Retailer WHERE id = ?");
         $stmt->bind_param("i", $retailid);
         $stmt->execute();
-        $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);        
+        $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         if (!empty($result)) {
             $this->sendResponse("success",  $result);
         }
@@ -658,8 +633,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     http_response_code(405);
     $api->sendResponse("error", "Method not allowed");
 }
-
-
-
-
-?>
