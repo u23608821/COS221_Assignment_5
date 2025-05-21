@@ -620,7 +620,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $requestData = json_decode(file_get_contents('php://input'), true);
 
     if (isset($requestData['type'])) {
-        //api key checks should be done in function so that it can be tested if admins/customers/all can do it
+        $apiKey = isset($requestData['apikey']) ? $requestData['apikey'] :'null';
+        if($apikey === 'null')
+        {
+            $api->sendResponse('error','No apikey');
+        }
+
+        $stmt = $conn->prepare('SELECT * FROM User WHERE apikey=?');
+        $stmt->bind_param('s', $apiKey);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if($result->num_rows <= 0)
+        {
+            $api->sendResponse('error','Invalid API key');
+        }
+        $stmt->close();
+        $conn->close();
+        
         if ($requestData['type'] === "Test") { //done
             $api->TestResponse($requestData);
         } else if ($requestData['type'] === "Login") { //50% done
