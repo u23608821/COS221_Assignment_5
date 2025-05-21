@@ -1,9 +1,11 @@
-const accountBtn = document.getElementById("accountBtn");
-const accountMenu = document.getElementById("accountMenu");
-const themeToggle = document.getElementById("themeToggle");
-const themeIcon = document.getElementById("themeIcon");
-const menuToggle = document.getElementById("menuToggle");
-const navLinks = document.getElementById("navLinks");
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DOM elements
+    const accountBtn = document.getElementById("accountBtn");
+    const accountMenu = document.getElementById("accountMenu");
+    const themeToggle = document.getElementById("themeToggle");
+    const themeIcon = document.getElementById("themeIcon");
+    const menuToggle = document.getElementById("menuToggle");
+    const navLinks = document.getElementById("navLinks");
 
 function updateIcon() {
     themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
@@ -22,7 +24,7 @@ function applySavedTheme() {
 window.addEventListener("load", applySavedTheme);
 
 accountBtn.addEventListener("click", function () {
-    accountMenu.classList.toggle("show");
+    accountMenu.classList.toggle("display");
 });
 
 themeToggle.addEventListener("click", function () {
@@ -42,7 +44,8 @@ window.addEventListener("click", function (e) {
     }
 });
 
-updateIcon();
+    updateIcon();
+}); // End of DOMContentLoaded
 
 function setCookie(name, value, days) {
     const d = new Date();
@@ -62,4 +65,97 @@ function getCookie(name) {
         }
     }
     return "";
+}
+
+
+// Functionality
+document.addEventListener('DOMContentLoaded', function () {
+    loadUserDetails();
+
+    const form = document.querySelector('.details-form form');
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        saveUserDetails();
+    });
+});
+
+function loadUserDetails() {
+    // Create a new XMLHttpRequest object
+    const xhr = new XMLHttpRequest();
+
+    // Configure the request
+    xhr.open('POST', 'https://wheatley.cs.up.ac.za/u24634434/COS221/api.php', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+
+    const data = {
+        type: "ViewCustomer",
+        email: getCookie("email"),
+        apiKey: getCookie("apiKey")
+    };
+
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+            if (response.status === 'success') {
+                // Populate form fields with user data
+                document.getElementById('firstName').value = response.data.name || '';
+                document.getElementById('lastName').value = response.data.surname || '';
+                document.getElementById('phone').value = response.data.phone_number || '';
+                document.getElementById('email').value = response.data.email || '';
+                document.getElementById('streetNumber').value = response.data.street_number || '';
+                document.getElementById('streetName').value = response.data.street_name || '';
+                document.getElementById('suburb').value = response.data.suburb || '';
+                document.getElementById('city').value = response.data.city || '';
+                document.getElementById('postalCode').value = response.data.zip_code || '';
+            } else {
+                alert('Error loading user details: ' + response.message);
+            }
+        }
+    };
+
+    xhr.onerror = function () {
+        alert('Error loading user details');
+    };
+
+    xhr.send(JSON.stringify(data));
+}
+
+function saveUserDetails() {
+    
+    const xhr = new XMLHttpRequest();
+
+   
+    xhr.open('POST', 'https://wheatley.cs.up.ac.za/u24634434/COS221/api.php', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+
+    const data = {
+        type: "UpdateCustomer",
+        email: getCookie("email"),
+        apiKey: getCookie("apiKey"),
+        name: document.getElementById('firstName').value,
+        surname: document.getElementById('lastName').value,
+        phone_number: document.getElementById('phone').value,
+        street_number: document.getElementById('streetNumber').value,
+        street_name: document.getElementById('streetName').value,
+        suburb: document.getElementById('suburb').value,
+        city: document.getElementById('city').value,
+        zip_code: document.getElementById('postalCode').value
+    };
+
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+            if (response.status === 'success') {
+                alert('Details updated successfully!');
+            } else {
+                alert('Error updating details: ' + response.message);
+            }
+        }
+    };
+
+    xhr.onerror = function () {
+        alert('Error updating details');
+    };
+
+    xhr.send(JSON.stringify(data));
 }
