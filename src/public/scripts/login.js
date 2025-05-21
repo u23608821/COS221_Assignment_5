@@ -27,30 +27,41 @@ function clickLogin() {
             console.log(responseData);
             if (responseData.status === 'success') {
                 console.log('Success response structure:', responseData);
-                
-                // The API key might be in a different location in the response
-                // Try to find it in different possible locations
-                if (responseData.data && responseData.data.apikey) {
-                    // Store the API key in DOM storage
-                    document.cookie = "apiKey=" + responseData.data.apikey;
-                    
-                    // Check if email exists before storing it
-                    if (responseData.data.email) {
-                        document.cookie = "email=" + responseData.data.email;
+
+                // Based on the response structure, we know the data is in the message object
+                if (responseData.message) {
+                    // Store the API key
+                    if (responseData.message.apikey) {
+                        document.cookie = "apiKey=" + responseData.message.apikey;
+                    } else {
+                        console.error('API key not found in response message');
+                        alert('Error: Unable to retrieve API key');
+                        return;
                     }
-                    
-                    // Redirect the user to products page
-                    window.location.href = 'products.html';
-                } else if (responseData.message && responseData.message.apikey) {
-                    // API key might be in the message object
-                    document.cookie = "apiKey=" + responseData.message.apikey;
-                    
+
+                    // Store email if available
                     if (responseData.message.email) {
                         document.cookie = "email=" + responseData.message.email;
                     }
-                    
-                    // Redirect the user to products page
-                    window.location.href = 'products.html';
+
+                    // Store user_type if available
+                    if (responseData.message.user_type) {
+                        document.cookie = "user_type=" + responseData.message.user_type;
+                        console.log('User type stored:', responseData.message.user_type);
+
+                        // Redirect based on user type
+                        if (responseData.message.user_type === 'customer') {
+                            window.location.href = 'products.html';
+                        } else if (responseData.message.user_type === 'admin') {
+                            window.location.href = 'Admin.html';
+                        } else {
+                            console.error('Unknown user type:', responseData.message.user_type);
+                            alert('Error: Unknown user type');
+                        }
+                    } else {
+                        console.log('No user_type found in response');
+                        alert('Error: User type not specified');
+                    }
                 } else {
                     // Handle missing data or apikey
                     console.error('API key not found in response:', responseData);

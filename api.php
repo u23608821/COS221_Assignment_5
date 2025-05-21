@@ -213,22 +213,21 @@ class API
                 $cookie_name = $result["name"]; //To use when displaying the users profile
                 $cookie_surname = $result["surname"];
                 $cookie_key = $result["apikey"];
+                $cookie_user_type = $result["user_type"];
 
                 setcookie("userapikey", $cookie_key, time() + (259200 * 30), "/"); //set for 3 days
                 setcookie("useremail", $cookie_email, time() + (259200 * 30), "/"); //set for 3 days
                 setcookie("username", $cookie_name, time() + (259200 * 30), "/"); //set for 3 days
                 setcookie("usersurname", $cookie_surname, time() + (259200 * 30), "/"); //set for 3 days
+                setcookie("usertype", $cookie_user_type, time() + (259200 * 30), "/"); //set for 3 days
 
-
-                $this->sendResponse(
-                    "success",
-                    [
-                        'apikey' => $result["apikey"],
-                        'username' => $result["name"],
-                        'surname' => $result["surname"],
-                        'email' => $result["email"]
-                    ]
-                );
+                $this->sendResponse("success", [
+                    "apikey" => $cookie_key,
+                    "email" => $cookie_email,
+                    "name" => $cookie_name,
+                    "surname" => $cookie_surname,
+                    "user_type" => $cookie_user_type
+                ]);
             } else {
                 $this->sendResponse("error", "Unknown email or password");
             }

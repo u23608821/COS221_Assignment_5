@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="../styles/Admin.css">
 </head>
+
 <body class="light">
   <nav class="navbar">
     <div class="container">
@@ -30,13 +32,13 @@
             <span class="material-symbols-outlined arrow-icon">arrow_drop_down</span>
           </button>
           <div class="dropdown-menu" id="accountMenu" aria-label="Account options">
-            <a href="/login.html" class="signout"><span>Sign Out</span></a>
+            <a href="../html/login.php" class="signout"><span>Sign Out</span></a>
           </div>
         </div>
       </div>
     </div>
   </nav>
-  
+
   <main>
     <!-- Quick Add User -->
     <div class="admin-card">
@@ -75,7 +77,7 @@
       <div class="card-content">
         <div class="form-group">
           <label>Product ID</label>
-          
+
           <input type="text" id="productIdSearch" placeholder="Enter product ID">
           <label for="new-price">New Price</label>
 
@@ -84,7 +86,7 @@
             <span class="material-symbols-outlined">edit</span> Update
           </button>
         </div>
-        
+
         <div id="productEditContainer" class="hidden">
           <div class="product-edit-preview">
             <div class="product-image-preview">
@@ -124,7 +126,7 @@
               <span class="material-symbols-outlined">delete</span> Delete
             </button>
           </div>
-          
+
           <!-- Review Item 2 -->
           <div class="review-item">
             <div class="review-meta">
@@ -136,7 +138,7 @@
               <span class="material-symbols-outlined">delete</span> Delete
             </button>
           </div>
-          
+
           <!-- Review Item 3 -->
           <div class="review-item">
             <div class="review-meta">
@@ -148,7 +150,7 @@
               <span class="material-symbols-outlined">delete</span> Delete
             </button>
           </div>
-          
+
           <!-- Review Item 4 -->
           <div class="review-item">
             <div class="review-meta">
@@ -164,16 +166,17 @@
       </div>
     </div>
   </main>
-  
+
   <footer class="footer">
     <div class="footer-container">
-      <span class="footer-left">© 2025 Pick 'n Price, The Primary Keys Group </span> 
+      <span class="footer-left">© 2025 Pick 'n Price, The Primary Keys Group </span>
       <button class="btn" id="themeToggle" title="Toggle theme">
-          <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
-      </button>  
+        <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+      </button>
     </div>
   </footer>
 
   <script src="../scripts/Admin.js"></script>
 </body>
+
 </html>
