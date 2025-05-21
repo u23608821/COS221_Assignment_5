@@ -760,8 +760,8 @@ main {
 }
 
 .product-image {
-    width: 200px; /* Fixed width */
-    height: 200px; /* Fixed height */
+    width: 100%; /* Fixed width */
+    height: 50%; /* Fixed height */
     min-width: 200px; /* Prevent shrinking */
     border-radius: var(--radius);
     background-color: #e5e7eb;
