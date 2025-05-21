@@ -526,8 +526,8 @@ main {
 }
 
 .search-btn {
-  background-color: var(--primary);
-  color: white;
+  background-color: rgb(232, 232, 232);
+  color: var(--text-dark);
   border: none;
   padding: 0.5rem 1rem;
   border-radius: var(--radius);
@@ -536,8 +536,14 @@ main {
   transition: background-color 0.2s ease;
 }
 
+.dark .search-btn {
+  background-color: rgb(43, 51, 73);
+  color: rgb(210, 210, 210); 
+}
+
 .search-btn:hover {
   background-color: #2a6bda;
+  color: var(--text-light);
 }
 
 .filter-options {
