@@ -694,6 +694,8 @@ main {
     background-color: #4b5563;
 }
 
+
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .product-box {
