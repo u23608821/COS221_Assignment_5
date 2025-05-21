@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Administrator Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles/Admin.css">
+</head>
+<body class="light">
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-left">
+        <a href="#" class="logo">
+          <img src="https://URL_HERE.co.za/" alt="Logo Placeholder" />
+        </a>
+        <span class="menu-toggle" id="menuToggle">☰</span>
+        <ul class="nav-links" id="navLinks">
+          <li><a href="#">Products</a></li>
+          <li><a href="#">Retailers</a></li>
+          <li><a href="#">Users</a></li>
+        </ul>
+      </div>
+      <div class="nav-actions">
+        <div class="dropdown">
+          <button class="btn-user dropdown-toggle" id="accountBtn" aria-haspopup="true" aria-expanded="false">Welcome Administrator!</button>
+          <div class="dropdown-menu" id="accountMenu" aria-label="Account options">
+            <a href="/login.html" class="signout"><span>Sign Out</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+  
+  <main></main>
+  
+  <footer class="footer">
+    <div class="footer-container">
+      <span class="footer-left">© 2025 Pick 'n Price, The Primary Keys Group </span> 
+      <button class="btn" id="themeToggle" title="Toggle theme">
+          <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+      </button>  
+    </div>
+  </footer>
+
+  <script src="../scripts/Admin.js"></script>
+</body>
+</html>
