@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Administrator Portal - Products</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles/Admin_Product.css">
+</head>
+<body class="light">
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-left">
+        <a href="#" class="logo">
+          <img src="https://URL_HERE.co.za/" alt="Logo Placeholder" />
+        </a>
+        <span class="menu-toggle" id="menuToggle">☰</span>
+        <ul class="nav-links" id="navLinks">
+          <li><a href="../html/Admin.html" class="active">Admin Home</a></li>
+          <li><a href="#">Retailers</a></li>
+          <li><a href="#">Users</a></li>
+        </ul>
+      </div>
+      <div class="nav-actions">
+        <div class="dropdown">
+          <button class="btn-user dropdown-toggle" id="accountBtn" aria-haspopup="true" aria-expanded="false">
+            <span class="material-symbols-outlined user-icon">account_circle</span>
+            <span class="user-text">Administrator</span>
+            <span class="material-symbols-outlined arrow-icon">arrow_drop_down</span>
+          </button>
+          <div class="dropdown-menu" id="accountMenu" aria-label="Account options">
+            <a href="/login.html" class="signout"><span>Sign Out</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+  
+  <main>
+    <h1 class="page-header">Product Management</h1>
+    <p class="page-subheader">Add, edit, and manage products in the database</p>
+    
+    <div class="admin-card">
+      <div class="card-header">
+        <h3>
+          <span class="material-symbols-outlined">add_circle</span>
+          Add New Product
+        </h3>
+      </div>
+      <div class="card-content">
+        <form id="product-form" class="product-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="product-name">Product Name*</label>
+              <input type="text" id="product-name" name="name" required placeholder="Enter product name">
+            </div>
+            
+            <div class="form-group">
+              <label for="product-price">Price*</label>
+              <input type="number" id="product-price" name="price" step="0.01" min="0" required placeholder="0.00">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="product-description">Description</label>
+            <textarea id="product-description" name="description" rows="5" placeholder="Enter detailed product description"></textarea>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="product-retailer">Retailer*</label>
+              <select id="product-retailer" name="retailer_id" required>
+                <option value="">Select a retailer</option>
+                <option value="1">Pick n Pay</option>
+                <option value="2">Woolworths</option>
+                <option value="3">Checkers</option>
+                <option value="4">Spar</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="product-category">Category</label>
+              <input type="text" id="product-category" name="category" placeholder="Enter product category">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="product-image">Image URL</label>
+            <input type="url" id="product-image" name="image_url" placeholder="https://example.com/image.jpg">
+          </div>
+          
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">
+              <span class="material-symbols-outlined">save</span>
+              Save Product
+            </button>
+            <button type="reset" class="btn-danger">
+              <span class="material-symbols-outlined">cancel</span>
+              Clear Form
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <div class="admin-card">
+      <div class="card-header">
+        <h3>
+          <span class="material-symbols-outlined">list</span>
+          Product List
+        </h3>
+      </div>
+      <div class="card-content">
+        <div class="table-responsive">
+          <table class="product-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Retailer</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="product-list">
+              <!-- Product data will be loaded here via JavaScript -->
+              <tr>
+                <td colspan="5" class="loading">Loading products...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <span class="footer-left">© 2025 Pick 'n Price, The Primary Keys Group </span> 
+      <button class="btn" id="themeToggle" title="Toggle theme">
+          <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+      </button>  
+    </div>
+  </footer>
+
+  <script src="../scripts/Admin_Products.js"></script>
+</body>
+</html>
