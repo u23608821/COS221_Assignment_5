@@ -671,11 +671,27 @@ main {
   background-color: #2a6bda;
 }
 
+.product-image {
+    width: 200px; /* Fixed width */
+    height: 200px; /* Fixed height */
+    min-width: 200px; /* Prevent shrinking */
+    border-radius: var(--radius);
+    background-color: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden; /* Ensure images don't overflow */
+}
+
 .product-image img {
-  width: 100%;
-  height: auto;
-  border-radius: var(--radius);
-  object-fit: cover;
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* This will maintain aspect ratio while fitting within the container */
+    padding: 10px; /* Add some padding around the image */
+}
+
+.dark .product-image {
+    background-color: #4b5563;
 }
 
 /* Responsive adjustments */
@@ -684,11 +700,11 @@ main {
     flex-direction: column;
   }
   
-  .product-image {
-    width: 100%;
-    margin-bottom: 1rem;
-  }
-  
+
+
+
+/* Responsive adjustments */
+
   .price-comparison {
     flex-direction: column;
   }
