@@ -7,11 +7,11 @@ $envFile = $envPath . '/.env';
 function readEnvFile($path)
 {
   if (!file_exists($path)) {
-    echo "ENV file not found at: $path<br>";
+    // echo "ENV file not found at: $path<br>";
     return false;
   }
 
-  echo "ENV file found at: $path<br>";
+  // echo "ENV file found at: $path<br>";
   $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
   $env = [];
 
@@ -35,14 +35,14 @@ function readEnvFile($path)
 $env = readEnvFile($envFile);
 
 // Get credentials
-// $username = $env ? $env['WHEATLEY_USERNAME'] : getenv("WHEATLEY_USERNAME");
-// $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
+$username = $env ? $env['WHEATLEY_USERNAME'] : getenv("WHEATLEY_USERNAME");
+$password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 
 
 
-// For debugging
-echo "Username from env: " . ($username ?: 'NOT FOUND') . "<br>";
-echo "Password from env: " . ($password ? '********' : 'NOT FOUND') . "<br>";
+// For debugging - comment these out in production
+// echo "Username from env: " . ($username ?: 'NOT FOUND') . "<br>";
+// echo "Password from env: " . ($password ? '********' : 'NOT FOUND') . "<br>";
 ?>
 
 <!DOCTYPE html>
@@ -91,7 +91,7 @@ echo "Password from env: " . ($password ? '********' : 'NOT FOUND') . "<br>";
             <span class="arrow">&#9662;</span>
           </div>
         </div>
-        <button type="submit">Register</button>
+        <button type="button" onclick="submitReg()">Register</button>
       </form>
     </div>
   </main>
@@ -103,8 +103,12 @@ echo "Password from env: " . ($password ? '********' : 'NOT FOUND') . "<br>";
   </footer>
 
   <script>
-    const WHEATLEY_USERNAME = "<?php echo $username; ?>";
-    const WHEATLEY_PASSWORD = "<?php echo $password; ?>";
+    // Set global variables for authentication
+    var WHEATLEY_USERNAME = "<?php echo $username; ?>";
+    var WHEATLEY_PASSWORD = "<?php echo $password; ?>";
+    console.log('Credentials loaded from PHP: ',
+      WHEATLEY_USERNAME ? 'Username found' : 'Username missing',
+      WHEATLEY_PASSWORD ? 'Password found' : 'Password missing');
   </script>
 
   <script src="../scripts/register.js"></script>
