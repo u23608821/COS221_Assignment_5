@@ -596,15 +596,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (isset($requestData['type'])) {
         //api key checks should be done in function so that it can be tested if admins/customers/all can do it
-        if ($requestData['type'] === "Test") {
+        if ($requestData['type'] === "Test") { //done
             $api->TestResponse($requestData);
-        } else if ($requestData['type'] === "Login") {
+        } else if ($requestData['type'] === "Login") { //50% done
             $api->Login($requestData);
-        } else if ($requestData['type'] === "Register") {
+        } else if ($requestData['type'] === "Register") { //50% done
             $api->Register($requestData);
-        } else if ($requestData['type'] === "ViewAllProducts") {
+        } else if ($requestData['type'] === "ViewAllProducts") { //done
             $api->ViewAllProducts($requestData);
-        } else if ($requestData['type'] === "RateProduct") {
+        } else if ($requestData['type'] === "RateProduct") { //done
             $api->RateProduct($requestData);
         } else if ($requestData['type'] === "AddProduct") {
             $api->AddProduct($requestData);
@@ -612,15 +612,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $api->UpdateProduct($requestData);
         } else if ($requestData['type'] === "DeleteProduct") {
             $api->DeleteProduct($requestData);
-        } else if ($requestData['type'] === "ViewRatings") {
+        } else if ($requestData['type'] === "ViewRatings") { //done
             $api->ViewRatings($requestData);
         } else if ($requestData['type'] === "FilterProducts") {
             $api->FilterProducts($requestData);
-        } else if ($requestData['type'] === "UpdateCustomer") { //update or delete through here
+        } else if ($requestData['type'] === "UpdateCustomer") { //50% done
             $api->UpdateCustomer($requestData);
-        } else if ($requestData['type'] === "UpdateAdmin") { //update or delete through here
+        } else if ($requestData['type'] === "UpdateAdmin") { //50% done
             $api->UpdateAdmin($requestData);
-        } else if ($requestData['type'] === "ViewSupplier") { //update or delete through here
+        } else if ($requestData['type'] === "ViewSupplier") { //done
             $api->ViewSupplier($requestData);
         } else {
             echo "please specify type";
