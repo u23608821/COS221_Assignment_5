@@ -80,17 +80,6 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
           <input type="password" id="password" placeholder="Enter a password" required />
         </div>
 
-        <div class="form-group">
-          <label for="accountType">Account Type</label>
-          <div class="select-wrapper">
-            <select id="accountType">
-              <option value="" disabled selected hidden>Select an account type</option>
-              <option value="customer">Customer</option>
-              <option value="courier">Courier</option> <!-- We need to decide what user types we have -->
-            </select>
-            <span class="arrow">&#9662;</span>
-          </div>
-        </div>
         <button type="button" onclick="submitReg()">Register</button>
       </form>
     </div>
