@@ -126,7 +126,7 @@ function submitReg() {
                     console.log("Parsed response:", response);
 
                     if (response.status === 'success') {
-                        alert("Registration successful! Redirecting to login page.");
+                        alert("The registration of your new account was successful! You can now proceed to the login page to access your account.");
                         window.location.href = 'login.html'; // Correct path based on your directory structure
                     } else {
                         alert('Registration failed: ' + (response.message || 'Please try again.'));
