@@ -112,6 +112,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   </script>
 
   <script src="../scripts/register.js"></script>
+  <script src="../scripts/global.js"></script>
 
 
 
