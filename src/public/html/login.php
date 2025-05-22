@@ -75,7 +75,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 				</div>
 				<button type="submit">Login</button>
 				<div class="create-account">
-					<a href="register.html">Create an account</a>
+					<a href="/register.php">Create an account</a>
 				</div>
 			</form>
 
