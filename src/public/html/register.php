@@ -98,7 +98,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 
   <footer class="footer">
     <div class="footer-container">
-      <span class="footer-left">© Pick n Price - 2025 The Primary Keys Group</span>
+      <span class="footer-left">© 2025 Pick 'n Price, The Primary Keys Group</span>
     </div>
   </footer>
 
