@@ -4,8 +4,7 @@ Our API provides functionality for our price comparison website called "Prick `n
 
 ## Authentication
 
-<!-- TODO: Add logic to check for a valid API key before processing a request. Current implementation does not authorise requests! -->
-When using the API, the logged-in user's API key should be included in requests as a cookie named `userapikey`. This is to prevent API misuse, and to ensure that the user is authorised to make this type of request. When registering a new user, an API key will be generated and stored in the database. This key should be used for all subsequent requests. When logging in, the API will automatically set the `userapikey` cookie for the user, along with `useremail`, `username`, and `usersurname` cookies. This allows the user to remain logged in for a period of 30 days, unless they log out or clear their cookies.
+When using the API, the logged-in user's API key should be included in requests as a cookie named `userapikey` or as a field in the request body as `apikey`. This is to prevent API misuse and to ensure that the user is authorised to make this type of request. When registering a new user, an API key will be generated and stored in the database. This key should be used for all subsequent requests. When logging in, the API will automatically set the `userapikey` cookie for the user, along with `useremail`, `username`, and `usersurname` cookies. This allows the user to remain logged in for a period of 30 days, unless they log out or clear their cookies.
 
 ## Request Format
 
@@ -26,27 +25,68 @@ See each of the API endpoints below for more details on the request format and r
 
 ## Response Format
 
-All responses from the API will be in `JSON` format. The response will include a `status` field indicating the success or failure of the request. A `message` field may be included in the response providing additional information. The response can also include a `data` field containing the requested data. If the request failed, the response will include an `error` field with details about the error.
+All responses from the API will be in `JSON` format. The response will include a `status` field indicating the success or failure of the request, a `timestamp` field, and may include a `message` and/or `data` field as follows:
 
-#### Example Request:
+- **Success Cases:**
+  - If returning records/objects, a `data` field will be included. `message` may also be specified but will not contain usable data.
+  - If the operation is successful but does not return data, include a `message` field will be included without any `data`.
+
+- **Error Cases:**
+  - Always includes a `message` field with description of the error.
+  - Should not include a `data` field.
+
+#### Example Response (Success with Data):
 ```json
 {
-    "status": "<status>",
+    "status": "success",
     "timestamp": 1234567890000,
-    "message": "Optional message",
-    "data": {}
+    "data": {
+        "some": "object",
+        "or": "array"
+    }
 }
 ```
 
+#### Example Response (Success with Message):
+```json
+{
+    "status": "success",
+    "timestamp": 1234567890000,
+    "message": "User created successfully"
+}
+```
+
+#### Example Response (Error):
+```json
+{
+    "status": "error",
+    "timestamp": 1234567890000,
+    "message": "Missing required fields"
+}
+```
+
+#### Example Response (Error with Data):
+```json
+{
+    "status": "error",
+    "timestamp": 1234567890000,
+    "message": "Validation failed",
+    "data": {
+        "email": "Invalid email address"
+    }
+}
+```
+--- 
+
 ## API Endpoints
+
 ### Test Endpoint
-The test endpoint is used to check if the API is working correctly. Send in a request with the `type` parameter set to `Test`, along with a `hello` and a `world` parameter. The API will respond with a message indicating that the test was successful.
+
+The test endpoint is used to check if the API is working correctly. Send a request with the `type` parameter set to `Test`, along with some parameters. The API will respond with a `data` field containing a message and all of the parameters received.
 
 | Parameter | Description | Required |
 |-----------|-------------|----------|
 | `type`   | The request type: Must be set to `Test` | Yes |
-| `hello`  | A string parameter to test the API | Yes |
-| `world`  | A string parameter to test the API | Yes |
 
 #### Example Request:
 ```json
@@ -61,73 +101,103 @@ The test endpoint is used to check if the API is working correctly. Send in a re
 ```json
 {
     "status": "success",
-    "timestamp": 1234567890000,
-    "message": "Hello world back to you!"
-}
-```
-
-#### Example Response (Error):
-```json
-{
-    "status": "error",
-    "timestamp": 1234567890000,
-    "message": "missing required fields"
+    "timestamp": 1747921217000,
+    "code": 200,
+    "message": "Test Successful!",
+    "data": {
+        "type": "Test",
+        "hello": "hello",
+        "world": "world"
+    }
 }
 ```
 
 ### Register Endpoint
-The register endpoint is used to create a new user account. Send in a request with the `type` parameter set to `Register`, along with the user's information (email, username, password, etc.) in the request body. The API will respond with a message indicating whether the registration was successful.
 
-If the user's email address already exists in the database, the API will respond with an error message indicating that the email is already in use. If the registration is successful, the API will respond with a success message.
+The register endpoint is used to create a new user account. Send a request with the `type` parameter set to `Register`, along with the user's information in the request body. The API will respond with a `message` and `data` if the registration is successful, or with a `message` and `data` describing the errors if registration fails. Users are registered as customers by default. The API will also generate an API key for the user, store it in the database, and return it upon successful registration. This `API key` should be used for all subsequent requests from this user.
 
-The user's password is hashed before being stored in the database for security purposes. The API will also generate an API key for the user, which will be used for authentication in subsequent requests. 
+#### Validation Rules
 
-| Parameter | Description | Required |
-|-----------|-------------|----------|
-| `type`    | The request type: Must be set to `Register` | Yes |
-| `name`    | The user's name | Yes |
-| `surname` | The user's surname | Yes |
-| `phone_number` | The user's phone number | Yes |
-| `email`   | The user's email address | Yes |
-| `password`| The user's password | Yes |
-| `street_number` | The user's street number | No |
-| `street_name` | The user's street name | No |
-| `suburb` | The user's suburb | No |
-| `city` | The user's city | No |
-|`zip_code` | The user's zip code | No |
-| `user_type` | The user's type (`Customer` or `Admin`) | Yes | <!-- TODO: Add logic to check if the user type is valid BEFORE inserting into the USER table! -->
-| `profile_picture` | For `Customer`s: The user's profile picture URL | No |
-| `salary` | For `Admin`s: The user's salary | No |
-| `position` | For `Admin`s: The user's position in the company | No |
+- **name**: Only letters, max 50 characters. **Required**
+- **surname**: Only letters, max 50 characters. **Required**
+- **phone_number**: Exactly 10 digits without spaces (e.g., `0726206863`). *Optional, but if provided, must be valid*
+- **email**: Valid email, max 100 characters. **Required**
+- **password**: At least 8 characters, must include upper and lower case letters, a number, and a special character. **Required**
+- **street_number**: Max 10 characters. *Optional, but if provided, must be valid*
+- **street_name**: Only letters and spaces, max 100 characters. *Optional, but if provided, must be valid*
+- **suburb**: Only letters and spaces, max 100 characters. *Optional, but if provided, must be valid*
+- **city**: Only letters and spaces, max 100 characters. *Optional, but if provided, must be valid*
+- **zip_code**: Max 5 characters. *Optional, but if provided, must be valid*
 
-#### Example Request:
+#### Request Parameters
+
+| Parameter        | Description                        | Required |
+|------------------|------------------------------------|----------|
+| `type`           | The request type: Must be `Register` | Yes      |
+| `name`           | The user's name (only letters, max 50 chars) | Yes      |
+| `surname`        | The user's surname (only letters, max 50 chars) | Yes      |
+| `phone_number`   | The user's phone number (exactly 10 digits) | No       |
+| `email`          | The user's email address (valid, max 100 chars) | Yes      |
+| `password`       | The user's password (min 8 chars, upper/lower/number/special char) | Yes      |
+| `street_number`  | The user's street number (max 10 chars) | No       |
+| `street_name`    | The user's street name (only letters and spaces, max 100 chars) | No       |
+| `suburb`         | The user's suburb (only letters and spaces, max 100 chars) | No       |
+| `city`           | The user's city (only letters and spaces, max 100 chars) | No       |
+| `zip_code`       | The user's zip code (max 5 chars) | No       |
+
+> **Note:**  
+> If any optional parameters are provided, they will be validated according to the rules above before registering the user with them.  
+> If an optional field is omitted, it will be stored as `NULL` in the database.
+
+#### Example Request
+
 ```json
 {
     "type": "Register",
-    "name": "John",
-    "surname": "Doe",
-    "phone_number": "0721234567",
-    "email": "user@example.com",
-    "password": "MyPassword@123!",
-    "user_type": "Customer"
+    "name": "Pieter",
+    "surname": "Wenning",
+    "email": "pieterwenning@gmail.com",
+    "password": "BadPass@123!"
 }
 ```
 
-#### Example Response (Success):
+#### Example Response (Success)
+
 ```json
 {
     "status": "success",
-    "timestamp": 1234567890000,
-    "message": "Inserted new user"
+    "timestamp": 1747920608000,
+    "code": 201,
+    "message": "User registered successfully",
+    "data": {
+        "user_id": 9999,
+        "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef"
+    }
 }
 ```
 
-#### Example Response (Error):
+#### Example Response (Error: Email Exists)
 ```json
 {
     "status": "error",
-    "timestamp": 1234567890000,
-    "message": "Email already exists"
+    "timestamp": 1747920923000,
+    "code": 409,
+    "message": "Email already exists: Please use a different email or log into your account"
+}
+```
+
+#### Example Response (Error: Validation)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747921194000,
+    "code": 422,
+    "message": "Parameter validation failed!",
+    "data": {
+        "name": "Name must be only letters and max 50 characters",
+        "surname": "Surname must be only letters and max 50 characters"
+    }
 }
 ```
 
