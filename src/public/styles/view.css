@@ -537,8 +537,8 @@
 }
 
 .review-count {
-  color: #6b7280;
-  font-size: 0.875rem;
+  color: #000000;
+  font-size: 0.90rem;
   margin-left: 0.5rem;
 }
 
@@ -571,6 +571,7 @@
   border: none;
   border-radius: var(--radius);
   padding: 0.5rem 1rem;
+  font-size: 0.90rem; 
   cursor: pointer;
   font-weight: 500;
   transition: background-color 0.2s ease;
@@ -669,19 +670,17 @@
   display: block;
   margin: 0 auto;
   background: none;
-  border: 1px solid var(--primary);
-  color: var(--primary);
+  border: 1px solid rgb(172, 172, 172); 
+  background-color: rgb(236, 236, 236);
+  color: grey; 
   border-radius: var(--radius);
   padding: 0.5rem 1.5rem;
   cursor: pointer;
   font-weight: 500;
+  font-size: 0.90rem;
   transition: all 0.2s ease;
 }
 
-.view-more-reviews:hover {
-  background-color: var(--primary);
-  color: white;
-}
 
 @media (max-width: 768px) {
   .product-container {
