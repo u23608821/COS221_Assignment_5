@@ -135,19 +135,19 @@ class Authorise {
         //Validate the API key
         $db = Database::getInstance();
         $conn = $db->getConnection();
-        $stmt = $conn->prepare('SELECT * FROM User WHERE apikey=?');
+        $stmt = $conn->prepare('SELECT name, user_type FROM User WHERE apikey=?'); //Only select necessary fields
         $stmt->bind_param('s', $apikey);
         $stmt->execute();
         $result = $stmt->get_result();
         if ($result->num_rows != 1) {
-            ResponseAPI::error('Invalid API key or User not found', 401);
+            ResponseAPI::error('Invalid API key or User not found', null, 401); //401 Unauthorized
         }
 
-        //Check if the user type is valid
+        //Check if the user type is valid (not case sensitive)
         if ($result->num_rows > 0) {
             $user = $result->fetch_assoc();
-            if ($user['user_type'] !== $requiredUserType) {
-                ResponseAPI::error('User type not allowed to perform this action', 403);
+            if (strcasecmp($user['user_type'], $requiredUserType) !== 0) {
+                ResponseAPI::error("User type ({$user['user_type']}) not allowed to use this request", null, 403); //403 Forbidden
             }
         }
     }//authenticate
@@ -425,6 +425,504 @@ class USER {
 
 }//USER class
 
+class ADMIN {
+    // Validation rules for QuickAddUser
+    private static $quickAddUserRules = [
+        'name' => [
+            'required' => true,
+            'pattern' => '/^[a-zA-Z]{1,50}$/',
+            'message' => 'Name must be only letters and max 50 characters'
+        ],
+        'surname' => [
+            'required' => true,
+            'pattern' => '/^[a-zA-Z]{1,50}$/',
+            'message' => 'Surname must be only letters and max 50 characters'
+        ],
+        'user_type' => [
+            'required' => true,
+            'pattern' => '/^(Admin|Customer)$/',
+            'message' => 'User type must be either Admin or Customer'
+        ],
+        'password' => [
+            'required' => true,
+            'pattern' => "/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/",
+            'message' => 'Password must be at least 8 characters with upper/lower case, number, and special character'
+        ],
+        'email' => [
+            'required' => true,
+            'pattern' => FILTER_VALIDATE_EMAIL,
+            'message' => 'Email must be valid and max 100 characters',
+            'max_length' => 100
+        ]
+    ];
+
+    public static function QuickAddUser($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Admin');
+
+        // Validate fields
+        $errors = [];
+        $fields = [];
+        foreach (self::$quickAddUserRules as $field => $rule) {
+            $value = isset($requestData[$field]) ? trim($requestData[$field]) : '';
+            if ($rule['required'] && $value === '') {
+                $errors[$field] = "Error: The $field field is required.";
+            } elseif ($field === 'email') {
+                // Email validation
+                if (strlen($value) > $rule['max_length'] || !filter_var($value, $rule['pattern'])) {
+                    $errors[$field] = $rule['message'];
+                } else {
+                    $fields[$field] = $value;
+                }
+            } elseif (isset($rule['pattern']) && !preg_match($rule['pattern'], $value)) {
+                $errors[$field] = $rule['message'];
+            } else {
+                $fields[$field] = $value;
+            }
+        }
+        if (!empty($errors)) {
+            ResponseAPI::error("Parameter validation failed!", $errors, 422); //422 Unprocessable Entity
+        }
+
+        //Check if email already exists
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("SELECT id FROM User WHERE email = ?");
+        $stmt->bind_param("s", $fields['email']);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows > 0) {
+            $stmt->close();
+            ResponseAPI::error("Email already exists: Please use a different email", null, 409); //409 Conflict
+        }
+        $stmt->close();
+
+        // Generate apikey and salt and hash password
+        $salt = bin2hex(random_bytes(16));
+        $passwordWithSalt = $fields['password'] . $salt;
+        $hashedPassword = password_hash($passwordWithSalt, PASSWORD_DEFAULT);
+        $apikey = bin2hex(random_bytes(32));
+
+        // Insert into User table
+        $stmt = $conn->prepare("INSERT INTO User (name, surname, email, user_type, password, salt, apikey) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssssss", $fields['name'], $fields['surname'], $fields['email'], $fields['user_type'], $hashedPassword, $salt, $apikey);
+        if (!$stmt->execute()) {
+            $stmt->close();
+            ResponseAPI::error("Failed to add user: " . $conn->error, ['database_error' => $conn->error], 500); //500 Internal Server Error
+        }
+        $user_id = $conn->insert_id;
+        $stmt->close();
+
+        // Insert into Customer or Admin_staff table
+        if ($fields['user_type'] === 'Customer') {
+            $stmt = $conn->prepare("INSERT INTO Customer (user_id) VALUES (?)");
+            $stmt->bind_param("i", $user_id);
+            if (!$stmt->execute()) {
+                $stmt->close();
+                ResponseAPI::error("Failed to add customer: " . $conn->error, ['database_error' => $conn->error], 500);
+            }
+            $stmt->close();
+        } else if ($fields['user_type'] === 'Admin') {
+            $stmt = $conn->prepare("INSERT INTO Admin_staff (user_id) VALUES (?)");
+            $stmt->bind_param("i", $user_id);
+            if (!$stmt->execute()) {
+                $stmt->close();
+                ResponseAPI::error("Failed to add admin staff: " . $conn->error, ['database_error' => $conn->error], 500);
+            }
+            $stmt->close();
+        }
+
+        ResponseAPI::send("User added successfully", [
+            'user_id' => $user_id,
+            'apikey' => $apikey
+        ], 201);//201 Created
+    }//QuickAddUser
+
+    public static function QuickEditProductPrice($requestData) {
+        // Authenticate as Admin
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Admin');
+
+        // Validate input
+        $errors = [];
+        if (!isset($requestData['product_id']) || !is_numeric($requestData['product_id'])) {
+            $errors['product_id'] = "Product ID is required and must be an integer.";
+        }
+        if (!isset($requestData['retailer_id']) || !is_numeric($requestData['retailer_id'])) {
+            $errors['retailer_id'] = "Retailer ID is required and must be an integer.";
+        }
+        if (!isset($requestData['price']) || !is_numeric($requestData['price'])) {
+            $errors['price'] = "Price is required and must be a floating point number.";
+        }
+        if (!empty($errors)) {
+            ResponseAPI::error("Parameter validation failed!", $errors, 422);
+        }
+        $product_id = (int)$requestData['product_id'];
+        $retailer_id = (int)$requestData['retailer_id'];
+        $price = (float)$requestData['price'];
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Check if product exists
+        $stmt = $conn->prepare("SELECT id FROM Product WHERE id = ?");
+        $stmt->bind_param("i", $product_id);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows === 0) {
+            $stmt->close();
+            ResponseAPI::error("Product does not exist", null, 404); //404 Not Found
+        }
+        $stmt->close();
+
+        // Check if retailer exists
+        $stmt = $conn->prepare("SELECT id FROM Retailer WHERE id = ?");
+        $stmt->bind_param("i", $retailer_id);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows === 0) {
+            $stmt->close();
+            ResponseAPI::error("Retailer does not exist", null, 404); //404 Not Found
+        }
+        $stmt->close();
+
+        // Check if SUPPLIED_BY entry exists
+        $stmt = $conn->prepare("SELECT * FROM Supplied_By WHERE product_id = ? AND retailer_id = ?");
+        $stmt->bind_param("ii", $product_id, $retailer_id);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows > 0) {
+            // Update price
+            $stmt->close();
+            $stmt = $conn->prepare("UPDATE Supplied_By SET price = ? WHERE product_id = ? AND retailer_id = ?");
+            $stmt->bind_param("dii", $price, $product_id, $retailer_id);
+            if (!$stmt->execute()) {
+                $stmt->close();
+                ResponseAPI::error("Failed to update price: " . $conn->error, ['database_error' => $conn->error], 500);
+            }
+            $stmt->close();
+            ResponseAPI::send("Product price updated successfully", ['product_id' => $product_id, 'retailer_id' => $retailer_id, 'price' => $price], 200);
+        } else {
+            // Insert new price
+            $stmt->close();
+            $stmt = $conn->prepare("INSERT INTO Supplied_By (product_id, retailer_id, price) VALUES (?, ?, ?)");
+            $stmt->bind_param("iid", $product_id, $retailer_id, $price);
+            if (!$stmt->execute()) {
+                $stmt->close();
+                ResponseAPI::error("Failed to add price: " . $conn->error, ['database_error' => $conn->error], 500);
+            }
+            $stmt->close();
+            ResponseAPI::send("Product price added successfully", ['product_id' => $product_id, 'retailer_id' => $retailer_id, 'price' => $price], 201);
+        }
+    }//QuickEditProductPrice
+
+    public static function AdminRecentReviews($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401); //401 Unauthorized
+        }
+        Authorise::authenticate($requestData['apikey'], 'Admin');
+
+        // Default number of reviews to fetch is 4, or the number specified in the request
+        $limit = 4;
+        if (isset($requestData['number']) && is_numeric($requestData['number']) && $requestData['number'] > 0) {
+            $limit = (int)$requestData['number'];
+        }
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Fetch the most recent reviews using updated_at
+        $query = "SELECT * FROM Rating ORDER BY updated_at DESC LIMIT ?";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("i", $limit);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $reviews = [];
+        while ($row = $res->fetch_assoc()) {
+            $reviews[] = $row;
+        }
+        $stmt->close();
+
+        ResponseAPI::send("Recent reviews fetched successfully", $reviews, 200);
+    }//AdminRecentReviews
+
+    public static function AddNewProduct($requestData) {
+        // Authenticate as Admin
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Admin');
+
+        // Validate product fields
+        $errors = [];
+        $fields = [];
+
+        if (empty($requestData['name'])) {
+            $errors['name'] = "Product name is required.";
+        } elseif (strlen($requestData['name']) > 100) {
+            $errors['name'] = "Product name must be at most 100 characters.";
+        } else {
+            $fields['name'] = trim($requestData['name']);
+        }
+
+        $optionalFields = [
+            'description' => ['max_length' => null], 
+            'image_url' => ['max_length' => 255],
+            'category' => ['max_length' => 100]
+        ];
+
+        foreach ($optionalFields as $field => $rules) {
+            if (isset($requestData[$field])) {
+                $value = trim($requestData[$field]);
+                if ($rules['max_length'] !== null && strlen($value) > $rules['max_length']) {
+                    $errors[$field] = "{$field} must be at most {$rules['max_length']} characters.";
+                } else {
+                    $fields[$field] = $value;
+                }
+            } else {
+                $fields[$field] = null;
+            }
+        }
+
+        // Validate retailer_id and price if provided
+        $retailer_id = null;
+        $price = null;
+        $retailerExists = true;
+
+        if (isset($requestData['retailer_id']) || isset($requestData['price'])) {
+            // Check if both are provided
+            if (!isset($requestData['retailer_id']) || !isset($requestData['price'])) {
+                $errors['retailer_id'] = "Retailer ID and price must be provided together.";
+                $errors['price'] = "Retailer ID and price must be provided together.";
+            } else {
+                // Validate retailer_id is numeric
+                if (!is_numeric($requestData['retailer_id'])) {
+                    $errors['retailer_id'] = "Retailer ID must be an integer.";
+                } else {
+                    $retailer_id = (int)$requestData['retailer_id'];
+                }
+
+                // Validate price is numeric
+                if (!is_numeric($requestData['price'])) {
+                    $errors['price'] = "Price must be a numeric value.";
+                } else {
+                    $price = (float)$requestData['price'];
+                }
+
+                // If both are valid format, check if retailer exists
+                if (empty($errors['retailer_id']) && empty($errors['price'])) {
+                    $db = Database::getInstance();
+                    $conn = $db->getConnection();
+                    $stmt = $conn->prepare("SELECT id FROM Retailer WHERE id = ?");
+                    $stmt->bind_param("i", $retailer_id);
+                    $stmt->execute();
+                    $stmt->store_result();
+                    $retailerExists = ($stmt->num_rows > 0);
+                    $stmt->close();
+
+                    if (!$retailerExists) {
+                        $errors['retailer_id'] = "Retailer ID does not exist.";
+                    }
+                }
+            }
+        }
+
+        if (!empty($errors)) {
+            ResponseAPI::error("Parameter validation failed!", $errors, 422);
+        }
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        $stmt = $conn->prepare("SELECT id FROM Product WHERE name = ?");
+        $stmt->bind_param("s", $fields['name']);
+        $stmt->execute();
+        $stmt->store_result();
+
+        if ($stmt->num_rows > 0) {
+            $stmt->bind_result($product_id);
+            $stmt->fetch();
+            $stmt->close();
+
+            // If retailer_id and price are both set and valid
+            if ($retailer_id !== null && $price !== null && $retailerExists) {
+                // Check if the product-retailer relationship already exists
+                $stmt = $conn->prepare("SELECT * FROM Supplied_By WHERE product_id = ? AND retailer_id = ?");
+                $stmt->bind_param("ii", $product_id, $retailer_id);
+                $stmt->execute();
+                $stmt->store_result();
+                $exists = ($stmt->num_rows > 0);
+                $stmt->close();
+
+                if ($exists) {
+                    // Update existing price
+                    $stmt = $conn->prepare("UPDATE Supplied_By SET price = ? WHERE product_id = ? AND retailer_id = ?");
+                    $stmt->bind_param("dii", $price, $product_id, $retailer_id);
+                } else {
+                    // Insert new price
+                    $stmt = $conn->prepare("INSERT INTO Supplied_By (product_id, retailer_id, price) VALUES (?, ?, ?)");
+                    $stmt->bind_param("iid", $product_id, $retailer_id, $price);
+                }
+
+                if (!$stmt->execute()) {
+                    $stmt->close();
+                    ResponseAPI::error("Failed to update product price: " . $conn->error, ['database_error' => $conn->error], 500);
+                }
+                $stmt->close();
+
+                ResponseAPI::send("Product price updated successfully", [
+                    'product_id' => $product_id,
+                    'retailer_id' => $retailer_id,
+                    'price' => $price
+                ], 200);
+            } else {
+                // Just return the product info
+                ResponseAPI::send("Product already exists", [
+                    'product_id' => $product_id,
+                    'name' => $fields['name'],
+                    'description' => $fields['description'],
+                    'image_url' => $fields['image_url'],
+                    'category' => $fields['category']
+                ], 200);
+            }
+            return;
+        }
+        $stmt->close();
+
+        $conn->begin_transaction();
+        try {
+            // Insert into Product table
+            $stmt = $conn->prepare("INSERT INTO Product (name, description, image_url, category) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param(
+                "ssss",
+                $fields['name'],
+                $fields['description'],
+                $fields['image_url'],
+                $fields['category']
+            );
+
+            if (!$stmt->execute()) {
+                throw new Exception("Failed to add product: " . $conn->error);
+            }
+            $product_id = $conn->insert_id;
+            $stmt->close();
+
+            // If retailer_id and price are both set and valid, add to Supplied_By table
+            if ($retailer_id !== null && $price !== null && $retailerExists) {
+                $stmt = $conn->prepare("INSERT INTO Supplied_By (product_id, retailer_id, price) VALUES (?, ?, ?)");
+                $stmt->bind_param("iid", $product_id, $retailer_id, $price);
+
+                if (!$stmt->execute()) {
+                    throw new Exception("Failed to add product price: " . $conn->error);
+                }
+                $stmt->close();
+            }
+
+            // Commit transaction if all operations succeeded
+            $conn->commit();
+
+            // Prepare response data
+            $responseData = [
+                'product_id' => $product_id,
+                'name' => $fields['name'],
+                'description' => $fields['description'],
+                'image_url' => $fields['image_url'],
+                'category' => $fields['category']
+            ];
+
+            if ($retailer_id !== null && $price !== null) {
+                $responseData['retailer_id'] = $retailer_id;
+                $responseData['price'] = $price;
+                ResponseAPI::send("Product and price added successfully", $responseData, 201); //201 Created
+            } else {
+                ResponseAPI::send("Product added successfully", $responseData, 201); //201 Created
+            }
+
+        } catch (Exception $e) {
+            // Rollback transaction on any error
+            $conn->rollback();
+            ResponseAPI::error("Database error:" . $e->getMessage(), ['database_error' => $conn->error], 500);//500 Internal Server Error
+        }
+    }//AddNewProduct
+
+    public static function getAllProducts($requestData) {
+        // Authenticate as Admin
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Admin');
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        $query = "SELECT * FROM Product";
+        $result = $conn->query($query);
+
+        if (!$result) {
+            ResponseAPI::error("Failed to fetch products: " . $conn->error, ['database_error' => $conn->error], 500);
+        }
+
+        $products = [];
+        while ($row = $result->fetch_assoc()) {
+            $products[] = $row;
+        }
+
+        ResponseAPI::send("All products fetched successfully", $products, 200);
+    }// getAllProducts
+
+    public static function deleteProduct($requestData) {
+        // Authenticate as Admin
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Admin');
+
+        // Validate product_id
+        if (empty($requestData['product_id']) || !is_numeric($requestData['product_id'])) {
+            ResponseAPI::error("Product ID is required and must be an integer.", null, 422);
+        }
+        $product_id = (int)$requestData['product_id'];
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Check if product exists
+        $stmt = $conn->prepare("SELECT id FROM Product WHERE id = ?");
+        $stmt->bind_param("i", $product_id);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows === 0) {
+            $stmt->close();
+            ResponseAPI::error("Product does not exist", null, 404); //404 Not Found
+        }
+        $stmt->close();
+
+        // Delete product
+        $stmt = $conn->prepare("DELETE FROM Product WHERE id = ?");
+        $stmt->bind_param("i", $product_id);
+        if (!$stmt->execute()) {
+            $stmt->close();
+            ResponseAPI::error("Failed to delete product: " . $conn->error, ['database_error' => $conn->error], 500);
+        }
+        $stmt->close();
+
+        ResponseAPI::send("Product deleted successfully", ['product_id' => $product_id], 200);
+    }
+
+}
+
+class CUSTOMER {
+    public static function getAllProducts($requestData) {
+        // Placeholder for customer-specific logic
+        ResponseAPI::error("Not implemented for customers yet", null, 501);
+    }
+}
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $requestData = json_decode(file_get_contents('php://input'), true);
 
@@ -450,6 +948,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             case 'Login':
                 USER::login($requestData);
+                break;
+
+            case 'QuickAddUser':
+                ADMIN::QuickAddUser($requestData);
+                break;
+
+            case 'QuickEditProductPrice':
+                ADMIN::QuickEditProductPrice($requestData);
+                break;
+
+            case 'AdminRecentReviews':
+                ADMIN::AdminRecentReviews($requestData);
+                break;
+
+            case 'AddNewProduct':
+                ADMIN::AddNewProduct($requestData);
+                break;
+
+            case 'getAllProducts':
+            // Check user type
+            if (empty($requestData['apikey'])) {
+                ResponseAPI::error("API key is required to authenticate user", null, 401);
+            }
+            // Get user type from API key
+            $db = Database::getInstance();
+            $conn = $db->getConnection();
+            $stmt = $conn->prepare('SELECT user_type FROM User WHERE apikey=?');
+            $stmt->bind_param('s', $requestData['apikey']);
+            $stmt->execute();
+            $stmt->bind_result($user_type);
+            if (!$stmt->fetch()) {
+                $stmt->close();
+                ResponseAPI::error("Invalid API key or User not found", null, 401);
+            }
+            $stmt->close();
+
+            if (strcasecmp($user_type, 'Admin') === 0) {
+                ADMIN::getAllProducts($requestData);
+            } else if (strcasecmp($user_type, 'Customer') === 0) {
+                CUSTOMER::getAllProducts($requestData);
+            } else {
+                ResponseAPI::error("Unknown user type", null, 403); //403 Forbidden
+            }
+            break;
+
+            case 'deleteProduct':
+                ADMIN::deleteProduct($requestData);
                 break;
                 
                 
