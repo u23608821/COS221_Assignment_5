@@ -985,3 +985,70 @@ main {
   margin: 0 4px;
 }
 
+
+
+
+
+
+
+
+
+.filter-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.dashboard-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--primary);
+  text-decoration: underline;
+  font-size: 1rem;
+  transition: color 0.2s ease;
+}
+
+.dashboard-link:hover {
+  color: #2a6bda;
+}
+
+.dashboard-link .material-symbols-outlined {
+  font-size: 1.2rem;
+  vertical-align: middle;
+}
+
+/* Adjust filter options to align properly */
+.filter-options {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0; /* Remove default margin */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .filter-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .dashboard-link {
+    align-self: flex-end;
+  }
+}
+
+
+.dash-btn {
+  background-color: rgb(244, 244, 244);
+  color: var(--primary);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background-color 0.2s ease;
+  font-size: 1rem; 
+  margin-left: 32rem; 
+}
