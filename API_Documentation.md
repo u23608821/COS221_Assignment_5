@@ -32,9 +32,9 @@ All responses from the API will be in `JSON` format. The response will include a
 ```json
 {
     "status": "<status>",
-    "timestamp": 1234567890000, // Timestamp in milliseconds
+    "timestamp": 1234567890000,
     "message": "Optional message",
-    "data": {} // Optional data to be returned
+    "data": {}
 }
 ```
 
@@ -173,3 +173,42 @@ The login endpoint is used to authenticate a user. Send in a request with the `t
 }
 ```
 
+### ViewAllProducts Endpoint
+The view all products endpoint is used to retrieve all the information of all the products in the database. Send a request with the `type` parameter set to `ViewAllProducts`. The API will respond with a message indicating whether the request was successful or not. If the request is successful, the API will return all the products in the database.
+
+| Parameter | Description | Required |
+|-----------|-------------|----------|
+| `type`    | The request type: Must be set to `ViewAllProducts` | Yes |
+| `userapikey` | The user's API key | Yes | <!-- TODO: The API key is not validated before returning products at the moment -->
+
+#### Example Request:
+```json
+{
+    "type": "ViewAllProducts",
+    "userapikey": "<api_key>"
+}
+```
+
+#### Example Response (Success):
+```json
+{
+    "status": "success",
+    "timestamp": 1234567890000,
+    "data": [
+        {
+            "id": 1,
+            "name": "Memory Card Reader",
+            "category": "Storage",
+            "description": "USB card reader for SD and microSD cards.",
+            "price": 285.55,
+            "retailer_id": 1,
+            "image_url": "https://images.pexels.com/photos/7610457/pexels-photo-7610457.jpeg?auto=compress&cs=tinysrgb&h=350"
+        },
+        {
+            "id": 2,
+            "name": "Product 2",
+            ...
+        }
+    ]
+}
+```
