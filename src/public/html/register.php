@@ -51,12 +51,10 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Create an account</title>
+  <title>Pick 'n Price—Register</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="../styles/register.css">
-
-
 </head>
 
 <body>
@@ -67,9 +65,12 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 
       <form>
         <div class="form-group">
-          <label for="name">Full Name</label>
-          <!-- We will need to split this into first and last name (DB has a first and last name field) -->
-          <input type="text" id="name" placeholder="Enter your full name" required />
+          <label for="name">First Name</label>
+          <input type="text" id="name" placeholder="Enter your first name" required />
+        </div>
+        <div class="form-group">
+          <label for="name">Last Name</label>
+          <input type="text" id="name" placeholder="Enter your last name" required />
         </div>
         <div class="form-group">
           <label for="email">Email Address</label>
@@ -80,17 +81,6 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
           <input type="password" id="password" placeholder="Enter a password" required />
         </div>
 
-        <div class="form-group">
-          <label for="accountType">Account Type</label>
-          <div class="select-wrapper">
-            <select id="accountType">
-              <option value="" disabled selected hidden>Select an account type</option>
-              <option value="customer">Customer</option>
-              <option value="courier">Courier</option> <!-- We need to decide what user types we have -->
-            </select>
-            <span class="arrow">&#9662;</span>
-          </div>
-        </div>
         <button type="button" onclick="submitReg()">Register</button>
       </form>
     </div>
