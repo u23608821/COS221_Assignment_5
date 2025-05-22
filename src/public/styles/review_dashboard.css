@@ -349,3 +349,176 @@
 .user-text {
   margin: 0 4px;
 }
+
+
+
+
+
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.dashboard-tile {
+    background-color: rgb(238, 243, 255);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.dark .dashboard-tile {
+    background-color: rgba(30, 50, 80, 0.747);
+}
+
+.tile-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--text-dark);
+}
+
+.dark .tile-header {
+    color: var(--text-light);
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+
+.value {
+  margin-top: -1rem;
+  margin-bottom: -1rem;
+  color: rgb(76, 76, 76)
+}
+
+
+
+
+
+/* Dashboard Grid Layout */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.dashboard-column {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+
+
+
+
+
+.aggregate-tile {
+  height: 100%;
+}
+
+.aggregate-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  height: 100%;
+  align-items: flex-start; 
+}
+
+.aggregate-number {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.big-number {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.aggregate-label {
+  font-size: 0.9rem;
+  color: var(--gray-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.aggregate-rating {
+  display: flex;
+  flex-direction: row; 
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.rating-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stars {
+  display: flex;
+  color: #FFD700;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.stars.small {
+  font-size: 1rem;
+}
+
+.rating-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.rating-range {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: auto;
+  width: 100%;
+}
+
+.range-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.range-label {
+  font-size: 0.9rem;
+  color: var(--gray-dark);
+  width: 70px; 
+}
+
+.dark .aggregate-label,
+.dark .range-label {
+  color: var(--gray);
+}
+
+.dark .rating-value {
+  color: var(--text-light);
+}
