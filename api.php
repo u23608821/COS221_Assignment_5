@@ -13,6 +13,7 @@
 */
 
 function loadEnv($path)
+//Function that loads the environment variables from the .env file
 {
     if (!file_exists($path))
         return;
@@ -24,13 +25,129 @@ function loadEnv($path)
         putenv(trim($name) . '=' . trim($value));
     }
 }
-
 loadEnv(__DIR__ . '/.env');
 
-
+//Sets the headers for the API
 header("Access-Control-Allow-Origin: *"); //allow all cors
 header("Content-Type: application/json");
 header("Access-Control-Allow-Methods: POST");
+
+class Database {
+        private static $instance = null;
+        private $conn;
+
+        private function __construct() {
+            //Constructor using the environment variables
+            $this->conn = new mysqli(
+                getenv('DB_HOST'),
+                getenv('DB_USER'),
+                getenv('DB_PASSWORD'),
+                getenv('DB_NAME'),
+                getenv('DB_PORT') ?: 3306
+            );
+
+            if ($this->conn->connect_error) {
+                throw new Exception("Database connection failed: " . $this->conn->connect_error);
+            }
+        }
+
+        public static function getInstance() {
+            //If we are not connected to the database, create a new instance
+            if (!self::$instance) {
+                self::$instance = new Database();
+            }
+            return self::$instance;
+        }
+
+        public function getConnection() {
+            //Returns the connection to the database
+            return $this->conn;
+        }
+
+        public function __destruct() {
+            //Closes the connection to the database
+            if ($this->conn) {
+                $this->conn->close();
+            }
+        }
+
+        private function __clone() {}
+        private function __wakeup() {}
+}//Database class
+
+class ResponseAPI {
+    public static function send($message, $data = null, $code = 200) {
+        http_response_code($code);
+        header('Content-Type: application/json');
+        $response = [
+            'status' => $code < 400 ? 'success' : 'error',
+            'timestamp' => time() * 1000
+        ];
+        if ($message !== null) {
+            $response['message'] = $message;
+        }
+        if ($data !== null) {
+            $response['data'] = $data;
+        }
+        echo json_encode($response);
+        exit;
+    }
+
+    public static function error($message, $data = null, $httpCode = 400) {
+        self::send($data, $message, $httpCode);
+    }
+}//ResponseAPI class
+
+class Authorise {
+    public static function authenticate($apikey, $requiredUserType){
+        //Checks if the API key is valid, and if it is it checks if the user type is valid (able to do the required action)
+        
+        if (empty($apikey)) {
+            ResponseAPI::error('API key is required to authenticate user', 401);
+        }
+        if (empty($requiredUserType)) {
+            ResponseAPI::error('User type is required to authenticate user', 401);
+        }
+        if ($requiredUserType !== 'Customer' && $requiredUserType !== 'Admin') {
+            ResponseAPI::error('Invalid User type to check if user is authorized', 400);
+        }
+
+        //Validate the API key
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare('SELECT * FROM User WHERE apikey=?');
+        $stmt->bind_param('s', $apikey);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows != 1) {
+            ResponseAPI::error('Invalid API key', 401);
+        }
+
+        //Check if the user type is valid
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
+            if ($user['user_type'] !== $requiredUserType) {
+                ResponseAPI::error('User type not allowed to perform this action', 403);
+            }
+        } else {
+            ResponseAPI::error('User not found', 404);
+        }
+    }//authenticate
+}//authorise
+
+class Tester {
+    public static function handleTest($requestData) {
+        $params = [];
+        foreach ($requestData as $key => $value) {
+            $params[] = "$key: $value";
+        }
+        $paramString = implode(', ', $params);
+
+        ResponseAPI::send("Test Successful! Parameters received: $paramString", null, 200);
+    }
+}
+
+//UP TO HERE WORKS IS UPDATED
 
 
 
