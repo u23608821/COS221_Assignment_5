@@ -380,6 +380,7 @@
     font-weight: 600;
     margin-bottom: 1.5rem;
     color: var(--text-dark);
+    margin-top: 0rem;
 }
 
 .dark .tile-header {
