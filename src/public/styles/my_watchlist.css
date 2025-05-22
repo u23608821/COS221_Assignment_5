@@ -350,3 +350,147 @@
   margin: 0 4px;
 }
 
+
+
+
+
+
+.watchlist-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.watchlist-box {
+    background-color: rgb(238, 243, 255);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    display: flex;
+    gap: 1.5rem;
+    position: relative;
+    height: 100px; 
+}
+
+.dark .watchlist-box {
+    background-color: rgba(30, 50, 80, 0.747);
+}
+
+.watchlist-main-content {
+    display: flex;
+    flex: 1;
+    gap: 1.5rem;
+}
+
+.watchlist-text-content {
+    flex: 1;
+}
+
+.watchlist-title {
+    color: var(--text-dark);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: -0.2rem;
+    margin-bottom: 0.25rem;
+}
+
+.dark .watchlist-title {
+    color: var(--text-light);
+}
+
+.product-image {
+    width: 10%;
+    height: 100%;
+    border-radius: var(--radius);
+    background-color: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dark .product-image {
+    background-color: #4b5563;
+}
+
+.best-price {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.best-price-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.retailer-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.best-price-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.watchlist-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-left: 1.5rem;
+    align-self: flex-start;
+}
+
+.watchlist-btn {
+    background-color: white;
+    border: 1px solid #e5e7eb;
+    border-radius: var(--radius);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: all 0.2s ease;
+    min-width: 80px;
+    text-align: center;
+}
+
+.dark .watchlist-btn {
+    border-color: #324561;
+    background-color: rgb(30, 50, 80);
+}
+
+.view-btn {
+    color: #3b82f6;
+}
+
+.view-btn:hover {
+    background-color: #3b82f6;
+    color: white;
+    border: 1px solid #3b82f6;
+    box-shadow: var(#3b82f6);
+}
+
+.delete-btn {
+    color: #ef4444;
+}
+
+.dark .delete-btn {
+    color: #f16161;
+}
+
+.delete-btn:hover {
+    background-color: #ef4444;
+    color: white;
+    border: 1px solid #ef4444;
+    box-shadow: var(#ef4444);
+}
