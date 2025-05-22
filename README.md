@@ -1,5 +1,8 @@
 # COS221 Assignment 5
 
+# **NOTE: TO AVOID FURTHER ISSUES, PLEASE DO NOT WORK IN OTHER PEOPLES BRANCHES WITHOUT THEIR PERMISSION. PLEASE ALSO CONTINUOUSLY CHECK GITHUB FOR UPDATES AND PULL FROM DEV OFTEN SO YOU STAY UP TO DATE WITH THE LATEST VERSION OF CONTENT**$$
+
+
 ## Getting started
 
 **Please make sure that you have signed into GitHub in your Visual Studio Code using your Tuks account before doing the following. Please ensure that Git is installed on your system first**
