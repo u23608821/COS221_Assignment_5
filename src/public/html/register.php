@@ -67,9 +67,12 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 
       <form>
         <div class="form-group">
-          <label for="name">Full Name</label>
-          <!-- We will need to split this into first and last name (DB has a first and last name field) -->
-          <input type="text" id="name" placeholder="Enter your full name" required />
+          <label for="name">First Name</label>
+          <input type="text" id="name" placeholder="Enter your first name" required />
+        </div>
+        <div class="form-group">
+          <label for="name">Last Name</label>
+          <input type="text" id="name" placeholder="Enter your last name" required />
         </div>
         <div class="form-group">
           <label for="email">Email Address</label>
