@@ -359,6 +359,69 @@ class USER {
         ], 201); //201 Created
     }//register
 
+    public static function login($requestData) {
+        $errors = [];
+        $validFields = [];
+
+        //Validate email and password (do not check password against its regex)
+        if(isset($requestData['email'])) {
+            $validationResult = self::validateField('email', $requestData['email']);
+            if ($validationResult !== true) {
+                $errors['email'] = $validationResult;
+            } else {
+                $validFields['email'] = trim($requestData['email']);
+            }
+        }
+        if (isset($requestData['password'])) {
+            $validFields['password'] = $requestData['password'];
+        }
+
+        // Check required fields are present in the request
+        foreach (['email', 'password'] as $field) {
+            if (!array_key_exists($field, $requestData)) {
+                $errors[$field] = "Error: The $field field is required.";
+            }
+        }
+
+        if (!empty($errors)) {
+            ResponseAPI::error("Parameter validation failed!", $errors, 422);
+        }
+
+        // Check if email exists in database
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        $stmt = $conn->prepare("SELECT id, name, password, salt, apikey, user_type FROM User WHERE email = ?");
+        $stmt->bind_param("s", $validFields['email']);
+        $stmt->execute();
+        $stmt->store_result();
+
+        if ($stmt->num_rows === 0) {
+            $stmt->close();
+            ResponseAPI::error("Invalid email or password", null, 401); //401 Unauthorized
+        }
+
+        $stmt->bind_result($user_id, $name, $hashedPassword, $salt, $apikey, $user_type);
+        $stmt->fetch();
+
+        // Hash the provided password with the salt and verify
+        if (!password_verify($validFields['password'] . $salt, $hashedPassword)) {
+            $stmt->close();
+            ResponseAPI::error("Invalid email or password", null, 401); //401 Unauthorized
+        }
+
+        $stmt->close();
+
+        ResponseAPI::send(
+            "User logged in successfully",
+            [
+                'apikey' => $apikey,
+                'name' => $name,
+                'user_type' => $user_type
+            ],
+            200
+        );
+    }//login
 
 }//USER class
 
@@ -366,7 +429,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $requestData = json_decode(file_get_contents('php://input'), true);
 
     if (empty($requestData) || !is_array($requestData)) {
-        ResponseAPI::error("Invalid request data", null, 400);
+        ResponseAPI::error("Invalid request data: Is your request object valid JSON?", null, 400);
     }
 
     if (!isset($requestData['type'])) {
@@ -383,6 +446,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
             case 'Register':
                 USER::register($requestData);
+                break;
+
+            case 'Login':
+                USER::login($requestData);
                 break;
                 
                 

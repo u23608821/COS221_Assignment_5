@@ -202,46 +202,73 @@ The register endpoint is used to create a new user account. Send a request with 
 ```
 
 ### Login Endpoint
-<!-- TODO: Verify the API response. Currently it seems like the response sends back an array of the user's data as message and not as data. -->
-The login endpoint is used to authenticate a user. Send in a request with the `type` parameter set to `Login`, along with the user's email and password in the request body. The API will respond with a message indicating whether the login was successful or not. If the login is successful, the API will set the `userapikey` cookie for the user, along with `useremail`, `username`, and `usersurname` cookies and return this information in the response body. If the login fails, the API will respond with an error message indicating that the email or password is incorrect.
 
-| Parameter | Description | Required |
-|-----------|-------------|----------|
-| `type`    | The request type: Must be set to `Login` | Yes |
-| `email`   | The user's email address | Yes |
-| `password`| The user's password | Yes |
+The login endpoint is used to authenticate a user. Send a request with the `type` parameter set to `Login`, along with the user's `email` and `password` in the request body. The API will respond with a message indicating whether the login was successful or not. If the login is successful, the API will return the user's API key, name, and user type in `data` in the response body. If the login fails, the API will return an error message indicating the reason for the failure.
 
-#### Example Request:
+#### Request Parameters
+
+| Parameter   | Description                | Required |
+|-------------|----------------------------|----------|
+| `type`      | The request type: Must be set to `Login` | Yes      |
+| `email`     | The user's email address   | Yes      |
+| `password`  | The user's password        | Yes      |
+
+> **Note:**  
+> - The `password` is not validated against its regex pattern during login, only during registration: The API will not respond with a validation error if the entered password does not meet the minimum password requirements.
+> - On successful login, use the returned `apikey` for future requests.
+
+#### Example Request
+
 ```json
 {
     "type": "Login",
-    "email": "user@example.com",
-    "password": "password123"
+    "email": "pieterwenning@gmail.com",
+    "password": "BadPass@123!"
 }
 ```
 
-#### Example Response (Success):
+#### Example Response (Success)
+
 ```json
 {
     "status": "success",
-    "timestamp": 1234567890000,
+    "timestamp": 1747924066000,
+    "code": 200,
+    "message": "User logged in successfully",
     "data": {
-        "userapikey": "<api_key>",
-        "useremail": "user@example.com",
-        "username": "John",
-        "usersurname": "Doe"
+        "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef",
+        "name": "Pieter",
+        "user_type": "Customer"
     }
 }
 ```
 
-#### Example Response (Error):
+#### Example Response (Error: Invalid Credentials)
+
 ```json
 {
     "status": "error",
-    "timestamp": 1234567890000,
-    "message": "Unknown email or password"
+    "timestamp": 1747924106000,
+    "code": 401,
+    "message": "Invalid email or password"
 }
 ```
+
+#### Example Response (Error: Validation)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747923898000,
+    "code": 422,
+    "message": "Parameter validation failed!",
+    "data": {
+        "email": "Email must be valid and max 100 characters",
+        "password": "Error: The password field is required."
+    }
+}
+```
+
 
 ### ViewAllProducts Endpoint
 The view all products endpoint is used to retrieve all the information of all the products in the database. Send a request with the `type` parameter set to `ViewAllProducts`. The API will respond with a message indicating whether the request was successful or not. If the request is successful, the API will return all the products in the database.
