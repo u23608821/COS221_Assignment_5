@@ -911,8 +911,572 @@ class ADMIN {
         $stmt->close();
 
         ResponseAPI::send("Product deleted successfully", ['product_id' => $product_id], 200);
-    }
+    }//deleteProduct
 
+    public static function GetAllRetailers($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Admin');
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        $query = "SELECT * FROM Retailer ORDER BY name ASC";
+        $result = $conn->query($query);
+
+        if (!$result) {
+            ResponseAPI::error("Failed to fetch retailers: " . $conn->error, ['database_error' => $conn->error], 500);
+        }
+
+        $retailers = [];
+        while ($row = $result->fetch_assoc()) {
+            $retailers[] = $row;
+        }
+
+        ResponseAPI::send("All retailers fetched successfully", $retailers, 200);
+    }// GetAllRetailers
+
+    public static function AddRetailer($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Admin');
+
+        // Validation
+        $errors = [];
+        $fields = [];
+
+        // Required fields
+        if (empty($requestData['name']) || strlen($requestData['name']) > 100) {
+            $errors['name'] = "Retailer name is required and must be at most 100 characters.";
+        } else {
+            $fields['name'] = trim($requestData['name']);
+        }
+        if (empty($requestData['email']) || strlen($requestData['email']) > 100 || !filter_var($requestData['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = "Valid email is required and must be at most 100 characters.";
+        } else {
+            $fields['email'] = trim($requestData['email']);
+        }
+
+        // Optional fields
+        $optionalFields = [
+            'street_number' => 100,
+            'street_name'   => 100,
+            'suburb'        => 100,
+            'city'          => 100,
+            'zip_code'      => 10
+        ];
+        foreach ($optionalFields as $field => $maxLen) {
+            if (isset($requestData[$field])) {
+                $value = trim($requestData[$field]);
+                if (strlen($value) > $maxLen) {
+                    $errors[$field] = "$field must be at most $maxLen characters.";
+                } else {
+                    $fields[$field] = $value;
+                }
+            } else {
+                $fields[$field] = null;
+            }
+        }
+
+        if (!empty($errors)) {
+            ResponseAPI::error("Parameter validation failed!", $errors, 422);
+        }
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Check if retailer already exists by name
+        $stmt = $conn->prepare("SELECT id FROM Retailer WHERE name = ?");
+        $stmt->bind_param("s", $fields['name']);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows > 0) {
+            $stmt->close();
+            ResponseAPI::error("Retailer already exists with this name.", null, 409); //409 Conflict
+        }
+        $stmt->close();
+
+        // Insert retailer
+        $stmt = $conn->prepare("INSERT INTO Retailer (name, email, street_number, street_name, suburb, city, zip_code) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param(
+            "sssssss",
+            $fields['name'],
+            $fields['email'],
+            $fields['street_number'],
+            $fields['street_name'],
+            $fields['suburb'],
+            $fields['city'],
+            $fields['zip_code']
+        );
+        if (!$stmt->execute()) {
+            $stmt->close();
+            ResponseAPI::error("Failed to add retailer: " . $conn->error, ['database_error' => $conn->error], 500); //500 Internal Server Error
+        }
+        $retailer_id = $conn->insert_id;
+        $stmt->close();
+
+        ResponseAPI::send("Retailer added successfully", [
+            'retailer_id' => $retailer_id,
+            'name' => $fields['name'],
+            'email' => $fields['email'],
+            'street_number' => $fields['street_number'],
+            'street_name' => $fields['street_name'],
+            'suburb' => $fields['suburb'],
+            'city' => $fields['city'],
+            'zip_code' => $fields['zip_code']
+        ], 201);//201 Created
+    }//AddRetailer
+
+    public static function EditRetailer($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Admin');
+
+        if (empty($requestData['retailer_id']) || !is_numeric($requestData['retailer_id'])) {
+            ResponseAPI::error("Retailer ID is required and must be an integer.", null, 422);
+        }
+        $retailer_id = (int)$requestData['retailer_id'];
+
+        // Build update fields
+        $fields = [];
+        $values = [];
+        $types = "";
+
+        $fieldMap = [
+            'name' => 100,
+            'email' => 100,
+            'street_number' => 100,
+            'street_name' => 100,
+            'suburb' => 100,
+            'city' => 100,
+            'zip_code' => 10
+        ];
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        foreach ($fieldMap as $field => $maxLen) {
+            if (isset($requestData[$field])) {
+                $value = trim($requestData[$field]);
+                if ($field === 'email') {
+                    if (strlen($value) > $maxLen || !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                        ResponseAPI::error("Email must be valid and at most $maxLen characters.", null, 422); //422 Unprocessable Entity
+                    }
+                } else if (strlen($value) > $maxLen) {
+                    ResponseAPI::error("$field must be at most $maxLen characters.", null, 422);
+                }
+                // Check for duplicate name
+                if ($field === 'name') {
+                    $stmt = $conn->prepare("SELECT id FROM Retailer WHERE name = ? AND id != ?");
+                    $stmt->bind_param("si", $value, $retailer_id);
+                    $stmt->execute();
+                    $stmt->store_result();
+                    if ($stmt->num_rows > 0) {
+                        $stmt->close();
+                        ResponseAPI::error("Another retailer already exists with this name.", null, 409); //409 Conflict
+                    }
+                    $stmt->close();
+                }
+                $fields[] = "$field = ?";
+                $values[] = $value;
+                $types .= "s";
+            }
+        }
+
+        if (empty($fields)) {
+            ResponseAPI::error("No fields provided to update.", null, 422);
+        }
+
+        // Check if retailer exists
+        $stmt = $conn->prepare("SELECT id FROM Retailer WHERE id = ?");
+        $stmt->bind_param("i", $retailer_id);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows === 0) {
+            $stmt->close();
+            ResponseAPI::error("Retailer does not exist.", null, 404);
+        }
+        $stmt->close();
+
+        // Build and execute update query
+        $sql = "UPDATE Retailer SET " . implode(", ", $fields) . " WHERE id = ?";
+        $types .= "i";
+        $values[] = $retailer_id;
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param($types, ...$values);
+        if (!$stmt->execute()) {
+            $stmt->close();
+            ResponseAPI::error("Failed to update retailer: " . $conn->error, ['database_error' => $conn->error], 500);
+        }
+        $stmt->close();
+
+        ResponseAPI::send("Retailer updated successfully", ['retailer_id' => $retailer_id], 200);
+    }//EditRetailer
+
+    public static function getAllUsers($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Admin');
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Get all users sorted by id ASC
+        $query = "SELECT * FROM User ORDER BY id ASC";
+        $result = $conn->query($query);
+        if (!$result) {
+            ResponseAPI::error("Failed to fetch users: " . $conn->error, ['database_error' => $conn->error], 500);
+        }
+
+        $users = [];
+        while ($user = $result->fetch_assoc()) {
+            $user_id = $user['id'];
+            $user_type = $user['user_type'];
+            unset($user['password'], $user['salt'], $user['apikey']);
+            // Get extra info from Customer or Admin_Staff
+            if (strcasecmp($user_type, 'Customer') === 0) {
+                // Customer
+                $stmt = $conn->prepare("SELECT * FROM Customer WHERE user_id = ?");
+                $stmt->bind_param("i", $user_id);
+                $stmt->execute();
+                $customerResult = $stmt->get_result();
+                $customerData = $customerResult->fetch_assoc();
+                $stmt->close();
+                if ($customerData) {
+                    unset($customerData['user_id']);
+                    $user = array_merge($user, $customerData);
+                }
+            } else if (strcasecmp($user_type, 'Admin') === 0) {
+                // Admin
+                $stmt = $conn->prepare("SELECT * FROM Admin_staff WHERE user_id = ?");
+                $stmt->bind_param("i", $user_id);
+                $stmt->execute();
+                $adminResult = $stmt->get_result();
+                $adminData = $adminResult->fetch_assoc();
+                $stmt->close();
+                if ($adminData) {
+                    unset($adminData['user_id']);
+                    $user = array_merge($user, $adminData);
+                }
+            }
+            $users[] = $user;
+        }
+
+        ResponseAPI::send("All users fetched successfully", $users, 200);
+    }// getAllUsers
+
+    public static function AddNewStaff($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Admin');
+
+        // Validation
+        $errors = [];
+        $fields = [];
+
+        // Required fields
+        $requiredFields = [
+            'name' => ['pattern' => '/^[a-zA-Z]{1,50}$/', 'message' => 'Name must be only letters and max 50 characters'],
+            'surname' => ['pattern' => '/^[a-zA-Z]{1,50}$/', 'message' => 'Surname must be only letters and max 50 characters'],
+            'email' => ['pattern' => FILTER_VALIDATE_EMAIL, 'max_length' => 100, 'message' => 'Email must be valid and max 100 characters'],
+            'phone_number' => ['pattern' => '/^\d{10}$/', 'message' => 'Phone number must be exactly 10 digits'],
+            'password' => ['pattern' => "/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/", 'message' => 'Password must be at least 8 characters with upper/lower case, number, and special character'],
+            'position' => ['pattern' => '/^.{1,100}$/', 'message' => 'Position is required and must be at most 100 characters'],
+            'salary' => ['pattern' => '/^\d+(\.\d{1,2})?$/', 'message' => 'Salary must be a valid number']
+        ];
+
+        foreach ($requiredFields as $field => $rule) {
+            $value = isset($requestData[$field]) ? trim($requestData[$field]) : '';
+            if ($value === '') {
+                $errors[$field] = "Error: The $field field is required.";
+            } else if ($field === 'email') {
+                if (strlen($value) > $rule['max_length'] || !filter_var($value, $rule['pattern'])) {
+                    $errors[$field] = $rule['message'];
+                } else {
+                    $fields[$field] = $value;
+                }
+            } else if ($field === 'salary') {
+                if (!preg_match($rule['pattern'], $value)) {
+                    $errors[$field] = $rule['message'];
+                } else {
+                    $fields[$field] = (float)$value;
+                }
+            } else if (!preg_match($rule['pattern'], $value)) {
+                $errors[$field] = $rule['message'];
+            } else {
+                $fields[$field] = $value;
+            }
+        }
+
+        if (!empty($errors)) {
+            ResponseAPI::error("Parameter validation failed!", $errors, 422);
+        }
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Check if email already exists
+        $stmt = $conn->prepare("SELECT id FROM User WHERE email = ?");
+        $stmt->bind_param("s", $fields['email']);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows > 0) {
+            $stmt->close();
+            ResponseAPI::error("Email already exists: Please use a different email", null, 409);
+        }
+        $stmt->close();
+
+        // Generate apikey and salt and hash password
+        $salt = bin2hex(random_bytes(16));
+        $passwordWithSalt = $fields['password'] . $salt;
+        $hashedPassword = password_hash($passwordWithSalt, PASSWORD_DEFAULT);
+        $apikey = bin2hex(random_bytes(32));
+
+        // Insert into User table
+        $stmt = $conn->prepare("INSERT INTO User (name, surname, email, phone_number, user_type, password, salt, apikey) VALUES (?, ?, ?, ?, 'Admin', ?, ?, ?)");
+        $stmt->bind_param("sssssss", $fields['name'], $fields['surname'], $fields['email'], $fields['phone_number'], $hashedPassword, $salt, $apikey);
+        if (!$stmt->execute()) {
+            $stmt->close();
+            ResponseAPI::error("Failed to add staff to user table: " . $conn->error, ['database_error' => $conn->error], 500);
+        }
+        $user_id = $conn->insert_id;
+        $stmt->close();
+
+        // Insert into Admin_staff table
+        $stmt = $conn->prepare("INSERT INTO Admin_staff (user_id, position, salary) VALUES (?, ?, ?)");
+        $stmt->bind_param("isd", $user_id, $fields['position'], $fields['salary']);
+        if (!$stmt->execute()) {
+            $stmt->close();
+            ResponseAPI::error("Failed to add admin staff: " . $conn->error, ['database_error' => $conn->error], 500);
+        }
+        $stmt->close();
+
+        ResponseAPI::send("Staff member added successfully", [
+            'user_id' => $user_id,
+            'apikey' => $apikey
+        ], 201);
+    }//AddNewStaff
+
+    public static function editUser($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401); //401 Unauthorized
+        }
+        Authorise::authenticate($requestData['apikey'], 'Admin');
+
+        if (empty($requestData['id']) || !is_numeric($requestData['id'])) {
+            ResponseAPI::error("User ID is required and must be an integer.", null, 422);//422 Unprocessable Entity
+        }
+        $user_id = (int)$requestData['id'];
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Get current user_type
+        $stmt = $conn->prepare("SELECT user_type FROM User WHERE id = ?");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $stmt->bind_result($current_type);
+        if (!$stmt->fetch()) {
+            $stmt->close();
+            ResponseAPI::error("User does not exist.", null, 404);//404 Not Found
+        }
+        $stmt->close();
+
+        // Validation for updatable fields
+        $userFields = [
+            'name' => ['pattern' => '/^[a-zA-Z]{1,50}$/', 'message' => 'Name must be only letters and max 50 characters'],
+            'surname' => ['pattern' => '/^[a-zA-Z]{1,50}$/', 'message' => 'Surname must be only letters and max 50 characters'],
+            'email' => ['pattern' => FILTER_VALIDATE_EMAIL, 'max_length' => 100, 'message' => 'Email must be valid and max 100 characters'],
+            'phone_number' => ['pattern' => '/^\d{10}$/', 'message' => 'Phone number must be exactly 10 digits'],
+            'password' => ['pattern' => "/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/", 'message' => 'Password must be at least 8 characters with upper/lower case, number, and special character'],
+            'user_type' => ['pattern' => '/^(Admin|Customer)$/', 'message' => 'User type must be either Admin or Customer']
+        ];
+        $adminFields = [
+            'position' => ['pattern' => '/^.{1,100}$/', 'message' => 'Position must be at most 100 characters'],
+            'salary' => ['pattern' => '/^\d+(\.\d{1,2})?$/', 'message' => 'Salary must be a valid number']
+        ];
+
+        $fields = [];
+        $values = [];
+        $types = "";
+
+        foreach ($userFields as $field => $rule) {
+            if (isset($requestData[$field])) {
+                $value = trim($requestData[$field]);
+                if ($field === 'email') {
+                    if (strlen($value) > $rule['max_length'] || !filter_var($value, $rule['pattern'])) {
+                        ResponseAPI::error($rule['message'], null, 422);
+                    }
+                } else if (!preg_match($rule['pattern'], $value)) {
+                    ResponseAPI::error($rule['message'], null, 422);
+                }
+                if ($field === 'password') {
+                    // Will be hashed below
+                } else {
+                    $fields[] = "$field = ?";
+                    $values[] = $value;
+                    $types .= "s";
+                }
+            }
+        }
+
+        // Handle password update
+        if (isset($requestData['password'])) {
+            $salt = bin2hex(random_bytes(16));
+            $passwordWithSalt = $requestData['password'] . $salt;
+            $hashedPassword = password_hash($passwordWithSalt, PASSWORD_DEFAULT);
+            $fields[] = "password = ?";
+            $values[] = $hashedPassword;
+            $types .= "s";
+            $fields[] = "salt = ?";
+            $values[] = $salt;
+            $types .= "s";
+        }
+
+        // Handle user_type change
+        $user_type_changed = false;
+        if (isset($requestData['user_type'])) {
+            $new_type = $requestData['user_type'];
+            if ($new_type !== $current_type) {
+                $user_type_changed = true;
+            }
+        }
+
+        if (!empty($fields)) {
+            $sql = "UPDATE User SET " . implode(", ", $fields) . " WHERE id = ?";
+            $types .= "i";
+            $values[] = $user_id;
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param($types, ...$values);
+            if (!$stmt->execute()) {
+                $stmt->close();
+                ResponseAPI::error("Failed to update user: " . $conn->error, ['database_error' => $conn->error], 500);
+            }
+            $stmt->close();
+        }
+
+        // Handle user_type table changes
+        if ($user_type_changed) {
+            // Remove from old table
+            if ($current_type === 'Admin') {
+                $stmt = $conn->prepare("DELETE FROM Admin_staff WHERE user_id = ?");
+                $stmt->bind_param("i", $user_id);
+                $stmt->execute();
+                $stmt->close();
+            } else if ($current_type === 'Customer') {
+                $stmt = $conn->prepare("DELETE FROM Customer WHERE user_id = ?");
+                $stmt->bind_param("i", $user_id);
+                $stmt->execute();
+                $stmt->close();
+            }
+            // Add to new table
+            if ($new_type === 'Admin') {
+                $stmt = $conn->prepare("INSERT INTO Admin_staff (user_id) VALUES (?)");
+                $stmt->bind_param("i", $user_id);
+                $stmt->execute();
+                $stmt->close();
+            } else if ($new_type === 'Customer') {
+                $stmt = $conn->prepare("INSERT INTO Customer (user_id) VALUES (?)");
+                $stmt->bind_param("i", $user_id);
+                $stmt->execute();
+                $stmt->close();
+            }
+        }
+
+        // Update Admin_staff fields if user is admin and fields are provided
+        if ((isset($requestData['position']) || isset($requestData['salary'])) && (isset($requestData['user_type']) ? $requestData['user_type'] === 'Admin' : $current_type === 'Admin')) {
+            $adminUpdates = [];
+            $adminValues = [];
+            $adminTypes = "";
+            foreach ($adminFields as $field => $rule) {
+                if (isset($requestData[$field])) {
+                    $value = trim($requestData[$field]);
+                    if (!preg_match($rule['pattern'], $value)) {
+                        ResponseAPI::error($rule['message'], null, 422);
+                    }
+                    $adminUpdates[] = "$field = ?";
+                    if ($field === 'salary') {
+                        $adminValues[] = (float)$value;
+                        $adminTypes .= "d";
+                    } else {
+                        $adminValues[] = $value;
+                        $adminTypes .= "s";
+                    }
+                }
+            }
+            if (!empty($adminUpdates)) {
+                $adminTypes .= "i";
+                $adminValues[] = $user_id;
+                $sql = "UPDATE Admin_staff SET " . implode(", ", $adminUpdates) . " WHERE user_id = ?";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param($adminTypes, ...$adminValues);
+                if (!$stmt->execute()) {
+                    $stmt->close();
+                    ResponseAPI::error("Failed to update admin staff: " . $conn->error, ['database_error' => $conn->error], 500);
+                }
+                $stmt->close();
+            }
+        }
+
+        ResponseAPI::send("User updated successfully", ['user_id' => $user_id], 200);
+    }//editUser
+
+    public static function deleteUser($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Admin');
+
+        // Validate user_id
+        if (empty($requestData['user_id']) || !is_numeric($requestData['user_id'])) {
+            ResponseAPI::error("User ID is required and must be an integer.", null, 422);
+        }
+        $user_id = (int)$requestData['user_id'];
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Check if user exists and get user_type
+        $stmt = $conn->prepare("SELECT user_type FROM User WHERE id = ?");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $stmt->bind_result($user_type);
+        if (!$stmt->fetch()) {
+            $stmt->close();
+            ResponseAPI::error("User does not exist", null, 404);
+        }
+        $stmt->close();
+
+        // Delete from Customer or Admin_staff table
+        if (strcasecmp($user_type, 'Customer') === 0) {
+            $stmt = $conn->prepare("DELETE FROM Customer WHERE user_id = ?");
+            $stmt->bind_param("i", $user_id);
+            $stmt->execute();
+            $stmt->close();
+        } else if (strcasecmp($user_type, 'Admin') === 0) {
+            $stmt = $conn->prepare("DELETE FROM Admin_staff WHERE user_id = ?");
+            $stmt->bind_param("i", $user_id);
+            $stmt->execute();
+            $stmt->close();
+        }
+
+        // Delete from User table
+        $stmt = $conn->prepare("DELETE FROM User WHERE id = ?");
+        $stmt->bind_param("i", $user_id);
+        if (!$stmt->execute()) {
+            $stmt->close();
+            ResponseAPI::error("Failed to delete user: " . $conn->error, ['database_error' => $conn->error], 500);
+        }
+        $stmt->close();
+
+        ResponseAPI::send("User deleted successfully", ['user_id' => $user_id], 200);
+    }//deleteUser
 }
 
 class CUSTOMER {
@@ -995,6 +1559,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             case 'deleteProduct':
                 ADMIN::deleteProduct($requestData);
+                break;
+
+            case 'GetAllRetailers':
+                ADMIN::GetAllRetailers($requestData);
+                break;
+
+            case 'AddRetailer':
+                ADMIN::AddRetailer($requestData);
+                break;
+
+            case 'EditRetailer':
+                ADMIN::EditRetailer($requestData);
+                break;
+
+            case 'getAllUsers':
+                ADMIN::getAllUsers($requestData);
+                break;
+
+            case 'AddNewStaff':
+                ADMIN::AddNewStaff($requestData);
+                break;
+            
+            case 'editUser':
+                ADMIN::editUser($requestData);
+                break;
+
+            case 'deleteUser':
+                ADMIN::deleteUser($requestData);
                 break;
                 
                 

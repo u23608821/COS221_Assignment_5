@@ -2,6 +2,128 @@
 
 Our API provides functionality for our price comparison website called "Prick `n Price". It integrates front-end development with our back-end database.
 
+## Table of Contents
+- [API Documentation](#api-documentation)
+  - [Table of Contents](#table-of-contents)
+  - [Authentication](#authentication)
+  - [Request Format](#request-format)
+  - [Response Format](#response-format)
+      - [Example Response (Success with Data):](#example-response-success-with-data)
+      - [Example Response (Success with Message):](#example-response-success-with-message)
+      - [Example Response (Error):](#example-response-error)
+      - [Example Response (Error with Data):](#example-response-error-with-data)
+  - [API Endpoints](#api-endpoints)
+    - [Test Endpoint](#test-endpoint)
+      - [Example Request:](#example-request)
+      - [Example Response (Success):](#example-response-success)
+    - [Register Endpoint](#register-endpoint)
+      - [Validation Rules](#validation-rules)
+      - [Request Parameters](#request-parameters)
+      - [Example Request](#example-request-1)
+      - [Example Response (Success)](#example-response-success-1)
+      - [Example Response (Error: Email Exists)](#example-response-error-email-exists)
+      - [Example Response (Error: Validation)](#example-response-error-validation)
+    - [Login Endpoint](#login-endpoint)
+      - [Request Parameters](#request-parameters-1)
+      - [Example Request](#example-request-2)
+      - [Example Response (Success)](#example-response-success-2)
+      - [Example Response (Error: Invalid Credentials)](#example-response-error-invalid-credentials)
+      - [Example Response (Error: Validation)](#example-response-error-validation-1)
+    - [QuickAddUser Endpoint](#quickadduser-endpoint)
+      - [Request Parameters](#request-parameters-2)
+      - [Validation Rules](#validation-rules-1)
+      - [Example Request](#example-request-3)
+      - [Example Response (Success)](#example-response-success-3)
+      - [Example Response (Error: Validation)](#example-response-error-validation-2)
+      - [Example Response (Error: Email Exists)](#example-response-error-email-exists-1)
+      - [Example Response (Error: Not Admin)](#example-response-error-not-admin)
+    - [QuickEditProductPrice Endpoint](#quickeditproductprice-endpoint)
+      - [Request Parameters](#request-parameters-3)
+      - [Validation Rules](#validation-rules-2)
+      - [Example Request](#example-request-4)
+      - [Example Response (Success: Updated)](#example-response-success-updated)
+      - [Example Response (Success: Added)](#example-response-success-added)
+      - [Example Response (Error: Validation)](#example-response-error-validation-3)
+      - [Example Response (Error: Product or Retailer Not Found)](#example-response-error-product-or-retailer-not-found)
+      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-1)
+    - [AdminRecentReviews Endpoint](#adminrecentreviews-endpoint)
+      - [Request Parameters](#request-parameters-4)
+      - [Example Request](#example-request-5)
+      - [Example Response (Success)](#example-response-success-4)
+      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-2)
+      - [Example Response (Error: Validation)](#example-response-error-validation-4)
+    - [AddNewProduct Endpoint](#addnewproduct-endpoint)
+      - [Request Parameters](#request-parameters-5)
+      - [Validation Rules](#validation-rules-3)
+      - [Example Request](#example-request-6)
+      - [Example Response (Success: Product and Price Added)](#example-response-success-product-and-price-added)
+      - [Example Response (Success: Product Added Only)](#example-response-success-product-added-only)
+      - [Example Response (Success: Product Already Exists, Price Updated)](#example-response-success-product-already-exists-price-updated)
+      - [Example Response (Success: Product Already Exists, No Price Update)](#example-response-success-product-already-exists-no-price-update)
+      - [Example Response (Error: Validation)](#example-response-error-validation-5)
+      - [Example Response (Error: Retailer Not Found)](#example-response-error-retailer-not-found)
+      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-3)
+    - [getAllProducts Endpoint (for Admin)](#getallproducts-endpoint-for-admin)
+      - [Request Parameters](#request-parameters-6)
+      - [Example Request](#example-request-7)
+      - [Example Response (Success)](#example-response-success-5)
+      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-4)
+      - [Example Response (Error: Invalid API Key)](#example-response-error-invalid-api-key)
+    - [deleteProduct Endpoint](#deleteproduct-endpoint)
+      - [Request Parameters](#request-parameters-7)
+      - [Example Request](#example-request-8)
+      - [Example Response (Success)](#example-response-success-6)
+      - [Example Response (Error: Product Not Found)](#example-response-error-product-not-found)
+      - [Example Response (Error: Validation)](#example-response-error-validation-6)
+      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-5)
+    - [GetAllRetailers Endpoint](#getallretailers-endpoint)
+      - [Request Parameters](#request-parameters-8)
+      - [Example Request](#example-request-9)
+      - [Example Response (Success)](#example-response-success-7)
+      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-6)
+      - [Example Response (Error: Invalid API Key)](#example-response-error-invalid-api-key-1)
+    - [AddRetailer Endpoint](#addretailer-endpoint)
+      - [Request Parameters](#request-parameters-9)
+      - [Example Request](#example-request-10)
+      - [Example Response (Success)](#example-response-success-8)
+      - [Example Response (Error: Validation)](#example-response-error-validation-7)
+      - [Example Response (Error: Retailer Exists)](#example-response-error-retailer-exists)
+      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-7)
+    - [EditRetailer Endpoint](#editretailer-endpoint)
+      - [Request Parameters](#request-parameters-10)
+      - [Example Request](#example-request-11)
+      - [Example Response (Success)](#example-response-success-9)
+      - [Example Response (Error: Validation)](#example-response-error-validation-8)
+      - [Example Response (Error: Retailer Not Found)](#example-response-error-retailer-not-found-1)
+      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-8)
+    - [getAllUsers Endpoint](#getallusers-endpoint)
+      - [Request Parameters](#request-parameters-11)
+      - [Example Request](#example-request-12)
+      - [Example Response (Success)](#example-response-success-10)
+      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-9)
+    - [AddNewStaff Endpoint](#addnewstaff-endpoint)
+      - [Request Parameters](#request-parameters-12)
+      - [Validation Rules](#validation-rules-4)
+      - [Example Request](#example-request-13)
+      - [Example Response (Success)](#example-response-success-11)
+      - [Example Response (Error: Validation)](#example-response-error-validation-9)
+      - [Example Response (Error: Email Exists)](#example-response-error-email-exists-2)
+      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-10)
+    - [editUser Endpoint](#edituser-endpoint)
+      - [Request Parameters](#request-parameters-13)
+      - [Example Request](#example-request-14)
+      - [Example Response (Success)](#example-response-success-12)
+      - [Example Response (Error: Validation)](#example-response-error-validation-10)
+      - [Example Response (Error: User Not Found)](#example-response-error-user-not-found)
+      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-11)
+    - [deleteUser Endpoint](#deleteuser-endpoint)
+      - [Request Parameters](#request-parameters-14)
+      - [Example Request](#example-request-15)
+      - [Example Response (Success)](#example-response-success-13)
+      - [Example Response (Error: User Not Found)](#example-response-error-user-not-found-1)
+      - [Example Response (Error: Validation)](#example-response-error-validation-11)
+      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-12)
+
 ## Authentication
 
 When using the API, the logged-in user's API key should be included in requests as a cookie named `userapikey` or as a field in the request body as `apikey`. This is to prevent API misuse and to ensure that the user is authorised to make this type of request. When registering a new user, an API key will be generated and stored in the database. This key should be used for all subsequent requests. When logging in, the API will automatically set the `userapikey` cookie for the user, along with `useremail`, `username`, and `usersurname` cookies. This allows the user to remain logged in for a period of 30 days, unless they log out or clear their cookies.
@@ -278,7 +400,7 @@ The `QuickAddUser` endpoint allows an admin to quickly add a new user (either a 
 - All other fields in the `User` table are set to `NULL`.
 - Returns the new user's `user_id` and generated `apikey` on success.
 
-**Only users with the `Admin` `user_type` (validated by their API key) can use this endpoint.**
+**Only users with the `Admin` user_type (validated by their API key) can use this endpoint.**
 
 #### Request Parameters
 
@@ -767,7 +889,6 @@ The `getAllProducts` endpoint allows an admin to retrieve all products in the da
             "image_url": "https://example.com/gadget.jpg",
             "category": "Gadgets"
         }
-        // ...more products...
     ]
 }
 ```
@@ -796,7 +917,7 @@ The `getAllProducts` endpoint allows an admin to retrieve all products in the da
 
 ### deleteProduct Endpoint
 
-The `deleteProduct` endpoint allows an admin to delete a product from the database by its `product_id`. The product will only be deleted if it exists. If the product has associated data (e.g., reviews, ratings), those will also be deleted. If the product does not exist, an error will be returned.
+The `deleteProduct` endpoint allows an admin to delete a product from the database by its `product_id`. The product will only be deleted if it exists. If the product has associated data (e.g., reviews, prices, etc.), those will also be deleted. If the product does not exist, an error will be returned.
 
 **Only users with the `Admin` user_type (validated by their API key) can use this endpoint.**
 
@@ -860,6 +981,605 @@ The `deleteProduct` endpoint allows an admin to delete a product from the databa
 {
     "status": "error",
     "timestamp": 1747933300000,
+    "code": 403,
+    "message": "User type (Customer) not allowed to use this request"
+}
+```
+
+### GetAllRetailers Endpoint
+
+The `GetAllRetailers` endpoint allows an admin to retrieve all retailers in the database. This endpoint returns all columns for every retailer in the `Retailer` table, sorted in ascending order by name. No filtering is applied.
+
+**Only users with the `Admin` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter   | Description                                      | Required |
+|-------------|--------------------------------------------------|----------|
+| `type`      | The request type: Must be set to `GetAllRetailers`| Yes      |
+| `apikey`    | The API key of the admin performing the request  | Yes      |
+
+#### Example Request
+```json
+{
+    "type": "GetAllRetailers",
+    "apikey": "FJihZZGK+5LOEVBX14JhkCCknJ6buHcrpJ/EKQpE1dA="
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1747934658000,
+    "code": 200,
+    "message": "All retailers fetched successfully",
+    "data": [
+        {
+            "id": "9",
+            "name": "Aivee",
+            "email": "nleroy8@hubpages.com",
+            "suburb": "Maple Ridge",
+            "city": "Kedungbulu",
+            "street_name": "Kings",
+            "street_number": "932",
+            "zip_code": "5931"
+        },
+        {
+            "id": "4",
+            "name": "Camido",
+            "email": "mconquer3@squarespace.com",
+            "suburb": "Willow Creek",
+            "city": "Fenghuangshan",
+            "street_name": "Eagle Crest",
+            "street_number": "73",
+            "zip_code": "2304"
+        }
+    ]
+}
+```
+
+#### Example Response (Error: Not Admin)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747934100000,
+    "code": 403,
+    "message": "User type (Customer) not allowed to use this request"
+}
+```
+
+#### Example Response (Error: Invalid API Key)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747934200000,
+    "code": 401,
+    "message": "Invalid API key or User not found"
+}
+```
+
+---
+
+### AddRetailer Endpoint
+
+The `AddRetailer` endpoint allows an admin to add a new retailer to the database. The retailer must have a unique name and a valid email address (max 100 characters each). Other address fields are optional and will be set to `NULL` if not provided.
+
+**Only users with the `Admin` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter        | Description                                      | Required |
+|------------------|--------------------------------------------------|----------|
+| `type`           | The request type: Must be set to `AddRetailer`   | Yes      |
+| `apikey`         | The API key of the admin performing the request  | Yes      |
+| `name`           | The retailer's name (max 100 characters, unique) | Yes      |
+| `email`          | The retailer's email (valid, max 100 characters) | Yes      |
+| `street_number`  | The retailer's street number (max 100 chars)     | No       |
+| `street_name`    | The retailer's street name (max 100 chars)       | No       |
+| `suburb`         | The retailer's suburb (max 100 chars)            | No       |
+| `city`           | The retailer's city (max 100 chars)              | No       |
+| `zip_code`       | The retailer's zip code (max 10 chars)           | No       |
+
+> **Note:**  
+> If any optional parameters are omitted, they will be stored as `NULL` in the database. If they are included, they must be valid according to the rules above.
+
+#### Example Request
+
+```json
+{
+    "type": "AddRetailer",
+    "apikey": "FJihZZGK+5LOEVBX14JhkCCknJ6buHcrpJ/EKQpE1dA=",
+    "name": "Retailer C",
+    "email": "retc@example.com",
+    "street_number": "15",
+    "street_name": "Market St",
+    "suburb": "CBD",
+    "city": "Cape Town",
+    "zip_code": "8000"
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1747934805000,
+    "code": 201,
+    "message": "Retailer added successfully",
+    "data": {
+        "retailer_id": 11,
+        "name": "Retailer C",
+        "email": "retc@example.com",
+        "street_number": "15",
+        "street_name": "Market St",
+        "suburb": "CBD",
+        "city": "Cape Town",
+        "zip_code": "8000"
+    }
+}
+```
+
+#### Example Response (Error: Validation)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747934400000,
+    "code": 422,
+    "message": "Parameter validation failed!",
+    "data": {
+        "name": "Retailer name is required and must be at most 100 characters.",
+        "email": "Valid email is required and must be at most 100 characters."
+    }
+}
+```
+
+#### Example Response (Error: Retailer Exists)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747934500000,
+    "code": 409,
+    "message": "Retailer already exists with this name."
+}
+```
+
+#### Example Response (Error: Not Admin)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747934600000,
+    "code": 403,
+    "message": "User type (Customer) not allowed to use this request"
+}
+```
+
+---
+
+### EditRetailer Endpoint
+
+The `EditRetailer` endpoint allows an admin to update the information of an existing retailer. The retailer is identified by `retailer_id`. Only the fields provided in the request will be updated; fields not included in the request will remain unchanged. If there is already a retailer with the same name, the request will fail validation. The `retailer_id` must refer to an existing retailer.
+
+**Only users with the `Admin` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter        | Description                                      | Required |
+|------------------|--------------------------------------------------|----------|
+| `type`           | The request type: Must be set to `EditRetailer`  | Yes      |
+| `apikey`         | The API key of the admin performing the request  | Yes      |
+| `retailer_id`    | The ID of the retailer to update (integer)       | Yes      |
+| `name`           | The retailer's name (max 100 characters)         | No       |
+| `email`          | The retailer's email (valid, max 100 characters) | No       |
+| `street_number`  | The retailer's street number (max 100 chars)     | No       |
+| `street_name`    | The retailer's street name (max 100 chars)       | No       |
+| `suburb`         | The retailer's suburb (max 100 chars)            | No       |
+| `city`           | The retailer's city (max 100 chars)              | No       |
+| `zip_code`       | The retailer's zip code (max 10 chars)           | No       |
+
+> **Note:**  
+> Only the fields provided in the request will be updated.  
+> If no updatable fields are provided, the request will fail validation.
+
+#### Example Request
+
+```json
+{
+    "type": "EditRetailer",
+    "apikey": "FJihZZGK+5LOEVBX14JhkCCknJ6buHcrpJ/EKQpE1dA=",
+    "retailer_id": 2,
+    "email": "newemail@retailer.com",
+    "city": "Johannesburg"
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1747934904000,
+    "code": 200,
+    "message": "Retailer updated successfully",
+    "data": {
+        "retailer_id": 2
+    }
+}
+```
+
+#### Example Response (Error: Validation)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747934800000,
+    "code": 422,
+    "message": "No fields provided to update."
+}
+```
+
+#### Example Response (Error: Retailer Not Found)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747934900000,
+    "code": 404,
+    "message": "Retailer does not exist."
+}
+```
+
+#### Example Response (Error: Not Admin)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747935000000,
+    "code": 403,
+    "message": "User type (Customer) not allowed to use this request"
+}
+```
+
+### getAllUsers Endpoint
+
+The `getAllUsers` endpoint allows an admin to retrieve all users in the database. For each user, all columns from the `User` table are included. If the user is a Customer, all fields from the `Customer` table (except `user_id`) are also included. If the user is an Admin, all fields from the `Admin_staff` table (except `user_id`) are also included. The results are sorted by user ID in ascending order. 
+
+**Only users with the `Admin` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter   | Description                                      | Required |
+|-------------|--------------------------------------------------|----------|
+| `type`      | The request type: Must be set to `getAllUsers`   | Yes      |
+| `apikey`    | The API key of the admin performing the request  | Yes      |
+> **Note:**
+> This endpoint does not return the user's password, API key or salt.
+
+#### Example Request
+
+```json
+{
+    "type": "getAllUsers",
+    "apikey": "FJihZZGK+5LOEVBX14JhkCCknJ6buHcrpJ/EKQpE1dA="
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1747936000000,
+    "code": 200,
+    "message": "All users fetched successfully",
+    "data": [
+        {
+            "id": "9999",
+            "name": "Pieter",
+            "surname": "Wenning",
+            "phone_number": null,
+            "email": "pieterwenning@gmail.com",
+            "street_number": null,
+            "street_name": null,
+            "suburb": null,
+            "city": null,
+            "zip_code": null,
+            "user_type": "Customer"
+        },
+        {
+            "id": "10000",
+            "name": "Alice",
+            "surname": "Smith",
+            "phone_number": null,
+            "email": "alice.smith@example.com",
+            "street_number": null,
+            "street_name": null,
+            "suburb": null,
+            "city": null,
+            "zip_code": null,
+            "user_type": "Admin",
+            "salary": null,
+            "position": null
+        }
+    ]
+}
+```
+
+#### Example Response (Error: Not Admin)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747936100000,
+    "code": 403,
+    "message": "User type (Customer) not allowed to use this request"
+}
+```
+
+### AddNewStaff Endpoint
+
+The `AddNewStaff` endpoint allows an admin to add a new admin staff member to the system. The staff member is added to both the `User` and `Admin_staff` tables. The API will generate a secure password hash, salt, and API key for the new staff member. Returns the new user's `user_id` and generated `apikey` on success.
+
+**Only users with the `Admin` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter      | Description                                             | Required |
+|----------------|---------------------------------------------------------|----------|
+| `type`         | The request type: Must be set to `AddNewStaff`          | Yes      |
+| `apikey`       | The API key of the admin performing the request         | Yes      |
+| `name`         | The staff member's name (only letters, max 50 chars)    | Yes      |
+| `surname`      | The staff member's surname (only letters, max 50 chars) | Yes      |
+| `email`        | The staff member's email (valid, max 100 chars)         | Yes      |
+| `phone_number` | The staff member's phone number (exactly 10 digits)     | Yes      |
+| `password`     | The staff member's password (min 8 chars, upper/lower/number/special char) | Yes |
+| `position`     | The staff member's position (max 100 chars)             | Yes      |
+| `salary`       | The staff member's salary (number, max 2 decimals)      | Yes      |
+
+#### Validation Rules
+
+- **name**: Only letters, max 50 characters.
+- **surname**: Only letters, max 50 characters.
+- **email**: Must be a valid email address and max 100 characters.
+- **phone_number**: Exactly 10 digits.
+- **password**: At least 8 characters, must include upper and lower case letters, a number, and a special character.
+- **position**: Max 100 characters.
+- **salary**: Must be a valid number (float, max 2 decimals).
+
+#### Example Request
+
+```json
+{
+    "type": "AddNewStaff",
+    "apikey": "FJihZZGK+5LOEVBX14JhkCCknJ6buHcrpJ/EKQpE1dA=",
+    "name": "Bob",
+    "surname": "Jones",
+    "email": "bob.jones@example.com",
+    "phone_number": "0721234567",
+    "password": "AdminPass@123",
+    "position": "Manager",
+    "salary": "50000"
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1747936429000,
+    "code": 201,
+    "message": "Staff member added successfully",
+    "data": {
+        "user_id": 10002,
+        "apikey": "86a64d2f1a72702e2fefec452987f59564f5b4d0a60f6d5190a7ade832ebc5b1"
+    }
+}
+```
+
+#### Example Response (Error: Validation)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747937100000,
+    "code": 422,
+    "message": "Parameter validation failed!",
+    "data": {
+        "name": "Name must be only letters and max 50 characters",
+        "salary": "Salary must be a valid number"
+    }
+}
+```
+
+#### Example Response (Error: Email Exists)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747937200000,
+    "code": 409,
+    "message": "Email already exists: Please use a different email"
+}
+```
+
+#### Example Response (Error: Not Admin)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747937300000,
+    "code": 403,
+    "message": "User type (Customer) not allowed to use this request"
+}
+```
+
+---
+
+### editUser Endpoint
+
+The `editUser` endpoint allows an admin to update any user's information. The user is identified by their `id`. Only the fields provided in the request will be updated; fields not included in the request will remain unchanged. If the `user_type` is changed, the user will be removed from their old type table and added to the new one. If the user is an admin and `position` or `salary` is provided, those fields will be updated in the `Admin_staff` table.
+
+**Only users with the `Admin` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter      | Description                                             | Required |
+|----------------|---------------------------------------------------------|----------|
+| `type`         | The request type: Must be set to `editUser`             | Yes      |
+| `apikey`       | The API key of the admin performing the request         | Yes      |
+| `id`           | The ID of the user to update (integer)                  | Yes      |
+| `name`         | The user's name (only letters, max 50 chars)            | No       |
+| `surname`      | The user's surname (only letters, max 50 chars)         | No       |
+| `email`        | The user's email (valid, max 100 chars)                 | No       |
+| `phone_number` | The user's phone number (exactly 10 digits)             | No       |
+| `password`     | The user's password (min 8 chars, upper/lower/number/special char) | No |
+| `user_type`    | The user's type: `Admin` or `Customer`                  | No       |
+| `position`     | The admin's position (max 100 chars, if user is admin)  | No       |
+| `salary`       | The admin's salary (number, max 2 decimals, if admin)   | No       |
+
+> **Note:**  
+> - Only the fields provided in the request will be updated.  
+> - If `user_type` is changed, the user will be removed from their old type table and added to the new one.
+> - If the user is an admin and `position` or `salary` is provided, those fields will be updated in the `Admin_staff` table.
+> - If no updatable fields are provided, the request will fail validation.
+
+#### Example Request
+
+```json
+{
+    "type": "editUser",
+    "apikey": "FJihZZGK+5LOEVBX14JhkCCknJ6buHcrpJ/EKQpE1dA=",
+    "id": 10002,
+    "email": "bob.jones@newmail.com",
+    "position": "Senior Manager",
+    "salary": "60000"
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1747938000000,
+    "code": 200,
+    "message": "User updated successfully",
+    "data": {
+        "user_id": 10002
+    }
+}
+```
+
+#### Example Response (Error: Validation)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747938100000,
+    "code": 422,
+    "message": "Parameter validation failed!",
+    "data": {
+        "email": "Email must be valid and max 100 characters"
+    }
+}
+```
+
+#### Example Response (Error: User Not Found)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747938200000,
+    "code": 404,
+    "message": "User does not exist."
+}
+```
+
+#### Example Response (Error: Not Admin)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747938300000,
+    "code": 403,
+    "message": "User type (Customer) not allowed to use this request"
+}
+```
+
+### deleteUser Endpoint
+
+The `deleteUser` endpoint allows an admin to delete a user from the database by their `user_id`. The user will be deleted from the `User` table and from the `Customer` or `Admin_staff` table, depending on their user type. If the user does not exist, an error will be returned.
+
+**Only users with the `Admin` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter   | Description                                      | Required |
+|-------------|--------------------------------------------------|----------|
+| `type`      | The request type: Must be set to `deleteUser`    | Yes      |
+| `apikey`    | The API key of the admin performing the request  | Yes      |
+| `user_id`   | The ID of the user to delete (integer)           | Yes      |
+
+#### Example Request
+
+```json
+{
+    "type": "deleteUser",
+    "apikey": "FJihZZGK+5LOEVBX14JhkCCknJ6buHcrpJ/EKQpE1dA=",
+    "user_id": 10002
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1747939000000,
+    "code": 200,
+    "message": "User deleted successfully",
+    "data": {
+        "user_id": 10002
+    }
+}
+```
+
+#### Example Response (Error: User Not Found)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747939100000,
+    "code": 404,
+    "message": "User does not exist"
+}
+```
+
+#### Example Response (Error: Validation)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747939200000,
+    "code": 422,
+    "message": "User ID is required and must be an integer."
+}
+```
+
+#### Example Response (Error: Not Admin)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747939300000,
     "code": 403,
     "message": "User type (Customer) not allowed to use this request"
 }
