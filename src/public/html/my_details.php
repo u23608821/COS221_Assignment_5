@@ -101,22 +101,22 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
         <div class="form-row">
           <div class="form-group">
             <label for="firstName">First Name</label>
-            <input type="text" id="firstName" value="John" />
+            <input type="text" id="firstName" placeholder="John" />
           </div>
           <div class="form-group">
             <label for="lastName">Last Name</label>
-            <input type="text" id="lastName" value="Doe" />
+            <input type="text" id="lastName" placeholder="Doe" />
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
             <label for="phone">Phone Number</label>
-            <input type="tel" id="phone" value="+27 12 345 6789" />
+            <input type="tel" id="phone" placeholder="+27 12 345 6789" />
           </div>
           <div class="form-group">
             <label for="email">Email</label>
-            <input type="email" id="email" value="john.doe@example.com" />
+            <input type="email" id="email" placeholder="john.doe@example.com" />
           </div>
         </div>
 
@@ -125,33 +125,33 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
         <div class="address-row">
           <div class="form-group small">
             <label for="streetNumber">Street No.</label>
-            <input type="text" id="streetNumber" value="123" />
+            <input type="text" id="streetNumber" placeholder="123" />
           </div>
           <div class="form-group large">
             <label for="streetName">Street Name</label>
-            <input type="text" id="streetName" value="Main Street" />
+            <input type="text" id="streetName" placeholder="Main Street" />
           </div>
         </div>
 
         <div class="address-row">
           <div class="form-group">
             <label for="suburb">Suburb</label>
-            <input type="text" id="suburb" value="Sunnyville" />
+            <input type="text" id="suburb" placeholder="Sunnyville" />
           </div>
           <div class="form-group">
             <label for="city">City</label>
-            <input type="text" id="city" value="Johannesburg" />
+            <input type="text" id="city" placeholder="Johannesburg" />
           </div>
         </div>
 
         <div class="address-row">
           <div class="form-group small">
             <label for="postalCode">Postal Code</label>
-            <input type="text" id="postalCode" value="2000" />
+            <input type="text" id="postalCode" placeholder="2000" />
           </div>
         </div>
 
-        <button type="submit" class="save-btn">Save</button>
+        <button type="submit" class="save-btn" onclick="saveUserDetails()">Save</button>
       </form>
     </div>
   </main>

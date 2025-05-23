@@ -2,10 +2,10 @@
 function submitReg() {
     console.log("submitReg function called");
 
-    const firstName = document.getElementById("fname");
-    const lastName = document.getElementById("lname");
-    const email = document.getElementById("email");
-    const password = document.getElementById("password");
+    const firstName = document.getElementById("fname").value;
+    const lastName = document.getElementById("lname").value;
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
     console.log("Form values:", { firstName, lastName, email, password });
 
@@ -59,7 +59,7 @@ function submitReg() {
         suburb: null,
         city: null,
         zip_code: null,
-        user_type
+
     };
 
     console.log("Sending payload:", JSON.stringify(payload));
@@ -79,7 +79,7 @@ function submitReg() {
             console.log("Response received:", xhr.status);
             console.log("Response text:", xhr.responseText);
 
-            if (xhr.status == 200) {
+            if (xhr.status == 200 || xhr.status == 201) {
                 try {
                     // Handle mixed responses that might contain both text and JSON
                     let responseText = xhr.responseText;
@@ -94,7 +94,7 @@ function submitReg() {
 
                     if (response.status === 'success') {
                         alert("The registration of your new account was successful! You can now proceed to the login page to access your account.");
-                        window.location.href = 'login.html'; // Correct path based on your directory structure
+                        window.location.href = 'login.php'; // Correct path based on your directory structure
                     } else {
                         alert('Registration failed: ' + (response.message || 'Please try again.'));
                         console.error('Registration failed:', response);
