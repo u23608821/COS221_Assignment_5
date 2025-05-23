@@ -93,7 +93,7 @@ function submitReg() {
 
                     if (response.status === 'success') {
                         alert("The registration of your new account was successful! You can now proceed to the login page to access your account.");
-                        window.location.href = 'login.php'; // Changed to .php extension
+                        window.location.href = 'login.php'; // Correct path based on your directory structure
                     } else {
                         alert('Registration failed: ' + (response.message || 'Please try again.'));
                         console.error('Registration failed:', response);

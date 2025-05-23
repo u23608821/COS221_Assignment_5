@@ -1,3 +1,50 @@
+<?php
+// Determine the correct path to the .env file
+$envPath = dirname(dirname(dirname(dirname(__FILE__)))); // Go up 4 levels to reach the project root
+$envFile = $envPath . '/.env';
+
+// Simple function to read .env file
+function readEnvFile($path)
+{
+  if (!file_exists($path)) {
+    // echo "ENV file not found at: $path<br>";
+    return false;
+  }
+
+  // echo "ENV file found at: $path<br>";
+  $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+  $env = [];
+
+  foreach ($lines as $line) {
+    if (strpos(trim($line), '#') === 0) continue; // Skip comments
+    if (empty(trim($line))) continue;             // Skip empty lines
+
+    list($name, $value) = explode('=', $line, 2);
+    $name = trim($name);
+    $value = trim($value);
+
+    $env[$name] = $value;
+    // Optionally set as environment variable
+    putenv("$name=$value");
+  }
+
+  return $env;
+}
+
+// Read environment variables from .env file
+$env = readEnvFile($envFile);
+
+// Get credentials
+$username = $env ? $env['WHEATLEY_USERNAME'] : getenv("WHEATLEY_USERNAME");
+$password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
+
+
+
+// For debugging - comment these out in production
+// echo "Username from env: " . ($username ?: 'NOT FOUND') . "<br>";
+// echo "Password from env: " . ($password ? '********' : 'NOT FOUND') . "<br>";
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -11,7 +58,7 @@
 </head>
 
 
-<body class="light">
+<body class="light" onload="loadUserDetails()">
   <nav class="navbar">
     <div class="container">
       <div class="nav-left">
@@ -37,7 +84,7 @@
             <a href="../html/my_reviews.html"><span>My Reviews</span></a>
             <a href="../html/my_watchlist.html"><span>My Watchlist</span></a>
             <div class="dropdown-divider"></div>
-            <a href="../html/login.html" class="signout"><span>Sign Out</span></a>
+            <a href="../html/login.php" class="signout"><span>Sign Out</span></a>
           </div>
         </div>
       </div>
@@ -54,22 +101,22 @@
         <div class="form-row">
           <div class="form-group">
             <label for="firstName">First Name</label>
-            <input type="text" id="firstName" value="John" />
+            <input type="text" id="firstName" placeholder="John" />
           </div>
           <div class="form-group">
             <label for="lastName">Last Name</label>
-            <input type="text" id="lastName" value="Doe" />
+            <input type="text" id="lastName" placeholder="Doe" />
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
             <label for="phone">Phone Number</label>
-            <input type="tel" id="phone" value="+27 12 345 6789" />
+            <input type="tel" id="phone" placeholder="+27 12 345 6789" />
           </div>
           <div class="form-group">
             <label for="email">Email</label>
-            <input type="email" id="email" value="john.doe@example.com" />
+            <input type="email" id="email" placeholder="john.doe@example.com" />
           </div>
         </div>
 
@@ -78,29 +125,29 @@
         <div class="address-row">
           <div class="form-group small">
             <label for="streetNumber">Street No.</label>
-            <input type="text" id="streetNumber" value="123" />
+            <input type="text" id="streetNumber" placeholder="123" />
           </div>
           <div class="form-group large">
             <label for="streetName">Street Name</label>
-            <input type="text" id="streetName" value="Main Street" />
+            <input type="text" id="streetName" placeholder="Main Street" />
           </div>
         </div>
 
         <div class="address-row">
           <div class="form-group">
             <label for="suburb">Suburb</label>
-            <input type="text" id="suburb" value="Sunnyville" />
+            <input type="text" id="suburb" placeholder="Sunnyville" />
           </div>
           <div class="form-group">
             <label for="city">City</label>
-            <input type="text" id="city" value="Johannesburg" />
+            <input type="text" id="city" placeholder="Johannesburg" />
           </div>
         </div>
 
         <div class="address-row">
           <div class="form-group small">
             <label for="postalCode">Postal Code</label>
-            <input type="text" id="postalCode" value="2000" />
+            <input type="text" id="postalCode" placeholder="2000" />
           </div>
         </div>
 
@@ -117,6 +164,15 @@
       </button>
     </div>
   </footer>
+
+  <script>
+    // Set global variables for authentication
+    var WHEATLEY_USERNAME = "<?php echo $username; ?>";
+    var WHEATLEY_PASSWORD = "<?php echo $password; ?>";
+    console.log('Credentials loaded from PHP: ',
+      WHEATLEY_USERNAME ? 'Username found' : 'Username missing',
+      WHEATLEY_PASSWORD ? 'Password found' : 'Password missing');
+  </script>
 
   <script src="../scripts/my_details.js"></script>
   <script src="../scripts/global.js"></script>
