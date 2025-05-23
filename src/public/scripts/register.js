@@ -1,34 +1,11 @@
-function getCookie(name) {
-    let cname = name + "=";
-    let decodedCookie = decodeURIComponent(document.cookie);
-    let ca = decodedCookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i].trim();
-        if (c.indexOf(cname) === 0) {
-            return c.substring(cname.length, c.length);
-        }
-    }
-    return "";
-}
-
-function applySavedTheme() {
-    const savedTheme = getCookie("theme");
-    if (savedTheme === "dark") {
-        document.body.classList.add("dark");
-    } else {
-        document.body.classList.remove("dark");
-    }
-}
-
-
 
 function submitReg() {
     console.log("submitReg function called");
 
-    const firstName = document.getElementById("fname").value;
-    const lastName = document.getElementById("lname").value;
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+    const firstName = document.getElementById("fname");
+    const lastName = document.getElementById("lname");
+    const email = document.getElementById("email");
+    const password = document.getElementById("password");
 
     console.log("Form values:", { firstName, lastName, email, password });
 
@@ -82,6 +59,7 @@ function submitReg() {
         suburb: null,
         city: null,
         zip_code: null,
+        user_type
     };
 
     console.log("Sending payload:", JSON.stringify(payload));
@@ -98,13 +76,13 @@ function submitReg() {
         console.log("XHR state change:", xhr.readyState, xhr.status);
 
         if (xhr.readyState == 4) {
+            console.log("Response received:", xhr.status);
+            console.log("Response text:", xhr.responseText);
 
-            // Handle both 200 OK and 201 Created status codes as success
-            if (xhr.status == 200 || xhr.status == 201) {
+            if (xhr.status == 200) {
                 try {
                     // Handle mixed responses that might contain both text and JSON
                     let responseText = xhr.responseText;
-                    console.log("Raw response text:", responseText);
                     // Check if there's a JSON part in the response
                     let jsonStartIdx = responseText.indexOf('{');
                     if (jsonStartIdx >= 0) {
@@ -114,10 +92,9 @@ function submitReg() {
                     const response = JSON.parse(responseText);
                     console.log("Parsed response:", response);
 
-                    // Most APIs use 'success' status or message, but check both
-                    if (response.status === 'success' || response.message === 'User registered successfully') {
+                    if (response.status === 'success') {
                         alert("The registration of your new account was successful! You can now proceed to the login page to access your account.");
-                        window.location.href = 'login.php'; // Correct path based on your directory structure
+                        window.location.href = 'login.html'; // Correct path based on your directory structure
                     } else {
                         alert('Registration failed: ' + (response.message || 'Please try again.'));
                         console.error('Registration failed:', response);
@@ -126,7 +103,7 @@ function submitReg() {
                     console.error("Error parsing response:", e, xhr.responseText);
                     alert("Error processing response from server.");
                 }
-            } else if (xhr.status >= 400) {
+            } else {
                 console.error("Server returned error status:", xhr.status);
                 try {
                     const errorData = JSON.parse(xhr.responseText);

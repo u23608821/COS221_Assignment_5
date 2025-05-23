@@ -21,41 +21,36 @@ function clickLogin() {
 
     // Set up a handler for when the request finishes
     xhr.onload = function () {
-        if (xhr.status === 200) {
+        if (xhr.status === 200 || xhr.status === 201) {
             // The request was successful
             var responseData = JSON.parse(xhr.responseText);
             console.log(responseData);
             if (responseData.status === 'success') {
                 console.log('Success response structure:', responseData);
 
-                // Based on the response structure, we know the data is in the message object
-                if (responseData.message) {
-                    // Store the API key
-                    if (responseData.message.apikey) {
-                        document.cookie = "apiKey=" + responseData.message.apikey;
-                    } else {
-                        console.error('API key not found in response message');
-                        alert('Error: Unable to retrieve API key');
-                        return;
-                    }
+                // Extract API key from data object (not message)
+                if (responseData.data && responseData.data.apikey) {
+                    // Store the API key in localStorage instead of cookies
+                    localStorage.setItem("apiKey", responseData.data.apikey);
 
                     // Store email if available
-                    if (responseData.message.email) {
-                        document.cookie = "email=" + responseData.message.email;
+                    if (responseData.data.email) {
+                        localStorage.setItem("email", responseData.data.email);
                     }
 
                     // Store user_type if available
-                    if (responseData.message.user_type) {
-                        document.cookie = "user_type=" + responseData.message.user_type;
-                        console.log('User type stored:', responseData.message.user_type);
+                    if (responseData.data.user_type) {
+                        localStorage.setItem("user_type", responseData.data.user_type);
+                        console.log('User type stored:', responseData.data.user_type);
 
-                        // Redirect based on user type
-                        if (responseData.message.user_type === 'customer') {
+                        // Redirect based on user type (case-insensitive comparison)
+                        const userType = responseData.data.user_type.toLowerCase();
+                        if (userType === 'customer') {
                             window.location.href = 'products.html';
-                        } else if (responseData.message.user_type === 'admin') {
+                        } else if (userType === 'admin') {
                             window.location.href = 'Admin.html';
                         } else {
-                            console.error('Unknown user type:', responseData.message.user_type);
+                            console.error('Unknown user type:', responseData.data.user_type);
                             alert('Error: Unknown user type');
                         }
                     } else {
@@ -86,27 +81,18 @@ function clickLogin() {
     xhr.send(JSON.stringify(data));
 }
 
-function getCookie(name) {
-    let cname = name + "=";
-    let decodedCookie = decodeURIComponent(document.cookie);
-    let ca = decodedCookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i].trim();
-        if (c.indexOf(cname) === 0) {
-            return c.substring(cname.length, c.length);
-        }
-    }
-    return "";
+// Replace getCookie with localStorage functions
+function getLocalStorage(name) {
+    return localStorage.getItem(name) || "";
 }
 
-function applySavedTheme() {
-    const savedTheme = getCookie("theme");
-    if (savedTheme === "dark") {
-        document.body.classList.add("dark");
-    } else {
-        document.body.classList.remove("dark");
-    }
+function setLocalStorage(name, value) {
+    localStorage.setItem(name, value);
 }
 
-window.addEventListener("load", applySavedTheme);
+function removeLocalStorage(name) {
+    localStorage.removeItem(name);
+}
+
+
 
