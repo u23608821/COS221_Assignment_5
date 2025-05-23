@@ -151,6 +151,44 @@ class Authorise {
             }
         }
     }//authenticate
+
+    public static function verifyCaptcha($token, $secretKey) {
+        // Verifies the Google reCAPTCHA token that is used on the client side (for Register and Login)
+        $url = 'https://www.google.com/recaptcha/api/siteverify';
+        $data = [
+            'secret' => $secretKey,
+            'response' => $token,
+            'remoteip' => $_SERVER['REMOTE_ADDR']
+        ];
+        $options = [
+            'http' => [
+                'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+                'method'  => 'POST',
+                'content' => http_build_query($data),
+                'timeout' => 3
+            ]
+        ];
+        $context  = stream_context_create($options);
+        $result = file_get_contents($url, false, $context);
+        if ($result === FALSE) {
+            return false;
+        }
+
+        $response = json_decode($result, true);
+        return ($response['success'] === true);
+
+    }//verifyCaptcha
+
+    public static function checkIfAPIKeyExists($apikey) {
+        //Checks if the API key exists in the database
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare('SELECT name FROM User WHERE apikey=?');
+        $stmt->bind_param('s', $apikey);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return ($result->num_rows > 0);
+    }
 }//Authorise class
 
 class Tester {
@@ -256,27 +294,40 @@ class USER {
     }
 
     public static function register($requestData) {
+        //Verifuing the reCAPTCHA token
+        //https://developers.google.com/recaptcha/docs/verify 
+        if (empty($requestData['recaptcha_token'])) {
+            ResponseAPI::error("recaptcha_token is required", null, 401); //401 Unauthorized
+        }
+        $secretKey = getenv('RECAPTCHA_SECRET_KEY');
+        if (empty($secretKey)) {
+            ResponseAPI::error("recaptcha_secret_key is not set in environment variables", null, 500); //500 Internal Server Error
+        }
+        if (!Authorise::verifyCaptcha($requestData['recaptcha_token'], $secretKey)) {
+            ResponseAPI::error("reCAPTCHA verification failed", null, 401); //401 Unauthorized
+        }
+
         $errors = [];
         $validFields = [];
 
         // Validate all provided fields
         foreach ($requestData as $field => $value) {
-        if (isset(self::$validationRules[$field])) {
-            $validationResult = self::validateField($field, $value);
-            if ($validationResult !== true) {
-                $errors[$field] = $validationResult;
-            } else {
-                $validFields[$field] = trim($value);
+            if (isset(self::$validationRules[$field])) {
+                $validationResult = self::validateField($field, $value);
+                if ($validationResult !== true) {
+                    $errors[$field] = $validationResult;
+                } else {
+                    $validFields[$field] = trim($value);
+                }
             }
         }
-    }
 
-        // Check required fields are present
-        foreach (self::$validationRules as $field => $rule) {
-        if ($rule['required'] && !array_key_exists($field, $requestData)) {
-            $errors[$field] = "Error: The $field field is required.";
+            // Check required fields are present
+            foreach (self::$validationRules as $field => $rule) {
+            if ($rule['required'] && !array_key_exists($field, $requestData)) {
+                $errors[$field] = "Error: The $field field is required.";
+            }
         }
-    }
 
         if (!empty($errors)) {
             ResponseAPI::error("Parameter validation failed!", $errors, 422); //422 Unprocessable Entity
@@ -300,7 +351,9 @@ class USER {
         $salt = bin2hex(random_bytes(16));
         $passwordWithSalt = $validFields['password'] . $salt;
         $hashedPassword = password_hash($passwordWithSalt, PASSWORD_DEFAULT);
-        $apikey = bin2hex(random_bytes(32));
+        do {
+            $apikey = bin2hex(random_bytes(32));
+        } while (Authorise::checkIfAPIKeyExists($apikey) === true);
 
         $validFields['apikey'] = $apikey;
         $validFields['salt'] = $salt;
@@ -360,6 +413,19 @@ class USER {
     }//register
 
     public static function login($requestData) {
+        //Verifuing the reCAPTCHA token
+        //https://developers.google.com/recaptcha/docs/verify 
+        if (empty($requestData['recaptcha_token'])) {
+            ResponseAPI::error("recaptcha_token is required", null, 401); //401 Unauthorized
+        }
+        $secretKey = getenv('RECAPTCHA_SECRET_KEY');
+        if (empty($secretKey)) {
+            ResponseAPI::error("recaptcha_secret_key is not set in environment variables", null, 500); //500 Internal Server Error
+        }
+        if (!Authorise::verifyCaptcha($requestData['recaptcha_token'], $secretKey)) {
+            ResponseAPI::error("reCAPTCHA verification failed", null, 401); //401 Unauthorized
+        }
+
         $errors = [];
         $validFields = [];
 
@@ -503,7 +569,9 @@ class ADMIN {
         $salt = bin2hex(random_bytes(16));
         $passwordWithSalt = $fields['password'] . $salt;
         $hashedPassword = password_hash($passwordWithSalt, PASSWORD_DEFAULT);
-        $apikey = bin2hex(random_bytes(32));
+        do {
+            $apikey = bin2hex(random_bytes(32));
+        } while (Authorise::checkIfAPIKeyExists($apikey) === true);
 
         // Insert into User table
         $stmt = $conn->prepare("INSERT INTO User (name, surname, email, user_type, password, salt, apikey) VALUES (?, ?, ?, ?, ?, ?, ?)");
@@ -1254,7 +1322,9 @@ class ADMIN {
         $salt = bin2hex(random_bytes(16));
         $passwordWithSalt = $fields['password'] . $salt;
         $hashedPassword = password_hash($passwordWithSalt, PASSWORD_DEFAULT);
-        $apikey = bin2hex(random_bytes(32));
+        do {
+            $apikey = bin2hex(random_bytes(32));
+        } while (Authorise::checkIfAPIKeyExists($apikey) === true);
 
         // Insert into User table
         $stmt = $conn->prepare("INSERT INTO User (name, surname, email, phone_number, user_type, password, salt, apikey) VALUES (?, ?, ?, ?, 'Admin', ?, ?, ?)");
