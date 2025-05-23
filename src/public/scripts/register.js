@@ -78,7 +78,7 @@ function submitReg() {
             console.log("Response received:", xhr.status);
             console.log("Response text:", xhr.responseText);
 
-            if (xhr.status == 200) {
+            if (xhr.status == 200 || xhr.status == 201) {
                 try {
                     // Handle mixed responses that might contain both text and JSON
                     let responseText = xhr.responseText;
