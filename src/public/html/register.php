@@ -65,12 +65,12 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 
       <form>
         <div class="form-group">
-          <label for="name">First Name</label>
-          <input type="text" id="name" placeholder="Enter your first name" required />
+          <label for="fname">First Name</label>
+          <input type="text" id="fname" placeholder="Enter your first name" required />
         </div>
         <div class="form-group">
-          <label for="name">Last Name</label>
-          <input type="text" id="name" placeholder="Enter your last name" required />
+          <label for="lname">Last Name</label>
+          <input type="text" id="lname" placeholder="Enter your last name" required />
         </div>
         <div class="form-group">
           <label for="email">Email Address</label>
@@ -102,7 +102,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   </script>
 
   <script src="../scripts/register.js"></script>
-  <script src="../scripts/global.js"></script>
+  <!-- <script src="../scripts/global.js"></script> -->
 
 
 
