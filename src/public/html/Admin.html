@@ -39,141 +39,88 @@
   
   <main>
     <!-- Quick Add User -->
-    <div class="admin-card">
-      <div class="card-header">
-        <span class="material-symbols-outlined">group_add</span>
-        <h3>Quick Add User</h3>
-      </div>
-      <div class="card-content">
-        <div class="form-group">
-          <label>Name</label>
-          <input type="text" id="userName" placeholder="First name">
-        </div>
-        <div class="form-group">
-          <label>Surname</label>
-          <input type="text" id="userSurname" placeholder="Last name">
-        </div>
-        <div class="form-group">
-          <label>Password</label>
-          <input type="text" id="userpassword" placeholder="Password">
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="text" id="userEmail" placeholder="example@email.com">
-        </div>
-        <div class="form-group">
-          <label>User Type</label>
-          <select id="userType">
-            <option value="customer">Customer</option>
-            <option value="staff">Staff</option>
-          </select>
-        </div>
-        <button class="btn-primary" onclick="addUser()">
-          <span class="material-symbols-outlined">person_add</span> Add User
-        </button>
-      </div>
+<div class="admin-card">
+  <div class="card-header">
+    <span class="material-symbols-outlined">group_add</span>
+    <h3>Quick Add User</h3>
+  </div>
+  <div class="card-content">
+    <div class="form-group">
+      <label>Name</label>
+      <input type="text" id="userName" placeholder="First name" required>
+      <small class="form-hint">Only letters, max 50 chars</small>
     </div>
-
-    <!-- Quick Edit Product -->
-    <div class="admin-card">
-      <div class="card-header">
-        <span class="material-symbols-outlined">edit</span>
-        <h3>Quick Edit Product Price</h3>
-      </div>
-      <div class="card-content">
-        <div class="form-group">
-          <label>Product ID</label>
-          
-          <input type="text" id="productIdSearch" placeholder="Enter product ID">
-          <label>Retailer ID</label>
-          
-          <input type="text" id="retailerIdSearch" placeholder="Enter retailer ID">
-          <label for="new-price">New Price</label>
-
-          <input type="text" id="new-price" placeholder="Enter New Price">
-          <button class="btn-primary" onclick="editPrice()">
-            <span class="material-symbols-outlined">edit</span> Update
-          </button>
-        </div>
-        
-        <div id="productEditContainer" class="hidden">
-          <div class="product-edit-preview">
-            <div class="product-image-preview">
-              <img id="productImagePreview" src="placeholder.jpg" alt="Product image">
-            </div>
-            <div class="product-details">
-              <h4 id="productTitlePreview">Product Name</h4>
-              <div class="form-group">
-                <label>New Price (R)</label>
-                <input type="number" id="productNewPrice" placeholder="Enter new price">
-              </div>
-              <button class="btn-primary" onclick="updateProductPrice()">
-                <span class="material-symbols-outlined">save</span> Update Price
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="form-group">
+      <label>Surname</label>
+      <input type="text" id="userSurname" placeholder="Last name" required>
+      <small class="form-hint">Only letters, max 50 chars</small>
     </div>
-
-    <!-- Recent Reviews -->
-    <div class="admin-card">
-      <div class="card-header">
-        <span class="material-symbols-outlined">reviews</span>
-        <h3>Recent Reviews</h3>
-      </div>
-      <div class="card-content">
-        <div class="reviews-list">
-          <!-- Review Item 1 -->
-          <div class="review-item">
-            <div class="review-meta">
-              <div class="stars">★★★★☆</div>
-              <span>on Smartphone X</span>
-            </div>
-            <p class="review-text">"Good but battery life could be better..."</p>
-            <button class="btn-danger" onclick="deleteReview(102)">
-              <span class="material-symbols-outlined">delete</span> Delete
-            </button>
-          </div>
-          
-          <!-- Review Item 2 -->
-          <div class="review-item">
-            <div class="review-meta">
-              <div class="stars">★★★★★</div>
-              <span>on Wireless Earbuds</span>
-            </div>
-            <p class="review-text">"Excellent sound quality and battery life!"</p>
-            <button class="btn-danger" onclick="deleteReview(103)">
-              <span class="material-symbols-outlined">delete</span> Delete
-            </button>
-          </div>
-          
-          <!-- Review Item 3 -->
-          <div class="review-item">
-            <div class="review-meta">
-              <div class="stars">★★★☆☆</div>
-              <span>on Smart Watch</span>
-            </div>
-            <p class="review-text">"Decent features but the strap is uncomfortable"</p>
-            <button class="btn-danger" onclick="deleteReview(104)">
-              <span class="material-symbols-outlined">delete</span> Delete
-            </button>
-          </div>
-          
-          <!-- Review Item 4 -->
-          <div class="review-item">
-            <div class="review-meta">
-              <div class="stars">★★★★☆</div>
-              <span>on 4K TV</span>
-            </div>
-            <p class="review-text">"Great picture quality but speakers could be better"</p>
-            <button class="btn-danger" onclick="deleteReview(105)">
-              <span class="material-symbols-outlined">delete</span> Delete
-            </button>
-          </div>
-        </div>
-      </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="userEmail" placeholder="example@email.com" required>
+      <small class="form-hint">Valid email format</small>
     </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="userpassword" placeholder="Password" required>
+      <small class="form-hint">Min 8 chars, upper/lower/number/special</small>
+    </div>
+    <div class="form-group">
+      <label>User Type</label>
+      <select id="userType">
+        <option value="customer">Customer</option>
+        <option value="staff">Admin</option>
+      </select>
+    </div>
+    <button class="btn-primary" onclick="addUser()">
+      <span class="material-symbols-outlined">person_add</span> Add User
+    </button>
+    <div id="userAddResult" class="result-message"></div>
+  </div>
+</div>
+
+<!-- quick edit a product price -->
+<div class="admin-card">
+  <div class="card-header">
+    <span class="material-symbols-outlined">edit</span>
+    <h3>Quick Edit Product Price</h3>
+  </div>
+  <div class="card-content">
+    <div class="form-group">
+      <label>Product ID</label>
+      <input type="number" id="productIdSearch" placeholder="Enter product ID" required>
+    </div>
+    <div class="form-group">
+      <label>Retailer ID</label>
+      <input type="number" id="retailerIdSearch" placeholder="Enter retailer ID" required>
+    </div>
+    <div class="form-group">
+      <label>New Price (R)</label>
+      <input type="number" id="new-price" placeholder="Enter New Price" step="0.01" min="0" required>
+    </div>
+    <button class="btn-primary" onclick="editPrice()">
+      <span class="material-symbols-outlined">edit</span> Update Price
+    </button>
+    <div id="priceEditResult" class="result-message"></div>
+  </div>
+</div>
+
+<!-- show the recent reviews -->
+<div class="admin-card">
+  <div class="card-header">
+    <span class="material-symbols-outlined">reviews</span>
+    <h3>Recent Reviews</h3>
+    <button class="btn-refresh" onclick="loadRecentReviews()">
+      <span class="material-symbols-outlined">refresh</span>
+    </button>
+  </div>
+  <div class="card-content">
+    <div class="reviews-list" id="reviewsList">
+      <!-- Reviews will be loaded dynamically -->
+      <div class="loading-reviews">Loading reviews...</div>
+    </div>
+  </div>
+</div>
   </main>
   
   <footer class="footer">
