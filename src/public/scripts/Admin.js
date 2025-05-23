@@ -65,6 +65,36 @@ function getCookie(name) {
 }
 
 
+//showing a nice error and success message. 
+function showSuccessMessage(elementId, message) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    element.innerHTML = message;
+    element.className = 'result-message success';
+    element.style.display = 'block';
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        element.style.display = 'none';
+    }, 5000);
+}
+
+function showErrorMessage(elementId, message) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    element.innerHTML = message;
+    element.className = 'result-message error';
+    element.style.display = 'block';
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        element.style.display = 'none';
+    }, 5000);
+}
+
+
 // Quick Add User Functionality
 async function addUser() {
     const name = document.getElementById('userName').value.trim();
@@ -73,16 +103,31 @@ async function addUser() {
     const password = document.getElementById('userpassword').value.trim();
     const userType = document.getElementById('userType').value === 'staff' ? 'Admin' : 'Customer';
 
+    // Clear any previous messages
+    showSuccessMessage('userAddResult', '');
+    showErrorMessage('userAddResult', '');
+
     // Basic validation
     if (!name || !surname || !email || !password) {
-        alert('Please fill in all fields');
+        showErrorMessage('userAddResult', 'Please fill in all fields');
         return;
     }
 
-    // Get admin API key from session or cookie (you'll need to implement this)
+    // Validate email format
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showErrorMessage('userAddResult', 'Please enter a valid email address');
+        return;
+    }
+
+    // Validate password complexity
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}/.test(password)) {
+        showErrorMessage('userAddResult', 'Password must be at least 8 characters with uppercase, lowercase, number, and special character');
+        return;
+    }
+
     const adminApiKey = getAdminApiKey(); 
     if (!adminApiKey) {
-        alert('Admin not authenticated');
+        showErrorMessage('userAddResult', 'Admin session expired. Please log in again.');
         return;
     }
 
@@ -106,21 +151,26 @@ async function addUser() {
         const result = await response.json();
         
         if (result.status === 'success') {
-            alert(`User added successfully! User ID: ${result.data.user_id}`);
+            const successMessage = `User added successfully!<br>
+                                   <small>User ID: ${result.data.user_id}</small><br>
+                                   <small>API Key: ${result.data.apikey}</small>`;
+            showSuccessMessage('userAddResult', successMessage);
+            
             // Clear form
             document.getElementById('userName').value = '';
             document.getElementById('userSurname').value = '';
             document.getElementById('userEmail').value = '';
             document.getElementById('userpassword').value = '';
         } else {
-            alert(`Error: ${result.message}`);
+            let errorMessage = result.message;
             if (result.data) {
-                console.error('Validation errors:', result.data);
+                errorMessage += '<br><small>' + Object.values(result.data).join('<br>') + '</small>';
             }
+            showErrorMessage('userAddResult', errorMessage);
         }
     } catch (error) {
         console.error('Error adding user:', error);
-        alert('Failed to add user. Please try again.');
+        showErrorMessage('userAddResult', 'Failed to add user. Please try again.');
     }
 }
 
@@ -130,15 +180,18 @@ async function editPrice() {
     const retailerId = document.getElementById('retailerIdSearch').value.trim();
     const newPrice = document.getElementById('new-price').value.trim();
 
+    // Clear any previous messages
+    showSuccessMessage('priceEditResult', '');
+    showErrorMessage('priceEditResult', '');
+
     if (!productId || !retailerId || !newPrice) {
-        alert('Please fill in all fields');
+        showErrorMessage('priceEditResult', 'Please fill in all fields');
         return;
     }
 
-    // Get admin API key from session or cookie
     const adminApiKey = getAdminApiKey();
     if (!adminApiKey) {
-        alert('Admin not authenticated');
+        showErrorMessage('priceEditResult', 'Admin session expired. Please log in again.');
         return;
     }
 
@@ -160,26 +213,36 @@ async function editPrice() {
         const result = await response.json();
         
         if (result.status === 'success') {
-            alert(`Price ${result.message.toLowerCase()}`);
+            const successMessage = `Price ${result.message.toLowerCase()}<br>
+                                  <small>Product: ${result.data.product_id}</small><br>
+                                  <small>Retailer: ${result.data.retailer_id}</small><br>
+                                  <small>New Price: R${result.data.price.toFixed(2)}</small>`;
+            showSuccessMessage('priceEditResult', successMessage);
+            
             // Clear form
             document.getElementById('productIdSearch').value = '';
             document.getElementById('retailerIdSearch').value = '';
             document.getElementById('new-price').value = '';
         } else {
-            alert(`Error: ${result.message}`);
+            let errorMessage = result.message;
+            if (result.data) {
+                errorMessage += '<br><small>' + Object.values(result.data).join('<br>') + '</small>';
+            }
+            showErrorMessage('priceEditResult', errorMessage);
         }
     } catch (error) {
         console.error('Error updating price:', error);
-        alert('Failed to update price. Please try again.');
+        showErrorMessage('priceEditResult', 'Failed to update price. Please try again.');
     }
 }
 
 // Load Recent Reviews
-async function loadRecentReviews() {
-    // Get admin API key from session or cookie
+async function deleteReview(reviewId) {
+    if (!confirm('Are you sure you want to delete this review?')) return;
+
     const adminApiKey = getAdminApiKey();
     if (!adminApiKey) {
-        console.error('Admin not authenticated');
+        alert('Admin session expired. Please log in again.');
         return;
     }
 
@@ -190,21 +253,37 @@ async function loadRecentReviews() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                type: 'AdminRecentReviews',
+                type: 'DeleteReview',
                 apikey: adminApiKey,
-                number: 4 // Get 4 most recent reviews
+                review_id: reviewId
             })
         });
 
         const result = await response.json();
         
         if (result.status === 'success') {
-            updateReviewsUI(result.data);
+            // Create a temporary success message in the review item
+            const reviewItem = document.querySelector(`.review-item button[onclick="deleteReview(${reviewId})"]`)?.closest('.review-item');
+            if (reviewItem) {
+                const tempMsg = document.createElement('div');
+                tempMsg.className = 'result-message success';
+                tempMsg.innerHTML = 'Review deleted successfully';
+                reviewItem.appendChild(tempMsg);
+                
+                // Remove the message after 3 seconds
+                setTimeout(() => {
+                    tempMsg.remove();
+                    loadRecentReviews(); // Refresh the list
+                }, 3000);
+            } else {
+                loadRecentReviews(); // Refresh the list
+            }
         } else {
-            console.error('Error loading reviews:', result.message);
+            alert(`Error: ${result.message}`);
         }
     } catch (error) {
-        console.error('Error loading reviews:', error);
+        console.error('Error deleting review:', error);
+        alert('Failed to delete review. Please try again.');
     }
 }
 
@@ -250,7 +329,7 @@ async function deleteReview(reviewId) {
     }
 
     try {
-        // You'll need to implement a DeleteReview endpoint in your API
+        
         const response = await fetch('http://localhost:8000/api.php', {
             method: 'POST',
             headers: {
@@ -274,6 +353,40 @@ async function deleteReview(reviewId) {
     } catch (error) {
         console.error('Error deleting review:', error);
         alert('Failed to delete review. Please try again.');
+    }
+}
+
+// Load Recent Reviews
+async function loadRecentReviews() {
+    // Get admin API key from session or cookie
+    const adminApiKey = getAdminApiKey();
+    if (!adminApiKey) {
+        console.error('Admin not authenticated');
+        return;
+    }
+
+    try {
+        const response = await fetch('http://localhost:8000/api.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                type: 'AdminRecentReviews',
+                apikey: adminApiKey,
+                number: 4 // Get 4 most recent reviews
+            })
+        });
+
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            updateReviewsUI(result.data);
+        } else {
+            console.error('Error loading reviews:', result.message);
+        }
+    } catch (error) {
+        console.error('Error loading reviews:', error);
     }
 }
 

@@ -614,4 +614,38 @@
     margin: 0 4px;
   }
   
-  
+  .result-message {
+    display: none;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.result-message.success {
+    display: block;
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border-left: 4px solid #4caf50;
+}
+
+.result-message.error {
+    display: block;
+    background-color: #ffebee;
+    color: #c62828;
+    border-left: 4px solid #f44336;
+}
+
+.result-message small {
+    display: block;
+    font-size: 12px;
+    margin-top: 5px;
+    opacity: 0.8;
+}
+
+.review-item .result-message {
+    margin: 5px 0 0;
+    padding: 8px;
+    font-size: 13px;
+}
