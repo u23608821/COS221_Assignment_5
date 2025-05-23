@@ -37,7 +37,7 @@
             <a href="../html/my_reviews.html"><span>My Reviews</span></a>
             <a href="../html/my_watchlist.html"><span>My Watchlist</span></a>
             <div class="dropdown-divider"></div>
-            <a href="../html/login.html" class="signout"><span>Sign Out</span></a>
+            <a href="../html/login.php" class="signout"><span>Sign Out</span></a>
           </div>
         </div>
       </div>
