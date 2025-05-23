@@ -21,13 +21,15 @@ function clickLogin() {
 
     // Configure the request
     xhr.open('POST', 'https://wheatley.cs.up.ac.za/u24634434/COS221/api.php', true);
+    // I THINK WE CAN REMOVE THIS WHEN IT IS ON WHEATLEY. WE DON'T WANT JORGE'S PASSWORD OUT IN THE WILD!!!
     xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.setRequestHeader("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
+    xhr.setRequestHeader("Authorization", "Basic " + btoa("u24634434" + ":" + "Norirotti218754"));
 
     // Set up a handler for when the request finishes
     xhr.onload = function () {
         if (xhr.status === 200 || xhr.status === 201) {
             // The request was successful
+            console.log("SUCCESS");
             var responseData = JSON.parse(xhr.responseText);
             console.log(responseData);
             if (responseData.status === 'success') {
