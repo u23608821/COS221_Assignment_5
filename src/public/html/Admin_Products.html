@@ -70,13 +70,10 @@
           <div class="form-row">
             <div class="form-group">
               <label for="product-retailer">Retailer*</label>
-              <select id="product-retailer" name="retailer_id" required>
-                <option value="">Select a retailer</option>
-                <option value="1">Pick n Pay</option>
-                <option value="2">Woolworths</option>
-                <option value="3">Checkers</option>
-                <option value="4">Spar</option>
-              </select>
+             <select id="product-retailer" name="retailer_id" required>
+    <option value="">Select a retailer</option>
+    <!-- Retailers will be loaded dynamically -->
+    </select>
             </div>
             
             <div class="form-group">
@@ -100,6 +97,7 @@
               Clear Form
             </button>
           </div>
+          <div id="productFormMessage" class="result-message"></div>
         </form>
       </div>
     </div>
@@ -113,24 +111,25 @@
       </div>
       <div class="card-content">
         <div class="table-responsive">
+           <div id="productListMessage" class="result-message"></div>
           <table class="product-table">
             <thead>
               <tr>
                 <th>ID</th>
                 <th>Name</th>
-                <th>Price</th>
-                <th>Retailer</th>
+                <th>Description</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="product-list">
               <!-- Product data will be loaded here via JavaScript -->
               <tr>
-                <td colspan="5" class="loading">Loading products...</td>
+                <td colspan="4" class="loading">Loading products...</td>
               </tr>
             </tbody>
           </table>
         </div>
+       
       </div>
     </div>
   </main>
