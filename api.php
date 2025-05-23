@@ -1325,6 +1325,16 @@ class ADMIN {
                     if (strlen($value) > $rule['max_length'] || !filter_var($value, $rule['pattern'])) {
                         ResponseAPI::error($rule['message'], null, 422);
                     }
+                    // Duplicate email check
+                    $stmt = $conn->prepare("SELECT id FROM User WHERE email = ? AND id != ?");
+                    $stmt->bind_param("si", $value, $user_id);
+                    $stmt->execute();
+                    $stmt->store_result();
+                    if ($stmt->num_rows > 0) {
+                        $stmt->close();
+                        ResponseAPI::error("Email already exists for another user.", null, 409);
+                    }
+                    $stmt->close();
                 } else if (!preg_match($rule['pattern'], $value)) {
                     ResponseAPI::error($rule['message'], null, 422);
                 }
@@ -1749,7 +1759,8 @@ class CUSTOMER {
         $min_avg_rating = isset($requestData['filter_by']['minimum_average_rating']) ? (float)$requestData['filter_by']['minimum_average_rating'] : null;
         $limit = (isset($requestData['limit']) && is_numeric($requestData['limit']) && $requestData['limit'] > 0) ? (int)$requestData['limit'] : null;
 
-        // Build base query
+        // Build base query:
+        // 
         $sql = "
             SELECT 
                 p.id AS product_id,
@@ -1773,6 +1784,10 @@ class CUSTOMER {
             ) sp ON sp.product_id = p.id
             LEFT JOIN Retailer rt ON sp.retailer_id = rt.id
         ";
+        //For each product in the product table, we left join the product table with the rating table 
+        // to get the average rating, and the supplied_by table to get the cheapest price. 
+        // The subquery in the supplied_by table gets the minimum price for each product and joins it 
+        // with the retailer table to get the retailer's name.
 
         // Where conditions
         $where = [];
@@ -1871,6 +1886,486 @@ class CUSTOMER {
 
         ResponseAPI::send("All products fetched successfully", $products, 200);
     }// getAllProducts
+
+    public static function getMyDetails($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Customer');
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Get user info
+        $stmt = $conn->prepare("SELECT * FROM User WHERE apikey = ?");
+        $stmt->bind_param("s", $requestData['apikey']);
+        $stmt->execute();
+        $userResult = $stmt->get_result();
+        $user = $userResult->fetch_assoc();
+        $stmt->close();
+
+        if (!$user) {
+            ResponseAPI::error("User not found.", null, 404); //404 Not Found
+        }
+
+        // Get customer info
+        $stmt = $conn->prepare("SELECT * FROM Customer WHERE user_id = ?");
+        $stmt->bind_param("i", $user['id']);
+        $stmt->execute();
+        $customerResult = $stmt->get_result();
+        $customer = $customerResult->fetch_assoc();
+        $stmt->close();
+
+        if (!$customer) {
+            ResponseAPI::error("Customer details not found.", null, 404); //404 Not Found
+        }
+
+        // Remove sensitive fields
+        unset($user['password'], $user['salt'], $user['apikey']);
+
+        // Merge and return
+        $details = array_merge($user, $customer);
+        ResponseAPI::send("Customer details fetched successfully", $details, 200); //200 OK
+    }//getMyDetails
+
+    public static function updateMyDetails($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Customer');
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Get user id
+        $stmt = $conn->prepare("SELECT id FROM User WHERE apikey = ?");
+        $stmt->bind_param("s", $requestData['apikey']);
+        $stmt->execute();
+        $stmt->bind_result($user_id);
+        if (!$stmt->fetch()) {
+            $stmt->close();
+            ResponseAPI::error("User not found.", null, 404);
+        }
+        $stmt->close();
+
+        // Validation rules
+        $rules = [
+            'name' => ['pattern' => '/^[a-zA-Z]{1,50}$/', 'message' => 'Name must be only letters and max 50 characters'],
+            'surname' => ['pattern' => '/^[a-zA-Z]{1,50}$/', 'message' => 'Surname must be only letters and max 50 characters'],
+            'phone_number' => ['pattern' => '/^\d{10}$/', 'message' => 'Phone number must be exactly 10 digits'],
+            'email' => ['pattern' => FILTER_VALIDATE_EMAIL, 'max_length' => 100, 'message' => 'Email must be valid and max 100 characters'],
+            'password' => ['pattern' => "/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/", 'message' => 'Password must be at least 8 characters with upper/lower case, number, and special character'],
+            'street_number' => ['max_length' => 10, 'message' => 'Street number must be 10 characters or less'],
+            'street_name' => ['pattern' => '/^[a-zA-Z\s]+$/', 'max_length' => 100, 'message' => 'Street name must be only letters and spaces, max 100 characters'],
+            'suburb' => ['pattern' => '/^[a-zA-Z\s]+$/', 'max_length' => 100, 'message' => 'Suburb must be only letters and spaces, max 100 characters'],
+            'city' => ['pattern' => '/^[a-zA-Z\s]+$/', 'max_length' => 100, 'message' => 'City must be only letters and spaces, max 100 characters'],
+            'zip_code' => ['max_length' => 5, 'message' => 'Zip code must be 5 characters or less']
+        ];
+
+        $userFields = ['name', 'surname', 'phone_number', 'email', 'password', 'street_number', 'street_name', 'suburb', 'city', 'zip_code'];
+        $fields = [];
+        $values = [];
+        $types = "";
+        $errors = [];
+
+        // Validate fields
+        foreach ($userFields as $field) {
+            if (isset($requestData[$field])) {
+                $value = trim($requestData[$field]);
+                $rule = $rules[$field];
+
+                // Email validation
+                if ($field === 'email') {
+                    if (strlen($value) > $rule['max_length'] || !filter_var($value, $rule['pattern'])) {
+                        ResponseAPI::error($rule['message'], null, 422);
+                    }
+                    // Duplicate email check
+                    $stmt = $conn->prepare("SELECT id FROM User WHERE email = ? AND id != ?");
+                    $stmt->bind_param("si", $value, $user_id);
+                    $stmt->execute();
+                    $stmt->store_result();
+                    if ($stmt->num_rows > 0) {
+                        $stmt->close();
+                        ResponseAPI::error("Email already exists for another user.", null, 409); //409 Conflict
+                    }
+                    $stmt->close();
+                } elseif ($field === 'password') {
+                    if (!preg_match($rule['pattern'], $value)) {
+                        $errors[$field] = $rule['message'];
+                    }
+                } elseif (isset($rule['pattern']) && !preg_match($rule['pattern'], $value)) {
+                    $errors[$field] = $rule['message'];
+                } elseif (isset($rule['max_length']) && strlen($value) > $rule['max_length']) {
+                    $errors[$field] = $rule['message'];
+                }
+            }
+        }
+
+        if (!empty($errors)) {
+            ResponseAPI::error("Parameter validation failed!", $errors, 422);
+        }
+
+        // Prepare update for User table
+        $userUpdates = [];
+        $userValues = [];
+        $userTypes = "";
+
+        foreach (['name', 'surname', 'phone_number', 'email', 'street_number', 'street_name', 'suburb', 'city', 'zip_code'] as $field) {
+            if (isset($requestData[$field])) {
+                $userUpdates[] = "$field = ?";
+                $userValues[] = trim($requestData[$field]);
+                $userTypes .= "s";
+            }
+        }
+
+        // Handle password update
+        if (isset($requestData['password'])) {
+            $salt = bin2hex(random_bytes(16));
+            $passwordWithSalt = $requestData['password'] . $salt;
+            $hashedPassword = password_hash($passwordWithSalt, PASSWORD_DEFAULT);
+            $userUpdates[] = "password = ?";
+            $userValues[] = $hashedPassword;
+            $userTypes .= "s";
+            $userUpdates[] = "salt = ?";
+            $userValues[] = $salt;
+            $userTypes .= "s";
+        }
+
+        // Only update if there are fields to update
+        if (!empty($userUpdates)) {
+            $userTypes .= "i";
+            $userValues[] = $user_id;
+            $sql = "UPDATE User SET " . implode(", ", $userUpdates) . " WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param($userTypes, ...$userValues);
+            if (!$stmt->execute()) {
+                $stmt->close();
+                ResponseAPI::error("Failed to update user: " . $conn->error, ['database_error' => $conn->error], 500);
+            }
+            $stmt->close();
+        }
+
+        $customerUpdates = [];
+        $customerValues = [];
+        $customerTypes = "";
+
+        if (!empty($customerUpdates)) {
+            $customerTypes .= "i";
+            $customerValues[] = $user_id;
+            $sql = "UPDATE Customer SET " . implode(", ", $customerUpdates) . " WHERE user_id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param($customerTypes, ...$customerValues);
+            if (!$stmt->execute()) {
+                $stmt->close();
+                ResponseAPI::error("Failed to update customer: " . $conn->error, ['database_error' => $conn->error], 500);
+            }
+            $stmt->close();
+        }
+
+        ResponseAPI::send("Customer details updated successfully", ['user_id' => $user_id], 200);
+    }//updateMyDetails
+
+    public static function getMyReviews($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Customer');
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Get user id
+        $stmt = $conn->prepare("SELECT id FROM User WHERE apikey = ?");
+        $stmt->bind_param("s", $requestData['apikey']);
+        $stmt->execute();
+        $stmt->bind_result($user_id);
+        if (!$stmt->fetch()) {
+            $stmt->close();
+            ResponseAPI::error("User not found.", null, 404);
+        }
+        $stmt->close();
+
+        // Get all reviews for this user, including product info and cheapest price/retailer
+        $sql = "
+            SELECT 
+                r.id AS review_id,
+                r.score,
+                r.description,
+                r.updated_at,
+                p.id AS product_id,
+                p.name AS product_name,
+                p.image_url,
+                sp.cheapest_price,
+                sp.retailer_id,
+                rt.name AS retailer_name
+            FROM Rating r
+            INNER JOIN Product p ON r.product_id = p.id
+            LEFT JOIN (
+                SELECT sb.product_id, sb.retailer_id, sb.price AS cheapest_price
+                FROM Supplied_By sb
+                INNER JOIN (
+                    SELECT product_id, MIN(price) AS min_price
+                    FROM Supplied_By
+                    GROUP BY product_id
+                ) minp ON sb.product_id = minp.product_id AND sb.price = minp.min_price
+            ) sp ON sp.product_id = p.id
+            LEFT JOIN Retailer rt ON sp.retailer_id = rt.id
+            WHERE r.user_id = ?
+            ORDER BY r.updated_at DESC
+        ";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $reviews = [];
+        while ($row = $result->fetch_assoc()) {
+            $reviews[] = [
+                'review_id' => (int)$row['review_id'],
+                'score' => (int)$row['score'],
+                'description' => $row['description'],
+                'last_updated' => $row['updated_at'],
+                'product_id' => (int)$row['product_id'],
+                'product_name' => $row['product_name'],
+                'image_url' => $row['image_url'],
+                'cheapest_price' => $row['cheapest_price'] !== null ? (float)number_format($row['cheapest_price'], 2, '.', '') : null,
+                'retailer_id' => $row['retailer_id'] !== null ? (int)$row['retailer_id'] : null,
+                'retailer_name' => $row['retailer_name'] !== null ? $row['retailer_name'] : null
+            ];
+        }
+        $stmt->close();
+
+        ResponseAPI::send("My reviews fetched successfully", $reviews, 200);
+    }// getMyReviews
+
+    public static function writeReview($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Customer');
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Get user id
+        $stmt = $conn->prepare("SELECT id FROM User WHERE apikey = ?");
+        $stmt->bind_param("s", $requestData['apikey']);
+        $stmt->execute();
+        $stmt->bind_result($user_id);
+        if (!$stmt->fetch()) {
+            $stmt->close();
+            ResponseAPI::error("User not found.", null, 404);
+        }
+        $stmt->close();
+
+        // Validate fields
+        $errors = [];
+        if (empty($requestData['product_id']) || !is_numeric($requestData['product_id'])) {
+            $errors['product_id'] = "Product ID is required and must be an integer.";
+        }
+        if (!isset($requestData['score']) || !is_numeric($requestData['score']) || $requestData['score'] < 1 || $requestData['score'] > 5) {
+            $errors['score'] = "Score must be an integer between 1 and 5.";
+        }
+        if (empty($requestData['description']) || strlen(trim($requestData['description'])) < 10) {
+            $errors['description'] = "Description must be at least 10 characters.";
+        }
+        if (!empty($errors)) {
+            ResponseAPI::error("Parameter validation failed!", $errors, 422);
+        }
+        $product_id = (int)$requestData['product_id'];
+        $score = (int)$requestData['score'];
+        $description = trim($requestData['description']);
+
+        // Check product exists
+        $stmt = $conn->prepare("SELECT id FROM Product WHERE id = ?");
+        $stmt->bind_param("i", $product_id);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows === 0) {
+            $stmt->close();
+            ResponseAPI::error("Product does not exist.", null, 404);
+        }
+        $stmt->close();
+
+        // Insert review
+        $stmt = $conn->prepare("INSERT INTO Rating (score, description, user_id, product_id) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("isii", $score, $description, $user_id, $product_id);
+        if (!$stmt->execute()) {
+            $stmt->close();
+            ResponseAPI::error("Failed to add review: " . $conn->error, ['database_error' => $conn->error], 500);
+        }
+        $review_id = $stmt->insert_id;
+        $stmt->close();
+
+        ResponseAPI::send("Review added successfully", [
+            'review_id' => $review_id,
+            'customer_id' => $user_id,
+            'product_id' => $product_id
+        ], 201);//201 Created
+    }// writeReview
+
+    public static function editMyReview($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Customer');
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Get user id
+        $stmt = $conn->prepare("SELECT id FROM User WHERE apikey = ?");
+        $stmt->bind_param("s", $requestData['apikey']);
+        $stmt->execute();
+        $stmt->bind_result($user_id);
+        if (!$stmt->fetch()) {
+            $stmt->close();
+            ResponseAPI::error("User not found.", null, 404);
+        }
+        $stmt->close();
+
+        // Identify review: by review_id or by product_id + user_id
+        $review_id = null;
+        if (!empty($requestData['review_id']) && is_numeric($requestData['review_id'])) {
+            $review_id = (int)$requestData['review_id'];
+            $stmt = $conn->prepare("SELECT id, product_id FROM Rating WHERE id = ? AND user_id = ?");
+            $stmt->bind_param("ii", $review_id, $user_id);
+            $stmt->execute();
+            $stmt->bind_result($found_review_id, $product_id);
+            if (!$stmt->fetch()) {
+                $stmt->close();
+                ResponseAPI::error("Review not found for this user.", null, 404);
+            }
+            $stmt->close();
+        } elseif (!empty($requestData['product_id']) && is_numeric($requestData['product_id'])) {
+            $product_id = (int)$requestData['product_id'];
+            $stmt = $conn->prepare("SELECT id FROM Rating WHERE product_id = ? AND user_id = ?");
+            $stmt->bind_param("ii", $product_id, $user_id);
+            $stmt->execute();
+            $stmt->bind_result($found_review_id);
+            if (!$stmt->fetch()) {
+                $stmt->close();
+                ResponseAPI::error("Review not found for this user and product.", null, 404);
+            }
+            $review_id = $found_review_id;
+            $stmt->close();
+        } else {
+            ResponseAPI::error("Review ID or Product ID is required.", null, 422);
+        }
+
+        // Validate fields
+        $errors = [];
+        if (isset($requestData['score']) && (!is_numeric($requestData['score']) || $requestData['score'] < 1 || $requestData['score'] > 5)) {
+            $errors['score'] = "Score must be an integer between 1 and 5.";
+        }
+        if (isset($requestData['description']) && strlen(trim($requestData['description'])) < 10) {
+            $errors['description'] = "Description must be at least 10 characters.";
+        }
+        if (!empty($errors)) {
+            ResponseAPI::error("Parameter validation failed!", $errors, 422);
+        }
+
+        // Only update if at least one field is provided
+        $fields = [];
+        $values = [];
+        $types = "";
+        if (isset($requestData['score'])) {
+            $fields[] = "score = ?";
+            $values[] = (int)$requestData['score'];
+            $types .= "i";
+        }
+        if (isset($requestData['description'])) {
+            $fields[] = "description = ?";
+            $values[] = trim($requestData['description']);
+            $types .= "s";
+        }
+        if (empty($fields)) {
+            ResponseAPI::error("No fields provided to update.", null, 422);
+        }
+        $types .= "i";
+        $values[] = $review_id;
+
+        $sql = "UPDATE Rating SET " . implode(", ", $fields) . " WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param($types, ...$values);
+        if (!$stmt->execute()) {
+            $stmt->close();
+            ResponseAPI::error("Failed to update review: " . $conn->error, ['database_error' => $conn->error], 500);
+        }
+        $stmt->close();
+
+        ResponseAPI::send("Review updated successfully", [
+            'review_id' => $review_id,
+            'customer_id' => $user_id,
+            'product_id' => isset($product_id) ? $product_id : null
+        ], 200);
+    }// editMyReview
+
+    public static function deleteMyReview($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Customer');
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Get user id
+        $stmt = $conn->prepare("SELECT id FROM User WHERE apikey = ?");
+        $stmt->bind_param("s", $requestData['apikey']);
+        $stmt->execute();
+        $stmt->bind_result($user_id);
+        if (!$stmt->fetch()) {
+            $stmt->close();
+            ResponseAPI::error("User not found.", null, 404);
+        }
+        $stmt->close();
+
+        // Identify review: by review_id or by product_id + user_id
+        $review_id = null;
+        $product_id = null;
+        if (!empty($requestData['review_id']) && is_numeric($requestData['review_id'])) {
+            $review_id = (int)$requestData['review_id'];
+            $stmt = $conn->prepare("SELECT product_id FROM Rating WHERE id = ? AND user_id = ?");
+            $stmt->bind_param("ii", $review_id, $user_id);
+            $stmt->execute();
+            $stmt->bind_result($product_id);
+            if (!$stmt->fetch()) {
+                $stmt->close();
+                ResponseAPI::error("Review not found for this user.", null, 404);
+            }
+            $stmt->close();
+        } elseif (!empty($requestData['product_id']) && is_numeric($requestData['product_id'])) {
+            $product_id = (int)$requestData['product_id'];
+            $stmt = $conn->prepare("SELECT id FROM Rating WHERE product_id = ? AND user_id = ?");
+            $stmt->bind_param("ii", $product_id, $user_id);
+            $stmt->execute();
+            $stmt->bind_result($review_id);
+            if (!$stmt->fetch()) {
+                $stmt->close();
+                ResponseAPI::error("Review not found for this user and product.", null, 404);
+            }
+            $stmt->close();
+        } else {
+            ResponseAPI::error("Review ID or Product ID is required.", null, 422);
+        }
+
+        // Delete the review
+        $stmt = $conn->prepare("DELETE FROM Rating WHERE id = ? AND user_id = ?");
+        $stmt->bind_param("ii", $review_id, $user_id);
+        if (!$stmt->execute()) {
+            $stmt->close();
+            ResponseAPI::error("Failed to delete review: " . $conn->error, ['database_error' => $conn->error], 500);
+        }
+        $stmt->close();
+
+        ResponseAPI::send("Review deleted successfully", [
+            'review_id' => $review_id,
+            'customer_id' => $user_id,
+            'product_id' => $product_id
+        ], 200);
+    }// deleteMyReview
+
 }
 
 
@@ -1878,11 +2373,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $requestData = json_decode(file_get_contents('php://input'), true);
 
     if (empty($requestData) || !is_array($requestData)) {
-        ResponseAPI::error("Invalid request data: Is your request object valid JSON?", null, 400);
+        ResponseAPI::error("Invalid request data: Is your request a valid JSON object?", null, 400); //400 Bad Request
     }
 
     if (!isset($requestData['type'])) {
-        ResponseAPI::error("Request type is required", null, 400);
+        ResponseAPI::error("Request type is required", null, 400); //400 Bad Request
     }
 
     try {
@@ -1994,7 +2489,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'getAllCategories':
                 CUSTOMER::getAllCategories($requestData);
                 break;
-                
+
+            case 'getMyDetails':
+                CUSTOMER::getMyDetails($requestData);
+                break;
+
+            case 'updateMyDetails':
+                CUSTOMER::updateMyDetails($requestData);
+                break;
+
+            case 'getMyReviews':
+                CUSTOMER::getMyReviews($requestData);
+                break;
+
+            case 'writeReview':
+                CUSTOMER::writeReview($requestData);
+                break;
+            
+            case 'editMyReview':
+                CUSTOMER::editMyReview($requestData);
+                break;
+
+            case 'deleteMyReview':
+                CUSTOMER::deleteMyReview($requestData);
+                break;                
                 
             default:
                 ResponseAPI::error("Invalid request type", null, 400);

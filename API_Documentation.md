@@ -8,10 +8,11 @@ Our API provides functionality for our price comparison website called "Prick `n
   - [Authentication](#authentication)
   - [Request Format](#request-format)
   - [Response Format](#response-format)
-  - [API Endpoints (ADMIN)](#api-endpoints-admin)
+  - [API Endpoints (USER)](#api-endpoints-user)
     - [Test Endpoint](#test-endpoint)
     - [Register Endpoint](#register-endpoint)
     - [Login Endpoint](#login-endpoint)
+  - [API Endpoints (ADMIN)](#api-endpoints-admin)
     - [QuickAddUser Endpoint](#quickadduser-endpoint)
     - [QuickEditProductPrice Endpoint](#quickeditproductprice-endpoint)
     - [AdminRecentReviews Endpoint](#adminrecentreviews-endpoint)
@@ -31,6 +32,12 @@ Our API provides functionality for our price comparison website called "Prick `n
   - [API Endpoints (CUSTOMER)](#api-endpoints-customer)
     - [getAllCategories Endpoint](#getallcategories-endpoint)
     - [getAllProducts Endpoint (for Customer)](#getallproducts-endpoint-for-customer)
+    - [getMyDetails Endpoint](#getmydetails-endpoint)
+    - [updateMyDetails Endpoint](#updatemydetails-endpoint)
+    - [getMyReviews Endpoint](#getmyreviews-endpoint)
+    - [writeReview Endpoint](#writereview-endpoint)
+    - [editMyReview Endpoint](#editmyreview-endpoint)
+    - [deleteMyReview Endpoint](#deletemyreview-endpoint)
 
 
 ## Authentication
@@ -109,7 +116,7 @@ All responses from the API will be in `JSON` format. The response will include a
 ```
 --- 
 
-## API Endpoints (ADMIN)
+## API Endpoints (USER)
 
 ### Test Endpoint
 
@@ -299,6 +306,10 @@ The login endpoint is used to authenticate a user. Send a request with the `type
     }
 }
 ```
+
+--
+
+## API Endpoints (ADMIN)
 
 ### QuickAddUser Endpoint
 
@@ -1357,10 +1368,11 @@ The `editUser` endpoint allows an admin to update any user's information. The us
 | `salary`       | The admin's salary (number, max 2 decimals, if admin)   | No       |
 
 > **Note:**  
-> - Only the fields provided in the request will be updated.  
-> - If `user_type` is changed, the user will be removed from their old type table and added to the new one.
-> - If the user is an admin and `position` or `salary` is provided, those fields will be updated in the `Admin_staff` table.
-> - If no updatable fields are provided, the request will fail validation.
+> Only the fields provided in the request will be updated.  
+> If `user_type` is changed, the user will be removed from their old type table and added to the new one.
+> If the user is an admin and `position` or `salary` is provided, those fields will be updated in the `Admin_staff` table.
+> If no updatable fields are provided, the request will fail validation. 
+> The `email` field must be unique across all users. If the email already exists for another user, the request will fail.
 
 #### Example Request
 
@@ -1924,8 +1936,6 @@ Each product in the response array includes:
 }
 ```
 
----
-
 #### Example Request (With Filtering and Sorting)
 
 ```json
@@ -1938,8 +1948,6 @@ Each product in the response array includes:
     "limit": 5
 }
 ```
-
----
 
 #### Example Request (Top Rated Only)
 
@@ -1954,8 +1962,6 @@ Each product in the response array includes:
 }
 ```
 
----
-
 #### Example Request (Fuzzy Name Search)
 
 ```json
@@ -1965,8 +1971,6 @@ Each product in the response array includes:
     "name": "Widget"
 }
 ```
-
----
 
 #### Example Response (Error: Not Authenticated)
 
@@ -1987,5 +1991,494 @@ Each product in the response array includes:
     "timestamp": 1747995200000,
     "code": 401,
     "message": "Invalid API key or User not found"
+}
+```
+
+### getMyDetails Endpoint
+
+The `getMyDetails` endpoint allows a customer to retrieve all their user and customer information. The user is identified by their API key. All fields from both the `User` and `Customer` tables are returned, except for sensitive fields (password, salt, apikey).
+
+**Only users with the `Customer` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter   | Description                                      | Required |
+|-------------|--------------------------------------------------|----------|
+| `type`      | The request type: Must be set to `getMyDetails`  | Yes      |
+| `apikey`    | The API key of the customer making the request   | Yes      |
+
+#### Example Request
+
+```json
+{
+    "type": "getMyDetails",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef"
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1747998613000,
+    "code": 200,
+    "message": "Customer details fetched successfully",
+    "data": {
+        "id": 9999,
+        "name": "Pieter",
+        "surname": "Wenning",
+        "phone_number": "0726206863",
+        "email": "pieterwenning2@gmail.com",
+        "street_number": "447A",
+        "street_name": "Strubenkop st",
+        "suburb": "Lynnwood",
+        "city": null,
+        "zip_code": "0081",
+        "user_type": "Customer",
+        "user_id": 9999
+    }
+}
+```
+
+#### Example Response (Error: User Not Found)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747998700000,
+    "code": 404,
+    "message": "User does not exist."
+}
+```
+
+#### Example Response (Error: Validation)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747998800000,
+    "code": 422,
+    "message": "API key is required to authenticate user"
+}
+```
+
+#### Example Response (Error: Not Customer)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747996300000,
+    "code": 403,
+    "message": "User type (Admin) not allowed to use this request"
+}
+```
+
+### updateMyDetails Endpoint
+
+The `updateMyDetails` endpoint allows a customer to update their own details. Only the fields provided in the request will be updated; fields not included will remain unchanged. All provided fields are validated. If any provided field fails validation, no changes are made. If the email is provided, it must be unique (not used by another user). The `user_type` cannot be changed through this endpoint. Only admins can change the `user_type` of a user using their own `editUser` endpoint.
+
+**Only users with the `Customer` user_type (validated by their API key) can use this endpoint.**
+
+#### Validation Rules
+
+- **name**: Only letters, max 50 characters.
+- **surname**: Only letters, max 50 characters.
+- **phone_number**: Exactly 10 digits without spaces (e.g., `0726206863`).
+- **email**: Valid email, max 100 characters, must be unique.
+- **password**: At least 8 characters, must include upper and lower case letters, a number, and a special character.
+- **street_number**: Max 10 characters.
+- **street_name**: Only letters and spaces, max 100 characters.
+- **suburb**: Only letters and spaces, max 100 characters.
+- **city**: Only letters and spaces, max 100 characters.
+- **zip_code**: Max 5 characters.
+
+#### Request Parameters
+
+| Parameter        | Description                        | Required |
+|------------------|------------------------------------|----------|
+| `type`           | The request type: Must be `updateMyDetails` | Yes      |
+| `apikey`         | The API key of the customer        | Yes      |
+| `name`           | The user's name (only letters, max 50 chars) | No       |
+| `surname`        | The user's surname (only letters, max 50 chars) | No       |
+| `phone_number`   | The user's phone number (exactly 10 digits) | No       |
+| `email`          | The user's email address (valid, max 100 chars, unique) | No       |
+| `password`       | The user's password (min 8 chars, upper/lower/number/special char) | No |
+| `street_number`  | The user's street number (max 10 chars) | No       |
+| `street_name`    | The user's street name (only letters and spaces, max 100 chars) | No       |
+| `suburb`         | The user's suburb (only letters and spaces, max 100 chars) | No       |
+| `city`           | The user's city (only letters and spaces, max 100 chars) | No       |
+| `zip_code`       | The user's zip code (max 5 chars) | No       |
+
+> **Note:**  
+> Only the fields provided in the request will be updated.  
+> If any provided field fails validation, no changes will be made and an error will be returned.  
+> If the email is already used by another user, the request will fail.
+
+#### Example Request (Update Address, Email and Phone number)
+
+```json
+{
+    "type": "updateMyDetails",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef",
+    "name": "Pieter",
+    "email": "pieterwenning2@gmail.com",
+    "phone_number": "0726206863",
+    "street_number": "447A",
+    "street_name": "Strubenkop st",
+    "suburb": "Lynnwood",
+    "zip_code": "0081"
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1747998575000,
+    "code": 200,
+    "message": "Customer details updated successfully",
+    "data": {
+        "user_id": 9999
+    }
+}
+```
+
+#### Example Response (Error: Duplicate Email)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747998668000,
+    "code": 409,
+    "message": "Email already exists for another user."
+}
+```
+
+#### Example Response (Error: Validation Failed)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747998718000,
+    "code": 422,
+    "message": "Parameter validation failed!",
+    "data": {
+        "phone_number": "Phone number must be exactly 10 digits",
+        "zip_code": "Zip code must be 5 characters or less"
+    }
+}
+```
+
+#### Example Response (Error: Not Customer)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747997400000,
+    "code": 403,
+    "message": "User type (Admin) not allowed to use this request"
+}
+```
+
+### getMyReviews Endpoint
+
+The `getMyReviews` endpoint allows a customer to retrieve all of the reviews that they have written. Each review includes the review details (id, score, description, last_updated), as well as the product's name, image, cheapest price, and the retailer offering that price.
+
+**Only users with the `Customer` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter   | Description                                      | Required |
+|-------------|--------------------------------------------------|----------|
+| `type`      | The request type: Must be set to `getMyReviews`  | Yes      |
+| `apikey`    | The API key of the customer making the request   | Yes      |
+
+#### Example Request
+
+```json
+{
+    "type": "getMyReviews",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef"
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1747999953000,
+    "code": 200,
+    "message": "My reviews fetched successfully",
+    "data": [
+        {
+            "review_id": 354,
+            "score": 2,
+            "description": "Product not as decribed! I wish I didn't order this :(",
+            "last_updated": "2025-05-23 13:32:18",
+            "product_id": 50,
+            "product_name": "External SSD",
+            "image_url": "https://images.pexels.com/photos/2644597/pexels-photo-2644597.jpeg?auto=compress&cs=tinysrgb&h=350",
+            "cheapest_price": 451.04,
+            "retailer_id": 5,
+            "retailer_name": "Flashpoint"
+        },
+        {
+            "review_id": 353,
+            "score": 5,
+            "description": "Great product, highly recommend!",
+            "last_updated": "2025-05-23 13:31:15",
+            "product_id": 49,
+            "product_name": "Storage Containers",
+            "image_url": "https://images.pexels.com/photos/32151281/pexels-photo-32151281.jpeg?auto=compress&cs=tinysrgb&h=350",
+            "cheapest_price": 85.52,
+            "retailer_id": 7,
+            "retailer_name": "Jayo"
+        }
+    ]
+}
+```
+
+#### Example Response (Error: Not Authenticated)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1748000100000,
+    "code": 401,
+    "message": "API key is required to authenticate user"
+}
+```
+
+### writeReview Endpoint
+
+The `writeReview` endpoint allows a customer to add a review for a product. The customer is identified by their API key. All fields are validated before insertion. If any field is invalid, no review is added.
+
+**Only users with the `Customer` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter     | Description                                      | Required |
+|---------------|--------------------------------------------------|----------|
+| `type`        | The request type: Must be set to `writeReview`   | Yes      |
+| `apikey`      | The API key of the customer making the request   | Yes      |
+| `product_id`  | The ID of the product being reviewed (integer)   | Yes      |
+| `score`       | The review score (integer, 1-5)                  | Yes      |
+| `description` | The review text (min 10 characters)              | Yes      |
+
+#### Example Request
+
+```json
+{
+    "type": "writeReview",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef",
+    "product_id": 49,
+    "score": 5,
+    "description": "Great product, highly recommend!"
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1747999879000,
+    "code": 201,
+    "message": "Review added successfully",
+    "data": {
+        "review_id": 353,
+        "customer_id": 9999,
+        "product_id": 49
+    }
+}
+```
+
+#### Example Response (Error: Validation)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1748000300000,
+    "code": 422,
+    "message": "Parameter validation failed!",
+    "data": {
+        "score": "Score must be an integer between 1 and 5.",
+        "description": "Description must be at least 10 characters."
+    }
+}
+```
+
+#### Example Response (Error: Product Not Found)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1748000400000,
+    "code": 404,
+    "message": "Product does not exist."
+}
+```
+
+### editMyReview Endpoint
+
+The `editMyReview` endpoint allows a customer to edit a review that they have written. The review can be identified by either the `review_id` or the `product_id` (the review must belong to the authenticated user). Only the fields provided will be updated. All provided fields are validated; if any field is invalid, no changes are made.
+
+**Only users with the `Customer` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter     | Description                                      | Required |
+|---------------|--------------------------------------------------|----------|
+| `type`        | The request type: Must be set to `editMyReview`  | Yes      |
+| `apikey`      | The API key of the customer making the request   | Yes      |
+| `review_id`   | The ID of the review to edit (integer)           | No*      |
+| `product_id`  | The ID of the product reviewed (integer)         | No*      |
+| `score`       | The new review score (integer, 1-5)              | No       |
+| `description` | The new review text (min 10 characters)          | No       |
+
+> **Note:**  
+> Either `review_id` or `product_id` must be provided to identify the review.  
+> At least one of `score` or `description` must be provided to update.
+
+#### Example Request (Edit by review_id)
+
+```json
+{
+    "type": "editMyReview",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef",
+    "review_id": 101,
+    "score": 4,
+    "description": "Good product, but could be improved."
+}
+```
+
+#### Example Request (Edit by product_id)
+
+```json
+{
+    "type": "editMyReview",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef",
+    "product_id": 7,
+    "score": 3
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1748000500000,
+    "code": 200,
+    "message": "Review updated successfully",
+    "data": {
+        "review_id": 101,
+        "customer_id": 9999,
+        "product_id": 7
+    }
+}
+```
+
+#### Example Response (Error: Review Not Found)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1748000600000,
+    "code": 404,
+    "message": "Review not found for this user."
+}
+```
+
+#### Example Response (Error: Validation)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1748000700000,
+    "code": 422,
+    "message": "Parameter validation failed!",
+    "data": {
+        "score": "Score must be an integer between 1 and 5."
+    }
+}
+```
+
+### deleteMyReview Endpoint
+
+The `deleteMyReview` endpoint allows a customer to delete a review that they have written. The review can be identified by either `review_id` or `product_id` (the review must belong to the authenticated user).
+
+**Only users with the `Customer` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter     | Description                                      | Required |
+|---------------|--------------------------------------------------|----------|
+| `type`        | The request type: Must be set to `deleteMyReview`| Yes      |
+| `apikey`      | The API key of the customer making the request   | Yes      |
+| `review_id`   | The ID of the review to delete (integer)         | No*      |
+| `product_id`  | The ID of the product reviewed (integer)         | No*      |
+
+> **Note:**  
+> Either `review_id` or `product_id` must be provided to identify the review.
+
+#### Example Request (By review_id)
+
+```json
+{
+    "type": "deleteMyReview",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef",
+    "review_id": 354
+}
+```
+
+#### Example Request (By product_id)
+
+```json
+{
+    "type": "deleteMyReview",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef",
+    "product_id": 7
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1748000143000,
+    "code": 200,
+    "message": "Review deleted successfully",
+    "data": {
+        "review_id": 354,
+        "customer_id": 9999,
+        "product_id": 50
+    }
+}
+```
+
+#### Example Response (Error: Review Not Found)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1748000900000,
+    "code": 404,
+    "message": "Review not found for this user."
+}
+```
+
+#### Example Response (Error: Validation)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1748001000000,
+    "code": 422,
+    "message": "Review ID or Product ID is required."
 }
 ```
