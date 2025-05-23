@@ -128,26 +128,26 @@ class Authorise {
         if (empty($requiredUserType)) {
             ResponseAPI::error('User type is required to authenticate user', 401);
         }
-        if ($requiredUserType !== 'Customer' && $requiredUserType !== 'Admin') {
+        if (!in_array($requiredUserType, ['Customer', 'Admin', 'Both'])) {
             ResponseAPI::error('Invalid User type to check if user is authorized', 400);
         }
 
         //Validate the API key
         $db = Database::getInstance();
         $conn = $db->getConnection();
-        $stmt = $conn->prepare('SELECT name, user_type FROM User WHERE apikey=?'); //Only select necessary fields
+        $stmt = $conn->prepare('SELECT name, user_type FROM User WHERE apikey=?');
         $stmt->bind_param('s', $apikey);
         $stmt->execute();
         $result = $stmt->get_result();
         if ($result->num_rows != 1) {
-            ResponseAPI::error('Invalid API key or User not found', null, 401); //401 Unauthorized
+            ResponseAPI::error('Invalid API key or User not found', null, 401);
         }
 
         //Check if the user type is valid (not case sensitive)
         if ($result->num_rows > 0) {
             $user = $result->fetch_assoc();
-            if (strcasecmp($user['user_type'], $requiredUserType) !== 0) {
-                ResponseAPI::error("User type ({$user['user_type']}) not allowed to use this request", null, 403); //403 Forbidden
+            if ($requiredUserType !== 'Both' && strcasecmp($user['user_type'], $requiredUserType) !== 0) {
+                ResponseAPI::error("User type ({$user['user_type']}) not allowed to use this request", null, 403);
             }
         }
     }//authenticate
@@ -1706,10 +1706,171 @@ class ADMIN {
 }
 
 class CUSTOMER {
+    public static function getAllCategories($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Both');
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        $query = "SELECT DISTINCT category FROM Product WHERE category IS NOT NULL AND category != '' ORDER BY category ASC";
+        $result = $conn->query($query);
+
+        if (!$result) {
+            ResponseAPI::error("Failed to fetch categories: " . $conn->error, ['database_error' => $conn->error], 500);
+        }
+
+        $categories = [];
+        while ($row = $result->fetch_assoc()) {
+            $categories[] = $row['category'];
+        }
+
+        ResponseAPI::send("All categories fetched successfully", $categories, 200); //200 OK
+    }// getAllCategories
+
     public static function getAllProducts($requestData) {
-        // Placeholder for customer-specific logic
-        ResponseAPI::error("Not implemented for customers yet", null, 501);
+        // Only customers can use this endpoint - customers are routed here by the switch statement
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Customer');
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Filters and options
+        $name = isset($requestData['name']) ? '%' . $conn->real_escape_string($requestData['name']) . '%' : null;
+        $category = isset($requestData['category']) ? $conn->real_escape_string($requestData['category']) : null;
+        $sort_by = isset($requestData['sort_by']) ? $requestData['sort_by'] : null;
+        $include_no_price = isset($requestData['include_no_price']) ? (bool)$requestData['include_no_price'] : true;
+        $include_no_rating = isset($requestData['include_no_rating']) ? (bool)$requestData['include_no_rating'] : true;
+        $min_avg_rating = isset($requestData['filter_by']['minimum_average_rating']) ? (float)$requestData['filter_by']['minimum_average_rating'] : null;
+        $limit = (isset($requestData['limit']) && is_numeric($requestData['limit']) && $requestData['limit'] > 0) ? (int)$requestData['limit'] : null;
+
+        // Build base query
+        $sql = "
+            SELECT 
+                p.id AS product_id,
+                p.name AS title,
+                p.image_url,
+                p.category,
+                ROUND(AVG(r.score), 1) AS average_rating,
+                sp.cheapest_price,
+                sp.retailer_id,
+                rt.name AS retailer_name
+            FROM Product p
+            LEFT JOIN Rating r ON r.product_id = p.id
+            LEFT JOIN (
+                SELECT sb.product_id, sb.retailer_id, sb.price AS cheapest_price
+                FROM Supplied_By sb
+                INNER JOIN (
+                    SELECT product_id, MIN(price) AS min_price
+                    FROM Supplied_By
+                    GROUP BY product_id
+                ) minp ON sb.product_id = minp.product_id AND sb.price = minp.min_price
+            ) sp ON sp.product_id = p.id
+            LEFT JOIN Retailer rt ON sp.retailer_id = rt.id
+        ";
+
+        // Where conditions
+        $where = [];
+        $params = [];
+        $types = "";
+
+        if ($name) {
+            $where[] = "p.name LIKE ?";
+            $params[] = $name;
+            $types .= "s";
+        }
+        if ($category) {
+            $where[] = "p.category = ?";
+            $params[] = $category;
+            $types .= "s";
+        }
+
+        // Having clause for minimum average rating
+        $having = [];
+        if ($min_avg_rating !== null) {
+            $having[] = "ROUND(AVG(r.score), 1) >= ?";
+            $params[] = $min_avg_rating;
+            $types .= "d";
+            $include_no_rating = false;
+            $include_no_price = false;
+        }
+        if (!$include_no_price) {
+            $having[] = "sp.cheapest_price IS NOT NULL";
+        }
+        if (!$include_no_rating) {
+            $having[] = "AVG(r.score) IS NOT NULL";
+        }
+
+        // Sorting
+        $order = "";
+        switch ($sort_by) {
+        case "price_asc":
+            $order = "ORDER BY (sp.cheapest_price IS NULL), sp.cheapest_price ASC";
+            break;
+        case "price_desc":
+            $order = "ORDER BY (sp.cheapest_price IS NULL), sp.cheapest_price DESC";
+            break;
+        case "name_asc":
+            $order = "ORDER BY p.name ASC";
+            break;
+        case "name_desc":
+            $order = "ORDER BY p.name DESC";
+            break;
+        case "rating_asc":
+            $order = "ORDER BY (AVG(r.score) IS NULL), ROUND(AVG(r.score), 1) ASC";
+            break;
+        case "rating_desc":
+            $order = "ORDER BY (AVG(r.score) IS NULL), ROUND(AVG(r.score), 1) DESC";
+            break;
+        default:
+            $order = "ORDER BY p.name ASC";
     }
+
+        // Build final SQL
+        if (!empty($where)) {
+            $sql .= " WHERE " . implode(" AND ", $where);
+        }
+        $sql .= " GROUP BY p.id";
+        if (!empty($having)) {
+            $sql .= " HAVING " . implode(" AND ", $having);
+        }
+        $sql .= " $order";
+        if ($limit !== null) {
+            $sql .= " LIMIT ?";
+            $params[] = $limit;
+            $types .= "i";
+        }
+
+        // Prepare and execute
+        $stmt = $conn->prepare($sql);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $products = [];
+        while ($row = $result->fetch_assoc()) {
+            $products[] = [
+                'product_id' => (int)$row['product_id'],
+                'title' => $row['title'],
+                'image_url' => $row['image_url'],
+                'category' => $row['category'],
+                'average_rating' => $row['average_rating'] !== null ? (float)number_format($row['average_rating'], 1) : null,
+                'cheapest_price' => $row['cheapest_price'] !== null ? (float)number_format($row['cheapest_price'], 2, '.', '') : null,
+                'retailer_id' => $row['retailer_id'] !== null ? (int)$row['retailer_id'] : null,
+                'retailer_name' => $row['retailer_name'] !== null ? $row['retailer_name'] : null
+            ];
+        }
+        $stmt->close();
+
+        ResponseAPI::send("All products fetched successfully", $products, 200);
+    }// getAllProducts
 }
 
 
@@ -1731,7 +1892,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'Test':
                 Tester::handleTest($requestData);
                 break;
-                
+
+            //ADMIN
             case 'Register':
                 USER::register($requestData);
                 break;
@@ -1755,33 +1917,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'AddNewProduct':
                 ADMIN::AddNewProduct($requestData);
                 break;
-
-            case 'getAllProducts':
-            // Check user type
-            if (empty($requestData['apikey'])) {
-                ResponseAPI::error("API key is required to authenticate user", null, 401);
-            }
-            // Get user type from API key
-            $db = Database::getInstance();
-            $conn = $db->getConnection();
-            $stmt = $conn->prepare('SELECT user_type FROM User WHERE apikey=?');
-            $stmt->bind_param('s', $requestData['apikey']);
-            $stmt->execute();
-            $stmt->bind_result($user_type);
-            if (!$stmt->fetch()) {
-                $stmt->close();
-                ResponseAPI::error("Invalid API key or User not found", null, 401);
-            }
-            $stmt->close();
-
-            if (strcasecmp($user_type, 'Admin') === 0) {
-                ADMIN::getAllProducts($requestData);
-            } else if (strcasecmp($user_type, 'Customer') === 0) {
-                CUSTOMER::getAllProducts($requestData);
-            } else {
-                ResponseAPI::error("Unknown user type", null, 403); //403 Forbidden
-            }
-            break;
 
             case 'deleteProduct':
                 ADMIN::deleteProduct($requestData);
@@ -1825,6 +1960,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             case 'editProduct':
                 ADMIN::editProduct($requestData);
+                break;
+
+            //BOTH
+            case 'getAllProducts':
+            // Check user type
+            if (empty($requestData['apikey'])) {
+                ResponseAPI::error("API key is required to authenticate user", null, 401);
+            }
+            // Get user type from API key
+            $db = Database::getInstance();
+            $conn = $db->getConnection();
+            $stmt = $conn->prepare('SELECT user_type FROM User WHERE apikey=?');
+            $stmt->bind_param('s', $requestData['apikey']);
+            $stmt->execute();
+            $stmt->bind_result($user_type);
+            if (!$stmt->fetch()) {
+                $stmt->close();
+                ResponseAPI::error("Invalid API key or User not found", null, 401);
+            }
+            $stmt->close();
+
+            if (strcasecmp($user_type, 'Admin') === 0) {
+                ADMIN::getAllProducts($requestData);
+            } else if (strcasecmp($user_type, 'Customer') === 0) {
+                CUSTOMER::getAllProducts($requestData);
+            } else {
+                ResponseAPI::error("Unknown user type", null, 403); //403 Forbidden
+            }
+            break;
+
+            //CUSTOMER
+            case 'getAllCategories':
+                CUSTOMER::getAllCategories($requestData);
                 break;
                 
                 

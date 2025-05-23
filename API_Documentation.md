@@ -8,146 +8,30 @@ Our API provides functionality for our price comparison website called "Prick `n
   - [Authentication](#authentication)
   - [Request Format](#request-format)
   - [Response Format](#response-format)
-      - [Example Response (Success with Data):](#example-response-success-with-data)
-      - [Example Response (Success with Message):](#example-response-success-with-message)
-      - [Example Response (Error):](#example-response-error)
-      - [Example Response (Error with Data):](#example-response-error-with-data)
-  - [API Endpoints](#api-endpoints)
+  - [API Endpoints (ADMIN)](#api-endpoints-admin)
     - [Test Endpoint](#test-endpoint)
-      - [Example Request:](#example-request)
-      - [Example Response (Success):](#example-response-success)
     - [Register Endpoint](#register-endpoint)
-      - [Validation Rules](#validation-rules)
-      - [Request Parameters](#request-parameters)
-      - [Example Request](#example-request-1)
-      - [Example Response (Success)](#example-response-success-1)
-      - [Example Response (Error: Email Exists)](#example-response-error-email-exists)
-      - [Example Response (Error: Validation)](#example-response-error-validation)
     - [Login Endpoint](#login-endpoint)
-      - [Request Parameters](#request-parameters-1)
-      - [Example Request](#example-request-2)
-      - [Example Response (Success)](#example-response-success-2)
-      - [Example Response (Error: Invalid Credentials)](#example-response-error-invalid-credentials)
-      - [Example Response (Error: Validation)](#example-response-error-validation-1)
     - [QuickAddUser Endpoint](#quickadduser-endpoint)
-      - [Request Parameters](#request-parameters-2)
-      - [Validation Rules](#validation-rules-1)
-      - [Example Request](#example-request-3)
-      - [Example Response (Success)](#example-response-success-3)
-      - [Example Response (Error: Validation)](#example-response-error-validation-2)
-      - [Example Response (Error: Email Exists)](#example-response-error-email-exists-1)
-      - [Example Response (Error: Not Admin)](#example-response-error-not-admin)
     - [QuickEditProductPrice Endpoint](#quickeditproductprice-endpoint)
-      - [Request Parameters](#request-parameters-3)
-      - [Validation Rules](#validation-rules-2)
-      - [Example Request](#example-request-4)
-      - [Example Response (Success: Updated)](#example-response-success-updated)
-      - [Example Response (Success: Added)](#example-response-success-added)
-      - [Example Response (Error: Validation)](#example-response-error-validation-3)
-      - [Example Response (Error: Product or Retailer Not Found)](#example-response-error-product-or-retailer-not-found)
-      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-1)
     - [AdminRecentReviews Endpoint](#adminrecentreviews-endpoint)
-      - [Request Parameters](#request-parameters-4)
-      - [Example Request](#example-request-5)
-      - [Example Response (Success)](#example-response-success-4)
-      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-2)
-      - [Example Response (Error: Validation)](#example-response-error-validation-4)
     - [AddNewProduct Endpoint](#addnewproduct-endpoint)
-      - [Request Parameters](#request-parameters-5)
-      - [Validation Rules](#validation-rules-3)
-      - [Example Request](#example-request-6)
-      - [Example Response (Success: Product and Price Added)](#example-response-success-product-and-price-added)
-      - [Example Response (Success: Product Added Only)](#example-response-success-product-added-only)
-      - [Example Response (Success: Product Already Exists, Price Updated)](#example-response-success-product-already-exists-price-updated)
-      - [Example Response (Success: Product Already Exists, No Price Update)](#example-response-success-product-already-exists-no-price-update)
-      - [Example Response (Error: Validation)](#example-response-error-validation-5)
-      - [Example Response (Error: Retailer Not Found)](#example-response-error-retailer-not-found)
-      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-3)
     - [getAllProducts Endpoint (for Admin)](#getallproducts-endpoint-for-admin)
-      - [Request Parameters](#request-parameters-6)
-      - [Example Request](#example-request-7)
-      - [Example Response (Success)](#example-response-success-5)
-      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-4)
-      - [Example Response (Error: Invalid API Key)](#example-response-error-invalid-api-key)
     - [deleteProduct Endpoint](#deleteproduct-endpoint)
-      - [Request Parameters](#request-parameters-7)
-      - [Example Request](#example-request-8)
-      - [Example Response (Success)](#example-response-success-6)
-      - [Example Response (Error: Product Not Found)](#example-response-error-product-not-found)
-      - [Example Response (Error: Validation)](#example-response-error-validation-6)
-      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-5)
     - [GetAllRetailers Endpoint](#getallretailers-endpoint)
-      - [Request Parameters](#request-parameters-8)
-      - [Example Request](#example-request-9)
-      - [Example Response (Success)](#example-response-success-7)
-      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-6)
-      - [Example Response (Error: Invalid API Key)](#example-response-error-invalid-api-key-1)
     - [AddRetailer Endpoint](#addretailer-endpoint)
-      - [Request Parameters](#request-parameters-9)
-      - [Example Request](#example-request-10)
-      - [Example Response (Success)](#example-response-success-8)
-      - [Example Response (Error: Validation)](#example-response-error-validation-7)
-      - [Example Response (Error: Retailer Exists)](#example-response-error-retailer-exists)
-      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-7)
     - [EditRetailer Endpoint](#editretailer-endpoint)
-      - [Request Parameters](#request-parameters-10)
-      - [Example Request](#example-request-11)
-      - [Example Response (Success)](#example-response-success-9)
-      - [Example Response (Error: Validation)](#example-response-error-validation-8)
-      - [Example Response (Error: Retailer Not Found)](#example-response-error-retailer-not-found-1)
-      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-8)
     - [getAllUsers Endpoint](#getallusers-endpoint)
-      - [Request Parameters](#request-parameters-11)
-      - [Example Request](#example-request-12)
-      - [Example Response (Success)](#example-response-success-10)
-      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-9)
     - [AddNewStaff Endpoint](#addnewstaff-endpoint)
-      - [Request Parameters](#request-parameters-12)
-      - [Validation Rules](#validation-rules-4)
-      - [Example Request](#example-request-13)
-      - [Example Response (Success)](#example-response-success-11)
-      - [Example Response (Error: Validation)](#example-response-error-validation-9)
-      - [Example Response (Error: Email Exists)](#example-response-error-email-exists-2)
-      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-10)
     - [editUser Endpoint](#edituser-endpoint)
-      - [Request Parameters](#request-parameters-13)
-      - [Example Request](#example-request-14)
-      - [Example Response (Success)](#example-response-success-12)
-      - [Example Response (Error: Validation)](#example-response-error-validation-10)
-      - [Example Response (Error: User Not Found)](#example-response-error-user-not-found)
-      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-11)
     - [deleteUser Endpoint](#deleteuser-endpoint)
-      - [Request Parameters](#request-parameters-14)
-      - [Example Request](#example-request-15)
-      - [Example Response (Success)](#example-response-success-13)
-      - [Example Response (Error: User Not Found)](#example-response-error-user-not-found-1)
-      - [Example Response (Error: Validation)](#example-response-error-validation-11)
-      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-12)
     - [deleteRating Endpoint](#deleterating-endpoint)
-      - [Request Parameters](#request-parameters-15)
-      - [Example Request](#example-request-16)
-      - [Example Response (Success)](#example-response-success-14)
-      - [Example Response (Error: User Not Found)](#example-response-error-user-not-found-2)
-      - [Example Response (Error: Product Not Found)](#example-response-error-product-not-found-1)
-      - [Example Response (Error: Rating Not Found)](#example-response-error-rating-not-found)
-      - [Example Response (Error: Validation)](#example-response-error-validation-12)
-      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-13)
     - [deleteRetailer Endpoint](#deleteretailer-endpoint)
-      - [Request Parameters](#request-parameters-16)
-      - [Example Request](#example-request-17)
-      - [Example Response (Success)](#example-response-success-15)
-      - [Example Response (Error: Retailer Not Found)](#example-response-error-retailer-not-found-2)
-      - [Example Response (Error: Validation)](#example-response-error-validation-13)
-      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-14)
     - [editProduct Endpoint](#editproduct-endpoint)
-      - [Request Parameters](#request-parameters-17)
-      - [Validation Rules](#validation-rules-5)
-      - [Example Request (Update Name and Category)](#example-request-update-name-and-category)
-      - [Example Response (Success)](#example-response-success-16)
-      - [Example Response (Error: Product Not Found)](#example-response-error-product-not-found-2)
-      - [Example Response (Error: Name Already Exists)](#example-response-error-name-already-exists)
-      - [Example Response (Error: Validation)](#example-response-error-validation-14)
-      - [Example Response (Error: No Fields Provided)](#example-response-error-no-fields-provided)
+  - [API Endpoints (CUSTOMER)](#api-endpoints-customer)
+    - [getAllCategories Endpoint](#getallcategories-endpoint)
+    - [getAllProducts Endpoint (for Customer)](#getallproducts-endpoint-for-customer)
+
 
 ## Authentication
 
@@ -225,7 +109,7 @@ All responses from the API will be in `JSON` format. The response will include a
 ```
 --- 
 
-## API Endpoints
+## API Endpoints (ADMIN)
 
 ### Test Endpoint
 
@@ -1889,3 +1773,219 @@ The `editProduct` endpoint allows an admin to update the details of an existing 
 }
 ```
 
+
+
+---
+
+## API Endpoints (CUSTOMER)
+
+### getAllCategories Endpoint
+
+The `getAllCategories` endpoint allows any authenticated user (Admin or Customer) to retrieve a list of all unique product categories from the `Product` table. This is typically used to populate a dropdown for category filtering on the products page.
+
+#### Request Parameters
+
+| Parameter   | Description                                      | Required |
+|-------------|--------------------------------------------------|----------|
+| `type`      | The request type: Must be set to `getAllCategories` | Yes      |
+| `apikey`    | The API key of the user performing the request   | Yes      |
+
+#### Example Request
+
+```json
+{
+    "type": "getAllCategories",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef"
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1747994683000,
+    "code": 200,
+    "message": "All categories fetched successfully",
+    "data": [
+        "Accessories",
+        "Audio",
+        "Computers",
+        "Electronics",
+        "Fitness"
+    ]
+}
+```
+
+#### Example Response (Error: Not Authenticated)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747951100000,
+    "code": 401,
+    "message": "API key is required to authenticate user"
+}
+```
+
+#### Example Response (Error: Invalid API Key)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747951200000,
+    "code": 401,
+    "message": "Invalid API key or User not found"
+}
+```
+
+### getAllProducts Endpoint (for Customer)
+
+The `getAllProducts` endpoint allows a customer to retrieve a list of products for display on the Products and Top-rated pages. The API performs all filtering, sorting, and aggregation, returning each product's image, title, average rating, cheapest price, and the retailer's name and ID for that price. Products with no ratings or prices are handled according to the request parameters.
+
+**Only users with the `Customer` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter                | Description                                                                                  | Required | Default   |
+|--------------------------|----------------------------------------------------------------------------------------------|----------|-----------|
+| `type`                   | The request type: Must be set to `getAllProducts`                                           | Yes      |           |
+| `apikey`                 | The API key of the customer performing the request                                          | Yes      |           |
+| `name`                   | Fuzzy search for product name (uses SQL LIKE)                                               | No       |           |
+| `category`               | Filter by product category                                                                  | No       |           |
+| `sort_by`                | Sort order: `price_asc`, `price_desc`, `name_asc`, `name_desc`, `rating_asc`, `rating_desc` | No       | `name_asc`|
+| `include_no_price`       | Include products with no price (`true` or `false`)                                          | No       | `true`    |
+| `include_no_rating`      | Include products with no ratings (`true` or `false`)                                        | No       | `true`    |
+| `filter_by`              | Object with filter options (see below)                                                      | No       |           |
+| `filter_by.minimum_average_rating` | Only include products with average rating above this float value                   | No       |           |
+| `limit`                  | Maximum number of products to return                                                        | No       |           |
+
+> **Note:**  
+> If `filter_by.minimum_average_rating` is specified, products with no rating or price are excluded.
+> If `include_no_price` or `include_no_rating` is set to `false`, products missing those values are excluded.
+> Sorting by price or rating will always place products with no price/rating at the end of the list.
+
+#### Response Fields
+
+Each product in the response array includes:
+
+| Field           | Description                                      |
+|-----------------|--------------------------------------------------|
+| `product_id`    | The product's unique ID (integer)                |
+| `title`         | The product's name                               |
+| `image_url`     | The product's image URL                          |
+| `category`      | The product's category                           |
+| `average_rating`| The product's average rating (float, 1 decimal) or `null` if no ratings |
+| `cheapest_price`| The cheapest price for this product (float, 2 decimals) or `null` if no prices |
+| `retailer_id`   | The retailer ID offering the cheapest price, or `null` if no prices |
+| `retailer_name` | The retailer's name for the cheapest price, or `null` if no prices |
+
+---
+
+#### Example Request (Simple: All Products)
+
+```json
+{
+    "type": "getAllProducts",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef"
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1747995000000,
+    "code": 200,
+    "message": "All products fetched successfully",
+    "data": [
+        {
+            "product_id": 1,
+            "title": "Super Widget",
+            "image_url": "https://example.com/widget.jpg",
+            "category": "Widgets",
+            "average_rating": 4.5,
+            "cheapest_price": 49.99,
+            "retailer_id": 5,
+            "retailer_name": "Retailer C"
+        },
+        {
+            "product_id": 2,
+            "title": "Mega Gadget",
+            "image_url": "https://example.com/gadget.jpg",
+            "category": "Gadgets",
+            "average_rating": null,
+            "cheapest_price": null,
+            "retailer_id": null,
+            "retailer_name": null
+        }
+    ]
+}
+```
+
+---
+
+#### Example Request (With Filtering and Sorting)
+
+```json
+{
+    "type": "getAllProducts",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef",
+    "sort_by": "price_asc",
+    "include_no_price": false,
+    "include_no_rating": true,
+    "limit": 5
+}
+```
+
+---
+
+#### Example Request (Top Rated Only)
+
+```json
+{
+    "type": "getAllProducts",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef",
+    "filter_by": {
+        "minimum_average_rating": 4.0
+    },
+    "sort_by": "rating_desc"
+}
+```
+
+---
+
+#### Example Request (Fuzzy Name Search)
+
+```json
+{
+    "type": "getAllProducts",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef",
+    "name": "Widget"
+}
+```
+
+---
+
+#### Example Response (Error: Not Authenticated)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747995100000,
+    "code": 401,
+    "message": "API key is required to authenticate user"
+}
+```
+
+#### Example Response (Error: Invalid API Key)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747995200000,
+    "code": 401,
+    "message": "Invalid API key or User not found"
+}
+```
