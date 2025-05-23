@@ -182,20 +182,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
       
       <div class="user-reviews" id="userReviewsContainer">
         <div class="review">
-          <div class="review-header">
-            <div class="review-stars">
-              <span class="material-symbols-outlined">star</span>
-              <span class="material-symbols-outlined">star</span>
-              <span class="material-symbols-outlined">star</span>
-              <span class="material-symbols-outlined">star</span>
-              <span class="material-symbols-outlined">star</span>
-            </div>
-            <div class="reviewer-name">John Smith</div>
-            <div class="review-date">Reviewed on 15 March 2025</div>
-          </div>
-          <div class="review-content">
-            These headphones are absolutely fantastic! The noise cancellation is incredible and the sound quality is top-notch. I use them every day for work and travel.
-          </div>
+
         </div>              
 
       </div>
