@@ -236,9 +236,10 @@ async function editPrice() {
     }
 }
 
-// Load Recent Reviews
-async function deleteReview(reviewId) {
-    if (!confirm('Are you sure you want to delete this review?')) return;
+
+//delete recent review.
+async function deleteReview(productId, userId) {
+   // if (!confirm('Are you sure you want to delete this review?')) return;
 
     const adminApiKey = getAdminApiKey();
     if (!adminApiKey) {
@@ -253,30 +254,34 @@ async function deleteReview(reviewId) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                type: 'DeleteReview',
+                type: 'deleteRating',
                 apikey: adminApiKey,
-                review_id: reviewId
+                user_id: userId,
+                product_id: productId
             })
         });
 
         const result = await response.json();
-        
+
         if (result.status === 'success') {
-            // Create a temporary success message in the review item
-            const reviewItem = document.querySelector(`.review-item button[onclick="deleteReview(${reviewId})"]`)?.closest('.review-item');
-            if (reviewItem) {
-                const tempMsg = document.createElement('div');
-                tempMsg.className = 'result-message success';
-                tempMsg.innerHTML = 'Review deleted successfully';
-                reviewItem.appendChild(tempMsg);
-                
-                // Remove the message after 3 seconds
-                setTimeout(() => {
-                    tempMsg.remove();
-                    loadRecentReviews(); // Refresh the list
-                }, 3000);
-            } else {
-                loadRecentReviews(); // Refresh the list
+            // Just remove the first .review-item matching both productId and userId
+            const allReviews = document.querySelectorAll('.review-item');
+            for (let item of allReviews) {
+                if (
+                    item.innerHTML.includes(`on Product ID: ${productId}`) &&
+                    item.innerHTML.includes(`by User ID: ${userId}`)
+                ) {
+                    const tempMsg = document.createElement('div');
+                    tempMsg.className = 'result-message success';
+                    tempMsg.innerHTML = 'Review deleted successfully';
+                    item.appendChild(tempMsg);
+
+                    setTimeout(() => {
+                        tempMsg.remove();
+                        loadRecentReviews(); // refresh
+                    }, 3000);
+                    break;
+                }
             }
         } else {
             alert(`Error: ${result.message}`);
@@ -286,6 +291,7 @@ async function deleteReview(reviewId) {
         alert('Failed to delete review. Please try again.');
     }
 }
+
 
 function updateReviewsUI(reviews) {
     const reviewsContainer = document.querySelector('.reviews-list');
@@ -306,10 +312,11 @@ function updateReviewsUI(reviews) {
             <div class="review-meta">
                 <div class="stars">${stars}</div>
                 <span>on Product ID: ${review.product_id}</span>
+                <span class="user-id">by User ID: ${review.user_id}</span>
             </div>
             <p class="review-text">"${review.description || 'No description'}"</p>
-            <button class="btn-danger" onclick="deleteReview(${review.id})">
-                <span class="material-symbols-outlined">delete</span> Delete
+            <button class="btn-danger" onclick="deleteReview(${review.product_id}, ${review.user_id})">
+            <span class="material-symbols-outlined">delete</span> Delete
             </button>
         `;
         
@@ -317,44 +324,9 @@ function updateReviewsUI(reviews) {
     });
 }
 
-// Delete Review Functionality
-async function deleteReview(reviewId) {
-    if (!confirm('Are you sure you want to delete this review?')) return;
 
-    // Get admin API key from session or cookie
-    const adminApiKey = getAdminApiKey();
-    if (!adminApiKey) {
-        alert('Admin not authenticated');
-        return;
-    }
 
-    try {
-        
-        const response = await fetch('http://localhost:8000/api.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                type: 'DeleteReview',
-                apikey: adminApiKey,
-                review_id: reviewId
-            })
-        });
 
-        const result = await response.json();
-        
-        if (result.status === 'success') {
-            alert('Review deleted successfully');
-            loadRecentReviews(); // Refresh the list
-        } else {
-            alert(`Error: ${result.message}`);
-        }
-    } catch (error) {
-        console.error('Error deleting review:', error);
-        alert('Failed to delete review. Please try again.');
-    }
-}
 
 // Load Recent Reviews
 async function loadRecentReviews() {

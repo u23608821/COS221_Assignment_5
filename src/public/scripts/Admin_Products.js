@@ -273,6 +273,8 @@ function cancelEdit(productId) {
     row.querySelector('.btn-cancel').style.display = 'none';
 }
 
+
+
 // Save product changes
 async function saveProduct(productId) {
     const row = document.querySelector(`tr[data-product-id="${productId}"]`);
@@ -281,8 +283,9 @@ async function saveProduct(productId) {
     const newName = row.querySelector('.product-name-edit').value.trim();
     const newDescription = row.querySelector('.product-description-edit').value.trim();
 
-    if (!newName) {
-        showErrorMessage('productListMessage', 'Product name cannot be empty');
+    // Don't proceed if both name and description are empty
+    if (!newName && !newDescription) {
+        showErrorMessage('productListMessage', 'Please enter a new name and/or description.');
         return;
     }
 
@@ -292,19 +295,23 @@ async function saveProduct(productId) {
         return;
     }
 
+    // Build request payload with only provided fields
+    const payload = {
+        type: 'editProduct',
+        apikey: adminApiKey,
+        product_id: productId
+    };
+
+    if (newName) payload.name = newName;
+    if (newDescription) payload.description = newDescription;
+
     try {
         const response = await fetch('http://localhost:8000/api.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                type: 'UpdateProduct',
-                apikey: adminApiKey,
-                product_id: productId,
-                name: newName,
-                description: newDescription
-            })
+            body: JSON.stringify(payload)
         });
 
         const result = await response.json();
@@ -322,6 +329,7 @@ async function saveProduct(productId) {
         cancelEdit(productId); // Revert changes
     }
 }
+
 
 // Delete a product
 async function deleteProduct(productId) {

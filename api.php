@@ -889,7 +889,7 @@ class ADMIN {
         }
         Authorise::authenticate($requestData['apikey'], 'Admin');
 
-        // Validate product_id
+        // Validate input
         if (empty($requestData['product_id']) || !is_numeric($requestData['product_id'])) {
             ResponseAPI::error("Product ID is required and must be an integer.", null, 422);
         }
@@ -905,11 +905,23 @@ class ADMIN {
         $stmt->store_result();
         if ($stmt->num_rows === 0) {
             $stmt->close();
-            ResponseAPI::error("Product does not exist", null, 404); //404 Not Found
+            ResponseAPI::error("Product does not exist", null, 404);
         }
         $stmt->close();
 
-        // Delete product
+        // Delete all ratings for this product
+        $stmt = $conn->prepare("DELETE FROM Rating WHERE product_id = ?");
+        $stmt->bind_param("i", $product_id);
+        $stmt->execute();
+        $stmt->close();
+
+        // Delete all supplied_by entries for this product
+        $stmt = $conn->prepare("DELETE FROM Supplied_By WHERE product_id = ?");
+        $stmt->bind_param("i", $product_id);
+        $stmt->execute();
+        $stmt->close();
+
+        // Delete the product
         $stmt = $conn->prepare("DELETE FROM Product WHERE id = ?");
         $stmt->bind_param("i", $product_id);
         if (!$stmt->execute()) {
@@ -1461,6 +1473,12 @@ class ADMIN {
         }
         $stmt->close();
 
+        // Delete all ratings by this user
+        $stmt = $conn->prepare("DELETE FROM Rating WHERE user_id = ?");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $stmt->close();
+
         // Delete from Customer or Admin_staff table
         if (strcasecmp($user_type, 'Customer') === 0) {
             $stmt = $conn->prepare("DELETE FROM Customer WHERE user_id = ?");
@@ -1485,6 +1503,214 @@ class ADMIN {
 
         ResponseAPI::send("User deleted successfully", ['user_id' => $user_id], 200);
     }//deleteUser
+
+    public static function deleteRating($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Admin');
+
+        // Validate input
+        if (empty($requestData['user_id']) || !is_numeric($requestData['user_id'])) {
+            ResponseAPI::error("User ID is required and must be an integer.", null, 422);
+        }
+        if (empty($requestData['product_id']) || !is_numeric($requestData['product_id'])) {
+            ResponseAPI::error("Product ID is required and must be an integer.", null, 422);
+        }
+        $user_id = (int)$requestData['user_id'];
+        $product_id = (int)$requestData['product_id'];
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Check if user exists
+        $stmt = $conn->prepare("SELECT id FROM User WHERE id = ?");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows === 0) {
+            $stmt->close();
+            ResponseAPI::error("User does not exist.", null, 404);
+        }
+        $stmt->close();
+
+        // Check if product exists
+        $stmt = $conn->prepare("SELECT id FROM Product WHERE id = ?");
+        $stmt->bind_param("i", $product_id);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows === 0) {
+            $stmt->close();
+            ResponseAPI::error("Product does not exist.", null, 404);
+        }
+        $stmt->close();
+
+        // Check if rating exists
+        $stmt = $conn->prepare("SELECT * FROM Rating WHERE user_id = ? AND product_id = ?");
+        $stmt->bind_param("ii", $user_id, $product_id);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows === 0) {
+            $stmt->close();
+            ResponseAPI::error("Rating does not exist for this user and product.", null, 404);
+        }
+        $stmt->close();
+
+        // Delete the rating
+        $stmt = $conn->prepare("DELETE FROM Rating WHERE user_id = ? AND product_id = ?");
+        $stmt->bind_param("ii", $user_id, $product_id);
+        if (!$stmt->execute()) {
+            $stmt->close();
+            ResponseAPI::error("Failed to delete rating: " . $conn->error, ['database_error' => $conn->error], 500);
+        }
+        $stmt->close();
+
+        ResponseAPI::send("Rating deleted successfully", ['user_id' => $user_id, 'product_id' => $product_id], 200);
+    }//deleteRating
+
+    public static function deleteRetailer($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Admin');
+
+        // Validate input
+        if (empty($requestData['retailer_id']) || !is_numeric($requestData['retailer_id'])) {
+            ResponseAPI::error("Retailer ID is required and must be an integer.", null, 422);
+        }
+        $retailer_id = (int)$requestData['retailer_id'];
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Check if retailer exists
+        $stmt = $conn->prepare("SELECT id FROM Retailer WHERE id = ?");
+        $stmt->bind_param("i", $retailer_id);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows === 0) {
+            $stmt->close();
+            ResponseAPI::error("Retailer does not exist.", null, 404);
+        }
+        $stmt->close();
+
+        // Delete all supplied_by entries for this retailer
+        $stmt = $conn->prepare("DELETE FROM Supplied_By WHERE retailer_id = ?");
+        $stmt->bind_param("i", $retailer_id);
+        $stmt->execute();
+        $stmt->close();
+
+        // Delete the retailer
+        $stmt = $conn->prepare("DELETE FROM Retailer WHERE id = ?");
+        $stmt->bind_param("i", $retailer_id);
+        if (!$stmt->execute()) {
+            $stmt->close();
+            ResponseAPI::error("Failed to delete retailer: " . $conn->error, ['database_error' => $conn->error], 500);
+        }
+        $stmt->close();
+
+        ResponseAPI::send("Retailer deleted successfully", ['retailer_id' => $retailer_id], 200);
+    }//deleteRetailer
+
+    public static function editProduct($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Admin');
+
+        // Validate product_id
+        if (empty($requestData['product_id']) || !is_numeric($requestData['product_id'])) {
+            ResponseAPI::error("Product ID is required and must be an integer.", null, 422);
+        }
+        $product_id = (int)$requestData['product_id'];
+
+        // Validate optional fields
+        $errors = [];
+        $fields = [];
+        $values = [];
+        $types = "";
+
+        // Check if product exists
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("SELECT id FROM Product WHERE id = ?");
+        $stmt->bind_param("i", $product_id);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows === 0) {
+            $stmt->close();
+            ResponseAPI::error("Product does not exist.", null, 404);
+        }
+        $stmt->close();
+
+        // Validation rules
+        $fieldRules = [
+            'name' => ['max_length' => 100, 'message' => 'Product name must be at most 100 characters.'],
+            'description' => ['max_length' => null],
+            'image_url' => ['max_length' => 255, 'message' => 'Image URL must be at most 255 characters.'],
+            'category' => ['max_length' => 100, 'message' => 'Category must be at most 100 characters.']
+        ];
+
+        // Check for duplicate name if name is being updated
+        if (isset($requestData['name'])) {
+            $newName = trim($requestData['name']);
+            if (strlen($newName) > $fieldRules['name']['max_length']) {
+                $errors['name'] = $fieldRules['name']['message'];
+            } else {
+                // Check if another product with this name exists (excluding this product)
+                $stmt = $conn->prepare("SELECT id FROM Product WHERE name = ? AND id != ?");
+                $stmt->bind_param("si", $newName, $product_id);
+                $stmt->execute();
+                $stmt->store_result();
+                if ($stmt->num_rows > 0) {
+                    $stmt->close();
+                    ResponseAPI::error("Product name already exists. Please use a different name.", null, 409);
+                }
+                $stmt->close();
+                $fields[] = "name = ?";
+                $values[] = $newName;
+                $types .= "s";
+            }
+        }
+
+        // Validate and add other fields
+        foreach (['description', 'image_url', 'category'] as $field) {
+            if (isset($requestData[$field])) {
+                $value = trim($requestData[$field]);
+                $maxLen = $fieldRules[$field]['max_length'];
+                if ($maxLen !== null && strlen($value) > $maxLen) {
+                    $errors[$field] = $fieldRules[$field]['message'];
+                } else {
+                    $fields[] = "$field = ?";
+                    $values[] = $value;
+                    $types .= "s";
+                }
+            }
+        }
+
+        if (!empty($errors)) {
+            ResponseAPI::error("Parameter validation failed!", $errors, 422);
+        }
+
+        if (empty($fields)) {
+            ResponseAPI::error("No fields provided to update.", null, 422);
+        }
+
+        // Build and execute update query
+        $sql = "UPDATE Product SET " . implode(", ", $fields) . " WHERE id = ?";
+        $types .= "i";
+        $values[] = $product_id;
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param($types, ...$values);
+        if (!$stmt->execute()) {
+            $stmt->close();
+            ResponseAPI::error("Failed to update product: " . $conn->error, ['database_error' => $conn->error], 500);
+        }
+        $stmt->close();
+
+        ResponseAPI::send("Product updated successfully", ['product_id' => $product_id], 200);
+    }//editProduct
 }
 
 class CUSTOMER {
@@ -1595,6 +1821,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             case 'deleteUser':
                 ADMIN::deleteUser($requestData);
+                break;
+
+            case 'deleteRating':
+                ADMIN::deleteRating($requestData);
+                break;
+
+            case 'deleteRetailer':
+                ADMIN::deleteRetailer($requestData);
+                break;
+
+            case 'editProduct':
+                ADMIN::editProduct($requestData);
                 break;
                 
                 
