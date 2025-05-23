@@ -1,3 +1,9 @@
+// Configuration constants
+const API_URL = 'https://wheatley.cs.up.ac.za/u24634434/COS221/api.php';
+const WHEATLEY_USERNAME = 'u24634434'; // Replace with actual
+const WHEATLEY_PASSWORD = 'Norirotti218754'; // Replace with actual
+const productsPerPage = 10; // Define how many products per page
+
 // DOM Elements
 const accountBtn = document.getElementById("accountBtn");
 const accountMenu = document.getElementById("accountMenu");
@@ -75,19 +81,19 @@ updateIcon();
 applySavedTheme();
 
 // API Functions
-async function fetchProducts(filters = {}) {
+async function fetchProducts(filters = {}, page = 1) {
     try {
-        // Get API key from cookies
         const apiKey = getCookie("userapikey");
         if (!apiKey) {
             window.location.href = "../html/login.php";
-            return;
+            return { products: [], total: 0 };
         }
 
-        // Prepare request body
         const requestBody = {
             type: "getAllProducts",
-            apikey: apiKey
+            apikey: apiKey,
+            limit: productsPerPage,
+            offset: (page - 1) * productsPerPage,
         };
 
         // Apply filters if provided
@@ -97,29 +103,117 @@ async function fetchProducts(filters = {}) {
         if (filters.include_no_price !== undefined) requestBody.include_no_price = filters.include_no_price;
         if (filters.include_no_rating !== undefined) requestBody.include_no_rating = filters.include_no_rating;
         if (filters.filter_by) requestBody.filter_by = filters.filter_by;
-        if (filters.limit) requestBody.limit = filters.limit;
 
-        // Make API request
-        const response = await fetch('https://your-api-endpoint.com/api', {
+        const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': 'Basic ' + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD)
             },
             body: JSON.stringify(requestBody)
         });
 
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
 
         if (data.status === "success") {
-            return data.data;
+            return {
+                products: data.data,
+                total: data.total_count || data.data.length * page
+            };
         } else {
-            console.error("Error fetching products:", data.message);
-            return [];
+            console.error("API Error:", data.message);
+            showErrorToUser(data.message || "Failed to load products");
+            return { products: [], total: 0 };
         }
     } catch (error) {
-        console.error("Error fetching products:", error);
-        return [];
+        console.error("Fetch Error:", error);
+        showErrorToUser("Network error. Please try again.");
+        return { products: [], total: 0 };
     }
+}
+
+// Alternative XMLHttpRequest version if needed
+function fetchProductsXHR(filters = {}, page = 1, callback) {
+    const apiKey = getCookie("userapikey");
+    if (!apiKey) {
+        window.location.href = "../html/login.php";
+        return;
+    }
+
+    const requestBody = {
+        type: "getAllProducts",
+        apikey: apiKey,
+        limit: productsPerPage,
+        offset: (page - 1) * productsPerPage,
+    };
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', API_URL, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
+
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    if (data.status === "success") {
+                        callback({
+                            products: data.data,
+                            total: data.total_count || data.data.length * page
+                        });
+                    } else {
+                        console.error("API Error:", data.message);
+                        showErrorToUser(data.message);
+                        callback({ products: [], total: 0 });
+                    }
+                } catch (e) {
+                    console.error("Parsing Error:", e);
+                    showErrorToUser("Invalid server response");
+                    callback({ products: [], total: 0 });
+                }
+            } else {
+                console.error("HTTP Error:", xhr.status);
+                showErrorToUser("Server error: " + xhr.status);
+                callback({ products: [], total: 0 });
+            }
+        }
+    };
+
+    xhr.send(JSON.stringify(requestBody));
+}
+
+// Helper function to display errors to users
+function showErrorToUser(message) {
+    const errorElement = document.getElementById('api-error') || createErrorElement();
+    errorElement.textContent = message;
+    errorElement.style.display = 'block';
+    
+    setTimeout(() => {
+        errorElement.style.display = 'none';
+    }, 5000);
+}
+
+function createErrorElement() {
+    const errorDiv = document.createElement('div');
+    errorDiv.id = 'api-error';
+    errorDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px;
+        background: #ff4444;
+        color: white;
+        border-radius: 5px;
+        z-index: 10000;
+        display: none;
+    `;
+    document.body.appendChild(errorDiv);
+    return errorDiv;
 }
 
 function renderProducts(products) {
@@ -172,7 +266,6 @@ function renderProducts(products) {
     document.querySelectorAll('.compare-btn').forEach(button => {
         button.addEventListener('click', function() {
             const productId = this.getAttribute('data-product-id');
-            // You can implement navigation to product details page here
             window.location.href = `product_details.html?product_id=${productId}`;
         });
     });
@@ -265,7 +358,7 @@ async function applyFilters() {
     }
     
     // Fetch and render products with filters
-    const products = await fetchProducts(filters);
+    const { products } = await fetchProducts(filters);
     renderProducts(products);
 }
 
@@ -290,7 +383,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     // Load initial products
-    const products = await fetchProducts();
+    const { products } = await fetchProducts();
     renderProducts(products);
     
     // Populate categories dropdown
@@ -303,10 +396,11 @@ async function populateCategories() {
         const apiKey = getCookie("userapikey");
         if (!apiKey) return;
 
-        const response = await fetch('https://your-api-endpoint.com/api', {
+        const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': 'Basic ' + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD)
             },
             body: JSON.stringify({
                 type: "getAllCategories",
@@ -324,7 +418,7 @@ async function populateCategories() {
 
             // Add new categories
             data.data.forEach(category => {
-                if (category) { // Check if category is not null or empty
+                if (category) {
                     const option = document.createElement('option');
                     option.value = category;
                     option.textContent = category;
