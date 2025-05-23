@@ -45,7 +45,7 @@ function loadEnv($path)
 loadEnv(__DIR__ . '/.env');
 
 //Sets the headers for the API
-header("Access-Control-Allow-Origin: *"); //allow all cors
+// header("Access-Control-Allow-Origin: *"); //Wheatley already specifies this in the .htaccess file. Do not add it again
 header("Content-Type: application/json");
 header("Access-Control-Allow-Methods: POST");
 
