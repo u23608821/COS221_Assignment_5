@@ -199,31 +199,40 @@ class Authorise {
 
         //Get the current request count and window start time for this IP and endpoint
         $now = time();
+        $hexIp = bin2hex($ip);
+
+        // SELECT
         $stmt = $pdo->prepare("SELECT request_count, window_start FROM rate_limits WHERE ip_address = ? AND endpoint = ?");
-        $stmt->execute([bin2hex($ip), $endpoint]); // Use bin2hex to convert the IP address to a hex string so that we cannot use the IP address directly
+        $stmt->bind_param("ss", $hexIp, $endpoint);
+        $stmt->execute();
         $result = $stmt->get_result();
         $row = $result ? $result->fetch_assoc() : null;
+        $stmt->close();
 
-        //If there is a record for this IP and endpoint, check if the request count is within the limit
         if ($row) {
             $window_start = strtotime($row['window_start']);
             if ($now - $window_start < $windowSeconds) {
                 if ($row['request_count'] >= $limit) {
-                    return true; // Rate limit exceeded (more requests than allowed)
+                    return true; // Rate limit exceeded
                 }
-                // Increment the request count
+                // UPDATE (ip and request combination found)
                 $stmt = $pdo->prepare("UPDATE rate_limits SET request_count = request_count + 1, last_request = NOW() WHERE ip_address = ? AND endpoint = ?");
-                $stmt->execute([bin2hex($ip), $endpoint]);
+                $stmt->bind_param("ss", $hexIp, $endpoint);
+                $stmt->execute();
+                $stmt->close();
             } else {
-                // Reset the request count and window start time
+                // RESET (ip and request combination found but window has expired)
                 $stmt = $pdo->prepare("UPDATE rate_limits SET request_count = 1, window_start = NOW(), last_request = NOW() WHERE ip_address = ? AND endpoint = ?");
-                $stmt->execute([bin2hex($ip), $endpoint]);
+                $stmt->bind_param("ss", $hexIp, $endpoint);
+                $stmt->execute();
+                $stmt->close();
             }
         } else {
-            // No record for this IP and endpoint, so create a new one
-            //Insert new record
+            // INSERT // (ip and request combination not found)
             $stmt = $pdo->prepare("INSERT INTO rate_limits (ip_address, endpoint, request_count, window_start, last_request) VALUES (?, ?, 1, NOW(), NOW())");
-            $stmt->execute([bin2hex($ip), $endpoint]);
+            $stmt->bind_param("ss", $hexIp, $endpoint);
+            $stmt->execute();
+            $stmt->close();
         }
         return false;
     }//isRateLimitedDB
