@@ -58,24 +58,27 @@ When using the API, the logged-in user's API key should be included as `apikey` 
 
 To protect the API from abuse and ensure fair usage, **rate limiting** is enforced on all endpoints. If you exceed the allowed number of requests for a specific endpoint within a certain time window, you will receive a `429 Too Many Requests` error response.
 
-**Important note:** The front-end should be able handle 429 errors gracefully by informing the user that they have exceeded the rate limit and should try again later.
+**Important note:** The front-end should handle 429 errors gracefully by informing the user that they have exceeded the rate limit and should try again later.
 
 ### How Rate Limiting Works
-
-- **Per-IP and Per-Endpoint:**  
-  Rate limits are applied based on your IP address and the specific endpoint you are accessing. Each endpoint may have a different rate limit.
-- **Time Window:**  
-  The time window for rate limiting is typically 60 seconds (1 minute).
+- **Database-Backed:**  Rate limiting is implemented using a dedicated `rate_limits` table in the database. This allows for accurate and persistent tracking of request counts and time windows to ensure that rate limits are enforced correctly.
+- **Per-IP and Per-Endpoint:**  Limits are tracked for each unique combination of IP address and the endpoint you are accessing. Each endpoint may have a different rate limit.
+- **Time Window:**  The time window for rate limiting is typically 60 seconds (1 minute), but may vary per endpoint.
 - **Limits:**  
-  The number of allowed requests per endpoint per minute varies. For example:
+  The number of allowed requests per endpoint per minute varies based on how computationally expensive the endpoint is. For example:
   - `Register` and `Login`: 5 requests per minute per IP
   - `getReviewStats` (all stats): 3 requests per minute per IP
   - `getReviewStats` (single stat): 10 requests per minute per IP
-  - Most other endpoints allow for 10 requests per minute per IP. It does range from 5 to 20 requests per minute depending on the endpoint.
+  - Most other endpoints allow for 10–20 requests per minute per IP, depending on the endpoint's complexity.
+- **How it works (technical):**
+  - On each request, the API checks the `rate_limits` table for your IP and the endpoint.
+  - If you have not exceeded the allowed number of requests in the current time window, your request proceeds and your request count is incremented.
+  - If you exceed the limit, the API immediately returns a 429 error and does not process your request.
+  - When the time window expires, your request count is reset.
 
 #### Error Response Example
 
-If you exceed the rate limit, you will receive a response like:
+If you exceed the rate limit, you will receive a response like this:
 
 ```json
 {
@@ -85,9 +88,6 @@ If you exceed the rate limit, you will receive a response like:
     "message": "Rate limit exceeded. Please try again later."
 }
 ```
-
-**Note:**  
-Rate limiting is implemented using a file-based mechanism on the server. It does not use a database and is enforced per server instance.
 
 ## Request Format
 

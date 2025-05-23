@@ -31,6 +31,3 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
-
-# Do not commit rate_limit
-/rate_limit/
