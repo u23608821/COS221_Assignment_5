@@ -1,15 +1,20 @@
 function clickLogin() {
+    // Captcha must be completed first
+    const captchaResponse = grecaptcha.getResponse();
+    if (!captchaResponse) {
+        alert("Please complete the reCAPTCHA verification first.");
+        return;
+    }
 
-    var emailInput = document.getElementById("username");
-    var passwordInput = document.getElementById("password");
+    var emailInput = document.getElementById("username").value;
+    var passwordInput = document.getElementById("password").value;
 
     var data = {
         type: "Login",
-        email: emailInput.value,
-        password: passwordInput.value
+        email: emailInput,
+        password: passwordInput,
+        recaptcha_token: captchaResponse
     };
-
-
 
     // Create a new XMLHttpRequest object
     var xhr = new XMLHttpRequest();
@@ -94,5 +99,12 @@ function removeLocalStorage(name) {
     localStorage.removeItem(name);
 }
 
-
-
+// Validate the captcha. It must be completed before the user tries to logon. 
+function validateCaptcha() {
+    const response = grecaptcha.getResponse();
+    if (response.length === 0) {
+        alert("Please complete the reCAPTCHA verification first.");
+        return false;
+    }
+    return true;
+}

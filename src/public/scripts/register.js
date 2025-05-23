@@ -1,11 +1,17 @@
-
 function submitReg() {
+    // Captcha Stuff 
+    const captchaResponse = grecaptcha.getResponse();
+    if (!captchaResponse) {
+        alert("Please complete the reCAPTCHA verification first.");
+        return;
+    }
+
     console.log("submitReg function called");
 
-    const firstName = document.getElementById("fname");
-    const lastName = document.getElementById("lname");
-    const email = document.getElementById("email");
-    const password = document.getElementById("password");
+    const firstName = document.getElementById("fname").value;
+    const lastName = document.getElementById("lname").value;
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
     console.log("Form values:", { firstName, lastName, email, password });
 
@@ -51,15 +57,9 @@ function submitReg() {
         type: "Register",
         name: firstName,
         surname: lastName,
-        phone_number: null,
         email: email,
         password: password,
-        street_number: null,
-        street_name: null,
-        suburb: null,
-        city: null,
-        zip_code: null,
-        user_type
+        recaptcha_token: captchaResponse
     };
 
     console.log("Sending payload:", JSON.stringify(payload));
@@ -67,9 +67,7 @@ function submitReg() {
     // Send the data to the server
     const xhr = new XMLHttpRequest();
     xhr.open('POST', 'https://wheatley.cs.up.ac.za/u24634434/COS221/api.php', true);
-    xhr.setRequestHeader("Content-Type", "application/json");  // Add this line
-
-    // We need auth credentials for Wheatley server
+    xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
 
     xhr.onreadystatechange = function () {
@@ -94,7 +92,7 @@ function submitReg() {
 
                     if (response.status === 'success') {
                         alert("The registration of your new account was successful! You can now proceed to the login page to access your account.");
-                        window.location.href = 'login.html'; // Correct path based on your directory structure
+                        window.location.href = 'login.php'; // Changed to .php extension
                     } else {
                         alert('Registration failed: ' + (response.message || 'Please try again.'));
                         console.error('Registration failed:', response);
@@ -124,9 +122,3 @@ function submitReg() {
     xhr.send(JSON.stringify(payload));
     console.log("Request sent to server");
 }
-
-
-
-
-
-
