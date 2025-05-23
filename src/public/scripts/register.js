@@ -23,6 +23,14 @@ function applySavedTheme() {
 
 
 function submitReg() {
+
+    const captchaResponse = grecaptcha.getResponse();
+    if (!captchaResponse) {
+        alert("Please complete the reCAPTCHA verification");
+        return;
+    }
+    
+    
     console.log("submitReg function called");
     // Get full name and split into name and surname
     const fullName = document.getElementById("name")?.value.trim() || "";

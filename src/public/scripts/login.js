@@ -1,5 +1,6 @@
 function clickLogin() {
-
+    if (!validateCaptcha()) return;
+    
     var emailInput = document.getElementById("username");
     var passwordInput = document.getElementById("password");
 
@@ -110,3 +111,11 @@ function applySavedTheme() {
 
 window.addEventListener("load", applySavedTheme);
 
+function validateCaptcha() {
+    const response = grecaptcha.getResponse();
+    if (response.length === 0) {
+        alert("Please complete the reCAPTCHA verification");
+        return false;
+    }
+    return true;
+}

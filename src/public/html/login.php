@@ -56,6 +56,8 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
 	<link rel="stylesheet" href="../styles/login.css" />
 
+
+	<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 
 <body>
@@ -73,6 +75,12 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 					<label for="password">Password</label>
 					<input type="password" id="password" placeholder="Enter password" required />
 				</div>
+
+				<!-- RECAPTCHA -->
+				<div class="form-group">
+					<div class="g-recaptcha" data-sitekey="6LeqnUYrAAAAAO__H-uxNMt8ro4K3OKBT_oF_hDl"></div>
+				</div>
+
 				<button type="submit">Login</button>
 				<div class="create-account">
 					<a href="../html/register.php">Create an account</a>
