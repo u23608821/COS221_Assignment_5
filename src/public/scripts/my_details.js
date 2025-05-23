@@ -170,15 +170,15 @@ function saveUserDetails() {
     const data = {
         type: "updateMyDetails",
         apikey: apiKey,
-        name: document.getElementById('firstName').value || '',
-        email: document.getElementById('email').value || '',
-        surname: document.getElementById('lastName').value || '',
-        phone_number: document.getElementById('phone').value || '',
-        street_number: document.getElementById('streetNumber').value || '',
-        street_name: document.getElementById('streetName').value || '',
-        suburb: document.getElementById('suburb').value || '',
-        city: document.getElementById('city').value || '',
-        zip_code: document.getElementById('postalCode').value || ''
+        name: document.getElementById('firstName').value || null,
+        email: document.getElementById('email').value || null,
+        surname: document.getElementById('lastName').value || null,
+        phone_number: document.getElementById('phone').value || null,
+        street_number: document.getElementById('streetNumber').value || null,
+        street_name: document.getElementById('streetName').value || null,
+        suburb: document.getElementById('suburb').value || null,
+        city: document.getElementById('city').value || null,
+        zip_code: document.getElementById('postalCode').value || null
     };
 
     console.log("Sending update request with data:", data);
