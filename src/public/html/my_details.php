@@ -151,7 +151,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
           </div>
         </div>
 
-        <button type="submit" class="save-btn" onclick="saveUserDetails()">Save</button>
+        <button type="submit" class="save-btn">Save</button>
       </form>
     </div>
   </main>
