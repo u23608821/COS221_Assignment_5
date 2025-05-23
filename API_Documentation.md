@@ -123,6 +123,31 @@ Our API provides functionality for our price comparison website called "Prick `n
       - [Example Response (Error: User Not Found)](#example-response-error-user-not-found-1)
       - [Example Response (Error: Validation)](#example-response-error-validation-11)
       - [Example Response (Error: Not Admin)](#example-response-error-not-admin-12)
+    - [deleteRating Endpoint](#deleterating-endpoint)
+      - [Request Parameters](#request-parameters-15)
+      - [Example Request](#example-request-16)
+      - [Example Response (Success)](#example-response-success-14)
+      - [Example Response (Error: User Not Found)](#example-response-error-user-not-found-2)
+      - [Example Response (Error: Product Not Found)](#example-response-error-product-not-found-1)
+      - [Example Response (Error: Rating Not Found)](#example-response-error-rating-not-found)
+      - [Example Response (Error: Validation)](#example-response-error-validation-12)
+      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-13)
+    - [deleteRetailer Endpoint](#deleteretailer-endpoint)
+      - [Request Parameters](#request-parameters-16)
+      - [Example Request](#example-request-17)
+      - [Example Response (Success)](#example-response-success-15)
+      - [Example Response (Error: Retailer Not Found)](#example-response-error-retailer-not-found-2)
+      - [Example Response (Error: Validation)](#example-response-error-validation-13)
+      - [Example Response (Error: Not Admin)](#example-response-error-not-admin-14)
+    - [editProduct Endpoint](#editproduct-endpoint)
+      - [Request Parameters](#request-parameters-17)
+      - [Validation Rules](#validation-rules-5)
+      - [Example Request (Update Name and Category)](#example-request-update-name-and-category)
+      - [Example Response (Success)](#example-response-success-16)
+      - [Example Response (Error: Product Not Found)](#example-response-error-product-not-found-2)
+      - [Example Response (Error: Name Already Exists)](#example-response-error-name-already-exists)
+      - [Example Response (Error: Validation)](#example-response-error-validation-14)
+      - [Example Response (Error: No Fields Provided)](#example-response-error-no-fields-provided)
 
 ## Authentication
 
@@ -717,7 +742,7 @@ If the product already exists in the `Product` table (its name is already in the
 ```json
 {
     "type": "AddNewProduct",
-    "apikey": "adminapikeyhere",
+    "apikey": "FJihZZGK+5LOEVBX14JhkCCknJ6buHcrpJ/EKQpE1dA=",
     "name": "Super Widget",
     "description": "A great widget for all your needs.",
     "image_url": "https://example.com/widget.jpg",
@@ -928,6 +953,8 @@ The `deleteProduct` endpoint allows an admin to delete a product from the databa
 | `type`        | The request type: Must be set to `deleteProduct` | Yes      |
 | `apikey`      | The API key of the admin performing the request  | Yes      |
 | `product_id`  | The ID of the product to delete (integer)        | Yes      |
+> **Note:**  
+> All ratings and price entries for this product are deleted from the `Rating` and `Supplied_By` tables before the product itself is deleted.
 
 #### Example Request
 
@@ -1527,6 +1554,8 @@ The `deleteUser` endpoint allows an admin to delete a user from the database by 
 | `type`      | The request type: Must be set to `deleteUser`    | Yes      |
 | `apikey`    | The API key of the admin performing the request  | Yes      |
 | `user_id`   | The ID of the user to delete (integer)           | Yes      |
+> **Note:**  
+> All ratings by this user are deleted from the `Rating` table and the user is removed from the `Customer` or `Admin_staff` table before the user is deleted from the `User` table
 
 #### Example Request
 
@@ -1584,3 +1613,279 @@ The `deleteUser` endpoint allows an admin to delete a user from the database by 
     "message": "User type (Customer) not allowed to use this request"
 }
 ```
+
+### deleteRating Endpoint
+
+The `deleteRating` endpoint allows an admin to delete a rating (review) for a specific user and product. The request must include both the `user_id` and `product_id`. The endpoint checks that both the user and product exist, and that a rating exists for this user-product combination before deleting it.
+
+**Only users with the `Admin` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter    | Description                                      | Required |
+|--------------|--------------------------------------------------|----------|
+| `type`       | The request type: Must be set to `deleteRating`  | Yes      |
+| `apikey`     | The API key of the admin performing the request  | Yes      |
+| `user_id`    | The ID of the user who wrote the rating (integer)| Yes      |
+| `product_id` | The ID of the product being rated (integer)      | Yes      |
+
+#### Example Request
+
+```json
+{
+    "type": "deleteRating",
+    "apikey": "FJihZZGK+5LOEVBX14JhkCCknJ6buHcrpJ/EKQpE1dA=",
+    "user_id": 10002,
+    "product_id": 57
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1747940000000,
+    "code": 200,
+    "message": "Rating deleted successfully",
+    "data": {
+        "user_id": 10002,
+        "product_id": 57
+    }
+}
+```
+
+#### Example Response (Error: User Not Found)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747940100000,
+    "code": 404,
+    "message": "User does not exist."
+}
+```
+
+#### Example Response (Error: Product Not Found)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747940200000,
+    "code": 404,
+    "message": "Product does not exist."
+}
+```
+
+#### Example Response (Error: Rating Not Found)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747940300000,
+    "code": 404,
+    "message": "Rating does not exist for this user and product."
+}
+```
+
+#### Example Response (Error: Validation)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747940400000,
+    "code": 422,
+    "message": "User ID is required and must be an integer."
+}
+```
+
+#### Example Response (Error: Not Admin)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747940500000,
+    "code": 403,
+    "message": "User type (Customer) not allowed to use this request"
+}
+```
+
+---
+
+### deleteRetailer Endpoint
+
+The `deleteRetailer` endpoint allows an admin to delete a retailer from the database by their `retailer_id`. The retailer will only be deleted if they exist. If the retailer does not exist, an error will be returned.
+
+**Only users with the `Admin` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter     | Description                                      | Required |
+|---------------|--------------------------------------------------|----------|
+| `type`        | The request type: Must be set to `deleteRetailer`| Yes      |
+| `apikey`      | The API key of the admin performing the request  | Yes      |
+| `retailer_id` | The ID of the retailer to delete (integer)       | Yes      |
+> **Note:**  
+> All price entries for this retailer are deleted from the `Supplied_By` table before the retailer itself is deleted.
+
+#### Example Request
+
+```json
+{
+    "type": "deleteRetailer",
+    "apikey": "FJihZZGK+5LOEVBX14JhkCCknJ6buHcrpJ/EKQpE1dA=",
+    "retailer_id": 11
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1747941000000,
+    "code": 200,
+    "message": "Retailer deleted successfully",
+    "data": {
+        "retailer_id": 11
+    }
+}
+```
+
+#### Example Response (Error: Retailer Not Found)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747941100000,
+    "code": 404,
+    "message": "Retailer does not exist."
+}
+```
+
+#### Example Response (Error: Validation)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747941200000,
+    "code": 422,
+    "message": "Retailer ID is required and must be an integer."
+}
+```
+
+#### Example Response (Error: Not Admin)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747941300000,
+    "code": 403,
+    "message": "User type (Customer) not allowed to use this request"
+}
+```
+
+### editProduct Endpoint
+
+The `editProduct` endpoint allows an admin to update the details of an existing product. The product is identified by its `product_id`. Only the fields provided in the request will be updated; fields not included in the request will remain unchanged. If the product name is being updated, it must be unique (no other product can have the same name). All fields are validated according to the same rules as `AddNewProduct`. 
+
+**Important note: You cannot edit the product's price through this enpdpoint: Use the `QuickEditProductPrice` endpoint for that.**
+
+**Only users with the `Admin` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter      | Description                                      | Required |
+|----------------|--------------------------------------------------|----------|
+| `type`         | The request type: Must be set to `editProduct`   | Yes      |
+| `apikey`       | The API key of the admin performing the request  | Yes      |
+| `product_id`   | The ID of the product to update (integer)        | Yes      |
+| `name`         | The new product name (max 100 characters, unique)| No       |
+| `description`  | The new product description                      | No       |
+| `image_url`    | The new product image URL (max 255 characters)   | No       |
+| `category`     | The new product category (max 100 characters)    | No       |
+
+> **Note:**  
+> Only the fields provided in the request will be updated.  If the product name is being updated, it must not already exist for another product. If no updatable fields are provided, the request will fail validation.
+
+#### Validation Rules
+
+- **name**: Max 100 characters, must be unique (no other product with the same name).
+- **description**: No length limit.
+- **image_url**: Max 255 characters.
+- **category**: Max 100 characters.
+
+#### Example Request (Update Name and Category)
+
+```json
+{
+    "type": "editProduct",
+    "apikey": "FJihZZGK+5LOEVBX14JhkCCknJ6buHcrpJ/EKQpE1dA=",
+    "product_id": 57,
+    "name": "Super Widget Pro",
+    "category": "Premium Widgets"
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1747950000000,
+    "code": 200,
+    "message": "Product updated successfully",
+    "data": {
+        "product_id": 57
+    }
+}
+```
+
+#### Example Response (Error: Product Not Found)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747950100000,
+    "code": 404,
+    "message": "Product does not exist."
+}
+```
+
+#### Example Response (Error: Name Already Exists)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747950200000,
+    "code": 409,
+    "message": "Product name already exists. Please use a different name."
+}
+```
+
+#### Example Response (Error: Validation)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747950300000,
+    "code": 422,
+    "message": "Parameter validation failed!",
+    "data": {
+        "name": "Product name must be at most 100 characters.",
+        "image_url": "Image URL must be at most 255 characters."
+    }
+}
+```
+
+#### Example Response (Error: No Fields Provided)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1747950400000,
+    "code": 422,
+    "message": "No fields provided to update."
+}
+```
+
