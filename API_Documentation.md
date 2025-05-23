@@ -38,6 +38,14 @@ Our API provides functionality for our price comparison website called "Prick `n
     - [writeReview Endpoint](#writereview-endpoint)
     - [editMyReview Endpoint](#editmyreview-endpoint)
     - [deleteMyReview Endpoint](#deletemyreview-endpoint)
+    - [getProductDetails Endpoint](#getproductdetails-endpoint)
+    - [Example Response (Success: Product Only)](#example-response-success-product-only)
+    - [Example Request and Response (Reviews Only)](#example-request-and-response-reviews-only)
+    - [Example Request and Response (Retailers Only)](#example-request-and-response-retailers-only)
+    - [addToWatchlist Endpoint](#addtowatchlist-endpoint)
+    - [removeFromWatchlist Endpoint](#removefromwatchlist-endpoint)
+    - [getMyWatchlist Endpoint](#getmywatchlist-endpoint)
+    - [getReviewStats Endpoint](#getreviewstats-endpoint)
 
 
 ## Authentication
@@ -849,7 +857,7 @@ The `deleteProduct` endpoint allows an admin to delete a product from the databa
 | `apikey`      | The API key of the admin performing the request  | Yes      |
 | `product_id`  | The ID of the product to delete (integer)        | Yes      |
 > **Note:**  
-> All ratings and price entries for this product are deleted from the `Rating` and `Supplied_By` tables before the product itself is deleted.
+> All ratings and price entries for this product are deleted from the `Rating` and `Supplied_By` tables, and all watchlist entries for this product in the `watchlist` table are deleted before the product itself is deleted.
 
 #### Example Request
 
@@ -1451,7 +1459,7 @@ The `deleteUser` endpoint allows an admin to delete a user from the database by 
 | `apikey`    | The API key of the admin performing the request  | Yes      |
 | `user_id`   | The ID of the user to delete (integer)           | Yes      |
 > **Note:**  
-> All ratings by this user are deleted from the `Rating` table and the user is removed from the `Customer` or `Admin_staff` table before the user is deleted from the `User` table
+> All ratings by this user are deleted from the `Rating` table, the user's watchlist products will be deleted from the `Watchlist` table, and the user is removed from the `Customer` or `Admin_staff` table before the user is deleted from the `User` table.
 
 #### Example Request
 
@@ -1512,7 +1520,11 @@ The `deleteUser` endpoint allows an admin to delete a user from the database by 
 
 ### deleteRating Endpoint
 
-The `deleteRating` endpoint allows an admin to delete a rating (review) for a specific user and product. The request must include both the `user_id` and `product_id`. The endpoint checks that both the user and product exist, and that a rating exists for this user-product combination before deleting it.
+The `deleteRating` endpoint allows an admin to delete a rating (review) in two ways:
+- By providing a `review_id` (the unique ID of the review to delete), **or**
+- By providing both the `user_id` (the user who wrote the review) and `product_id` (the product being reviewed).
+
+The endpoint will check that the review exists before deleting it. If the review does not exist, an error will be returned.
 
 **Only users with the `Admin` user_type (validated by their API key) can use this endpoint.**
 
@@ -1522,10 +1534,24 @@ The `deleteRating` endpoint allows an admin to delete a rating (review) for a sp
 |--------------|--------------------------------------------------|----------|
 | `type`       | The request type: Must be set to `deleteRating`  | Yes      |
 | `apikey`     | The API key of the admin performing the request  | Yes      |
-| `user_id`    | The ID of the user who wrote the rating (integer)| Yes      |
-| `product_id` | The ID of the product being rated (integer)      | Yes      |
+| `review_id`  | The ID of the review to delete (integer)         | No*      |
+| `user_id`    | The ID of the user who wrote the rating (integer)| No*      |
+| `product_id` | The ID of the product being rated (integer)      | No*      |
 
-#### Example Request
+> **Note:**  
+> Either `review_id` **or** both `user_id` and `product_id` must be provided to identify the review to delete.
+
+#### Example Request (By review_id)
+
+```json
+{
+    "type": "deleteRating",
+    "apikey": "FJihZZGK+5LOEVBX14JhkCCknJ6buHcrpJ/EKQpE1dA=",
+    "review_id": 354
+}
+```
+
+#### Example Request (By user_id and product_id)
 
 ```json
 {
@@ -1545,36 +1571,24 @@ The `deleteRating` endpoint allows an admin to delete a rating (review) for a sp
     "code": 200,
     "message": "Rating deleted successfully",
     "data": {
+        "review_id": 354,
         "user_id": 10002,
         "product_id": 57
     }
 }
 ```
 
-#### Example Response (Error: User Not Found)
+#### Example Response (Error: Review Not Found)
 
 ```json
 {
     "status": "error",
-    "timestamp": 1747940100000,
+    "timestamp": 1747940300000,
     "code": 404,
-    "message": "User does not exist."
+    "message": "Rating does not exist for this review ID."
 }
 ```
-
-#### Example Response (Error: Product Not Found)
-
-```json
-{
-    "status": "error",
-    "timestamp": 1747940200000,
-    "code": 404,
-    "message": "Product does not exist."
-}
-```
-
-#### Example Response (Error: Rating Not Found)
-
+or
 ```json
 {
     "status": "error",
@@ -1591,7 +1605,7 @@ The `deleteRating` endpoint allows an admin to delete a rating (review) for a sp
     "status": "error",
     "timestamp": 1747940400000,
     "code": 422,
-    "message": "User ID is required and must be an integer."
+    "message": "Either review_id or both user_id and product_id are required."
 }
 ```
 
@@ -1605,8 +1619,6 @@ The `deleteRating` endpoint allows an admin to delete a rating (review) for a sp
     "message": "User type (Customer) not allowed to use this request"
 }
 ```
-
----
 
 ### deleteRetailer Endpoint
 
@@ -2254,7 +2266,7 @@ The `getMyReviews` endpoint allows a customer to retrieve all of the reviews tha
 
 ### writeReview Endpoint
 
-The `writeReview` endpoint allows a customer to add a review for a product. The customer is identified by their API key. All fields are validated before insertion. If any field is invalid, no review is added.
+The `writeReview` endpoint allows a customer to add a review for a product. If the customer has already reviewed this product, the review will be updated instead of creating a new one. The customer is identified by their API key. All fields are validated before insertion or update. If any field is invalid, no review is added or updated.
 
 **Only users with the `Customer` user_type (validated by their API key) can use this endpoint.**
 
@@ -2268,7 +2280,11 @@ The `writeReview` endpoint allows a customer to add a review for a product. The 
 | `score`       | The review score (integer, 1-5)                  | Yes      |
 | `description` | The review text (min 10 characters)              | Yes      |
 
-#### Example Request
+> **Note:**
+> If the customer **has not reviewed** this product before, a new review is created.
+> If the customer **already has a review** for this product, the review is updated with the passed in score and description.
+
+#### Example Request (Add or Update Review)
 
 ```json
 {
@@ -2280,7 +2296,7 @@ The `writeReview` endpoint allows a customer to add a review for a product. The 
 }
 ```
 
-#### Example Response (Success)
+#### Example Response (Review Added)
 
 ```json
 {
@@ -2288,6 +2304,22 @@ The `writeReview` endpoint allows a customer to add a review for a product. The 
     "timestamp": 1747999879000,
     "code": 201,
     "message": "Review added successfully",
+    "data": {
+        "review_id": 353,
+        "customer_id": 9999,
+        "product_id": 49
+    }
+}
+```
+
+#### Example Response (Review Updated)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1747999888000,
+    "code": 200,
+    "message": "Review updated successfully",
     "data": {
         "review_id": 353,
         "customer_id": 9999,
@@ -2480,5 +2512,908 @@ The `deleteMyReview` endpoint allows a customer to delete a review that they hav
     "timestamp": 1748001000000,
     "code": 422,
     "message": "Review ID or Product ID is required."
+}
+```
+
+### getProductDetails Endpoint
+
+The `getProductDetails` endpoint allows a customer to retrieve information about a specific product. You can control which information is returned using the `return` parameter.
+
+**Only users with the `Customer` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter     | Description                                      | Required | Default   |
+|---------------|--------------------------------------------------|----------|-----------|
+| `type`        | The request type: Must be set to `getProductDetails` | Yes      |           |
+| `apikey`      | The API key of the customer making the request   | Yes      |           |
+| `product_id`  | The ID of the product to fetch (integer)         | Yes      |           |
+| `return`      | What to return: `All`, `Product`, `Retailers`, or `Reviews` | No | `All` |
+| `sort_reviews`| Sort reviews: `time_ASC`, `time_DESC`, `score_ASC`, `score_DESC`, `name_ASC`, `name_DESC` | No | `time_DESC` |
+| `sort_retailers` | Sort retailers: `name_ASC`, `name_DESC`, `price_ASC`, `price_DESC` | No | `price_ASC` |
+| `filter_reviews_by_score` | Only return reviews with this score (1-5) | No |           |
+
+> **Note:**  
+> If `return` is `"All"` (default), all product info, retailers, and reviews are returned.  
+> If `return` is `"Product"`, only product info (including cheapest price/retailer and average review) is returned.  
+> If `return` is `"Retailers"`, only the retailers/prices array is returned.  
+> If `return` is `"Reviews"`, only the reviews array is returned.  
+> Sorting and filtering options only affect the relevant arrays if they are included in the response.
+
+#### Response Fields
+
+| Field                  | Description                                                      |
+|------------------------|------------------------------------------------------------------|
+| `id`                   | Product ID (integer)                                             |
+| `name`                 | Product name                                                     |
+| `description`          | Product description                                              |
+| `image_url`            | Product image URL                                                |
+| `category`             | Product category                                                 |
+| `cheapest_price`       | The lowest price for this product (float, 2 decimals) or `null`  |
+| `cheapest_retailer`    | Name of the retailer offering the cheapest price or `null`       |
+| `cheapest_retailer_id` | ID of the retailer offering the cheapest price or `null`         |
+| `average_review`       | Average review score for the product (float, 1 decimal) or `null`|
+| `retailers`            | Array of all retailers offering this product (see below)         |
+| `reviews`              | Array of all reviews for this product (see below)                |
+
+**Each retailer in `retailers`:**
+| Field           | Description                    |
+|-----------------|-------------------------------|
+| `retailer_id`   | Retailer ID (integer)         |
+| `retailer_name` | Retailer name                 |
+| `price`         | Price offered by this retailer (float, 2 decimals) |
+
+**Each review in `reviews`:**
+| Field           | Description                    |
+|-----------------|-------------------------------|
+| `review_id`     | Review ID (integer)           |
+| `customer_id`   | ID of the reviewer (integer)  |
+| `customer_name` | Name of the reviewer          |
+| `score`         | Review score (integer, 1-5)   |
+| `description`   | Review text                   |
+| `updated_at`    | Last updated timestamp        |
+
+#### Example Request and Response (All Details)
+**Request Object**
+```json
+{
+    "type": "getProductDetails",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef",
+    "product_id": 50
+}
+```
+
+**Response Object**
+```json
+{
+    "status": "success",
+    "timestamp": 1748001919000,
+    "code": 200,
+    "message": "Product details fetched successfully",
+    "data": {
+        "id": 50,
+        "name": "External SSD",
+        "description": "High-speed portable SSD with USB-C connectivity.",
+        "Image_url": "https://images.pexels.com/photos/2644597/pexels-photo-2644597.jpeg?auto=compress&cs=tinysrgb&h=350",
+        "category": "Storage",
+        "cheapest_price": 451.04,
+        "cheapest_retailer": "Flashpoint",
+        "cheapest_retailer_id": 5,
+        "average_review": 3.5,
+        "retailers": [
+            {
+                "retailer_id": 5,
+                "retailer_name": "Flashpoint",
+                "price": 451.04
+            },
+            {
+                "retailer_id": 4,
+                "retailer_name": "Camido",
+                "price": 470.04
+            },
+            {
+                "retailer_id": 6,
+                "retailer_name": "Talane",
+                "price": 492.04
+            },
+            {
+                "retailer_id": 8,
+                "retailer_name": "Tanoodle",
+                "price": 520.04
+            },
+            {
+                "retailer_id": 1,
+                "retailer_name": "Voonix",
+                "price": 521.04
+            },
+            {
+                "retailer_id": 7,
+                "retailer_name": "Jayo",
+                "price": 521.04
+            }
+        ],
+        "reviews": [
+            {
+                "review_id": 357,
+                "customer_id": 10004,
+                "customer_name": "AdrianoCustomer",
+                "score": 3,
+                "description": "Cool product!! Doesn't work though. Had to return it.",
+                "updated_at": "2025-05-23 14:04:34"
+            },
+            {
+                "review_id": 355,
+                "customer_id": 9999,
+                "customer_name": "Pieter",
+                "score": 4,
+                "description": "Great product, highly recommend!",
+                "updated_at": "2025-05-23 14:03:10"
+            }
+        ]
+    }
+}
+```
+
+### Example Response (Success: Product Only)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1748002698000,
+    "code": 200,
+    "message": "Product details fetched successfully",
+    "data": {
+        "id": 50,
+        "name": "External SSD",
+        "description": "High-speed portable SSD with USB-C connectivity.",
+        "Image_url": "https://images.pexels.com/photos/2644597/pexels-photo-2644597.jpeg?auto=compress&cs=tinysrgb&h=350",
+        "category": "Storage",
+        "cheapest_price": 451.04,
+        "cheapest_retailer": "Flashpoint",
+        "cheapest_retailer_id": 5,
+        "average_review": 3.5
+    }
+}
+```
+
+### Example Request and Response (Reviews Only)
+
+**Request Object**
+```json
+{
+    "type": "getProductDetails",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef",
+    "product_id": 50,
+    "return": "Reviews",
+    "sort_reviews": "score_DESC"
+}
+```
+
+**Response Object**
+```json
+{
+    "status": "success",
+    "timestamp": 1748002799000,
+    "code": 200,
+    "message": "Reviews fetched successfully",
+    "data": [
+        {
+            "review_id": 355,
+            "customer_id": 9999,
+            "customer_name": "Pieter",
+            "score": 4,
+            "description": "Great product, highly recommend!",
+            "updated_at": "2025-05-23 14:03:10"
+        },
+        {
+            "review_id": 357,
+            "customer_id": 10004,
+            "customer_name": "AdrianoCustomer",
+            "score": 3,
+            "description": "Cool product!! Doesn't work though. Had to return it.",
+            "updated_at": "2025-05-23 14:04:34"
+        }
+    ]
+}
+```
+
+### Example Request and Response (Retailers Only)
+
+**Request Object**
+```json
+{
+    "type": "getProductDetails",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef",
+    "product_id": 50,
+    "return": "Retailers",
+    "sort_retailers": "name_DESC"
+}
+```
+
+***Response Object**
+```json
+{
+    "status": "success",
+    "timestamp": 1748002942000,
+    "code": 200,
+    "message": "Retailers fetched successfully",
+    "data": [
+        {
+            "retailer_id": 1,
+            "retailer_name": "Voonix",
+            "price": 521.04
+        },
+        {
+            "retailer_id": 8,
+            "retailer_name": "Tanoodle",
+            "price": 520.04
+        },
+        {
+            "retailer_id": 6,
+            "retailer_name": "Talane",
+            "price": 492.04
+        },
+        {
+            "retailer_id": 7,
+            "retailer_name": "Jayo",
+            "price": 521.04
+        },
+        {
+            "retailer_id": 5,
+            "retailer_name": "Flashpoint",
+            "price": 451.04
+        },
+        {
+            "retailer_id": 4,
+            "retailer_name": "Camido",
+            "price": 470.04
+        }
+    ]
+}
+```
+
+#### Example Response (Error: Product Not Found)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1748002100000,
+    "code": 404,
+    "message": "Product does not exist."
+}
+```
+
+#### Example Response (Error: Validation)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1748002200000,
+    "code": 422,
+    "message": "Product ID is required and must be an integer."
+}
+```
+
+#### Example Response (Error: Not Authenticated)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1748002300000,
+    "code": 401,
+    "message": "API key is required to authenticate user"
+}
+```
+
+#### Example Response (Error: Not Customer)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1748002400000,
+    "code": 403,
+    "message": "User type (Admin) not allowed to use this request"
+}
+```
+
+### addToWatchlist Endpoint
+
+The `addToWatchlist` endpoint allows a customer to add a product to their watchlist.  
+If the product is already in the watchlist, the API returns a success message with code 200 and does not add it again.
+
+**Only users with the `Customer` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter    | Description                                      | Required |
+|--------------|--------------------------------------------------|----------|
+| `type`       | The request type: Must be set to `addToWatchlist`| Yes      |
+| `apikey`     | The API key of the customer making the request   | Yes      |
+| `product_id` | The ID of the product to add (integer)           | Yes      |
+
+#### Example Request
+
+```json
+{
+    "type": "addToWatchlist",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef",
+    "product_id": 50
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1748004000000,
+    "code": 201,
+    "message": "Product added to watchlist successfully",
+    "data": {
+        "product_id": 50
+    }
+}
+```
+
+#### Example Response (Already in Watchlist)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1748004100000,
+    "code": 200,
+    "message": "Product already in watchlist",
+    "data": {
+        "product_id": 50
+    }
+}
+```
+
+#### Example Response (Error: Product Not Found)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1748004200000,
+    "code": 404,
+    "message": "Product does not exist."
+}
+```
+
+### removeFromWatchlist Endpoint
+
+The `removeFromWatchlist` endpoint allows a customer to remove a product from their watchlist.  
+If the product is not in the watchlist, the API returns a success message with code 200 and does nothing.
+
+**Only users with the `Customer` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter    | Description                                      | Required |
+|--------------|--------------------------------------------------|----------|
+| `type`       | The request type: Must be set to `removeFromWatchlist` | Yes      |
+| `apikey`     | The API key of the customer making the request   | Yes      |
+| `product_id` | The ID of the product to remove (integer)        | Yes      |
+
+#### Example Request
+
+```json
+{
+    "type": "removeFromWatchlist",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef",
+    "product_id": 50
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1748004300000,
+    "code": 200,
+    "message": "Product removed from watchlist successfully",
+    "data": {
+        "product_id": 50
+    }
+}
+```
+
+#### Example Response (Not in Watchlist)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1748004400000,
+    "code": 200,
+    "message": "Product not in watchlist",
+    "data": {
+        "product_id": 50
+    }
+}
+```
+
+#### Example Response (Error: Product Not Found)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1748004500000,
+    "code": 404,
+    "message": "Product does not exist."
+}
+```
+
+### getMyWatchlist Endpoint
+
+The `getMyWatchlist` endpoint allows a customer to retrieve all products in their watchlist. Each product includes the same details as returned by the `getAllProducts` endpoint for customers (product ID, title, image, category, average rating, cheapest price, and retailer info).
+
+**Only users with the `Customer` user_type (validated by their API key) can use this endpoint.**
+
+#### Request Parameters
+
+| Parameter   | Description                                      | Required |
+|-------------|--------------------------------------------------|----------|
+| `type`      | The request type: Must be set to `getMyWatchlist`| Yes      |
+| `apikey`    | The API key of the customer making the request   | Yes      |
+
+#### Example Request
+
+```json
+{
+    "type": "getMyWatchlist",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef"
+}
+```
+
+#### Example Response (Success)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1748004600000,
+    "code": 200,
+    "message": "Watchlist fetched successfully",
+    "data": [
+        {
+            "product_id": 50,
+            "title": "External SSD",
+            "image_url": "https://images.pexels.com/photos/2644597/pexels-photo-2644597.jpeg?auto=compress&cs=tinysrgb&h=350",
+            "category": "Storage",
+            "average_rating": 3.5,
+            "cheapest_price": 451.04,
+            "retailer_id": 5,
+            "retailer_name": "Flashpoint"
+        },
+        {
+            "product_id": 49,
+            "title": "Storage Containers",
+            "image_url": "https://images.pexels.com/photos/32151281/pexels-photo-32151281.jpeg?auto=compress&cs=tinysrgb&h=350",
+            "category": "Home",
+            "average_rating": 4.2,
+            "cheapest_price": 85.52,
+            "retailer_id": 7,
+            "retailer_name": "Jayo"
+        }
+    ]
+}
+```
+
+#### Example Response (Error: Not Authenticated)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1748004700000,
+    "code": 401,
+    "message": "API key is required to authenticate user"
+}
+```
+
+#### Example Response (Error: Invalid API Key)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1748004800000,
+    "code": 401,
+    "message": "Invalid API key or User not found"
+}
+```
+
+### getReviewStats Endpoint
+
+The `getReviewStats` endpoint provides a comprehensive set of review-related statistics for all products and users on the platform. It is designed for analytics dashboards, admin insights, and visualizations. Both Admin and Customer users (validated by their API key) can use this endpoint.
+
+> **Performance Note:**  
+> Requesting all statistics at once (`return: "All"`) is computationally expensive and may be slow. For best performance, use the `return` parameter to request only the specific statistic(s) you need.
+
+#### Request Parameters
+
+| Parameter    | Description                                                                 | Required | Default |
+|--------------|-----------------------------------------------------------------------------|----------|---------|
+| `type`       | The request type: Must be set to `getReviewStats`                           | Yes      |         |
+| `apikey`     | The API key of the user making the request                                  | Yes      |         |
+| `return`     | Which statistic to return (see below). If omitted, returns all statistics.  | No       | `All`   |
+| `min_reviews`| Minimum number of reviews for "top_rated_with_min_reviews" (integer, >=1)   | No       | 2       |
+
+##### Allowed values for `return`:
+- `All` (default): Returns all statistics below in a single response.
+- `star_counts`
+- `starAverage_Counts`
+- `total_reviews`
+- `pie_percentages`
+- `average_review`
+- `best_worst_products`
+- `most_reviewed_products`
+- `least_reviewed_products`
+- `most_active_reviewers`
+- `review_growth`
+- `products_no_reviews`
+- `review_length_stats`
+- `avg_score_per_category`
+- `percent_products_with_reviews`
+- `top_rated_with_min_reviews`
+- `number_of_products`
+
+#### Returned Statistics (with explanations)
+
+- **star_counts**:  
+  The number of individual reviews for each star rating (1-5).  
+  *Example:* `{ "1": 3, "2": 7, "3": 12, "4": 20, "5": 58 }`  
+  *Use case:* Bar chart of all review scores.
+
+- **starAverage_Counts**:  
+  The number of products whose average review falls into each star "bin":  
+  - 1.0–1.9 → 1 star  
+  - 2.0–2.9 → 2 stars  
+  - 3.0–3.9 → 3 stars  
+  - 4.0–4.9 → 4 stars  
+  - 5.0     → 5 stars  
+  *Example:* `{ "1": 2, "2": 5, "3": 10, "4": 18, "5": 7 }`  
+  *Use case:* Bar or pie chart showing product quality distribution.
+
+- **total_reviews**:  
+  The total number of individual reviews in the system.  
+  *Example:* `100`  
+  *Use case:* Overall review volume.
+
+- **pie_percentages**:  
+  The percentage of products whose average review falls into each star "bin" (see above).  
+  *Example:* `{ "1": 5.0, "2": 12.5, "3": 25.0, "4": 45.0, "5": 12.5 }`  
+  *Use case:* Pie chart of product quality.
+
+- **average_review**:  
+  The average of all products' average review ratings (rounded to 1 decimal).  
+  *Example:* `4.2`  
+  *Use case:* Overall product satisfaction.
+
+- **best_worst_products**:  
+  The product(s) with the highest and lowest average review rating (among products with at least one review).  
+  *Example:*  
+  ```json
+  {
+    "best_products": [
+      {
+        "product_id": 12,
+        "title": "Super Widget",
+        "image_url": "...",
+        "category": "Widgets",
+        "average_rating": 4.9,
+        "review_count": 15
+      }
+    ],
+    "worst_products": [
+      {
+        "product_id": 7,
+        "title": "Bad Gadget",
+        "image_url": "...",
+        "category": "Gadgets",
+        "average_rating": 1.2,
+        "review_count": 8
+      }
+    ]
+  }
+  ```
+  *Use case:* Highlight best/worst products.
+
+- **most_reviewed_products**:  
+  Product(s) with the highest number of reviews (with product info).  
+  *Example:*  
+  ```json
+  [
+    {
+      "product_id": 5,
+      "title": "Popular Product",
+      "image_url": "...",
+      "category": "Electronics",
+      "review_count": 32
+    }
+  ]
+  ```
+  *Use case:* Show most discussed products.
+
+- **least_reviewed_products**:  
+  Product(s) with the lowest (but >0) number of reviews (with product info).  
+  *Example:*  
+  ```json
+  [
+    {
+      "product_id": 8,
+      "title": "Rarely Reviewed",
+      "image_url": "...",
+      "category": "Home",
+      "review_count": 1
+    }
+  ]
+  ```
+  *Use case:* Find products needing more feedback.
+
+- **most_active_reviewers**:  
+  User(s) who have written the most reviews (with user info: id, name, review count).  
+  *Example:*  
+  ```json
+  [
+    {
+      "user_id": 10001,
+      "name": "Alice",
+      "review_count": 25
+    }
+  ]
+  ```
+  *Use case:* Identify top contributors.
+
+- **review_growth**:  
+  Number of reviews per month for the last 12 months (for a line chart).  
+  *Example:*  
+  ```json
+  [
+    { "month": "2024-06", "review_count": 12 },
+    { "month": "2024-07", "review_count": 18 }
+  ]
+  ```
+  *Use case:* Show review activity trends.
+
+- **products_no_reviews**:  
+  The count of products that have never been reviewed.  
+  *Example:* `7`  
+  *Use case:* Identify products needing first reviews.
+
+- **review_length_stats**:  
+  Statistics about review description lengths: average, min, max, and median.  
+  *Example:*  
+  ```json
+  {
+    "average_length": 54.2,
+    "min_length": 10,
+    "max_length": 200,
+    "median_length": 52
+  }
+  ```
+  *Use case:* Analyze review quality and engagement.
+
+- **avg_score_per_category**:  
+  Average review score per product category (rounded to 1 decimal).  
+  *Example:*  
+  ```json
+  [
+    { "category": "Electronics", "average_score": 4.3 },
+    { "category": "Home", "average_score": 3.8 }
+  ]
+  ```
+  *Use case:* Compare satisfaction across categories.
+
+- **percent_products_with_reviews**:  
+  Percentage of products that have at least one review (float, 1 decimal).  
+  *Example:* `82.5`  
+  *Use case:* Coverage insight for product reviews.
+
+- **top_rated_with_min_reviews**:  
+  The top-rated product(s) with at least X reviews (default X=2, can be set with `min_reviews`).  
+  *Example:*  
+  ```json
+  [
+    {
+      "product_id": 15,
+      "title": "Trusted Product",
+      "image_url": "...",
+      "category": "Electronics",
+      "average_rating": 4.8,
+      "review_count": 12
+    }
+  ]
+  ```
+  *Use case:* Highlight reliably top-rated products.
+
+- **number_of_products**:  
+  The total number of products in the database.  
+  *Example:* `120`  
+  *Use case:* General statistics and coverage.
+
+---
+
+#### Example Request (All Stats)
+
+```json
+{
+    "type": "getReviewStats",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef"
+}
+```
+
+#### Example Request (Only Pie Percentages)
+
+```json
+{
+    "type": "getReviewStats",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef",
+    "return": "pie_percentages"
+}
+```
+
+#### Example Request (Top Rated Product With At Least 5 Reviews)
+
+```json
+{
+    "type": "getReviewStats",
+    "apikey": "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef",
+    "return": "top_rated_with_min_reviews",
+    "min_reviews": 5
+}
+```
+
+#### Example Response (All Stats)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1748006572000,
+    "code": 200,
+    "message": "Review statistics fetched successfully",
+    "data": {
+        "star_counts": {
+            "1": 0,
+            "2": 0,
+            "3": 2,
+            "4": 2,
+            "5": 0
+        },
+        "starAverage_Counts": {
+            "1": 0,
+            "2": 0,
+            "3": 2,
+            "4": 1,
+            "5": 0
+        },
+        "total_reviews": 4,
+        "pie_percentages": {
+            "1": 0,
+            "2": 0,
+            "3": 66.7,
+            "4": 33.3,
+            "5": 0
+        },
+        "average_review": 3.5,
+        "best_products": [
+            {
+                "product_id": 28,
+                "title": "Air Purifier",
+                "image_url": "https://images.pexels.com/photos/3554239/pexels-photo-3554239.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "category": "Home Appliances",
+                "average_rating": 4,
+                "review_count": 1
+            }
+        ],
+        "worst_products": [
+            {
+                "product_id": 49,
+                "title": "Storage Containers",
+                "image_url": "https://images.pexels.com/photos/32151281/pexels-photo-32151281.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "category": "Kitchen",
+                "average_rating": 3,
+                "review_count": 1
+            }
+        ],
+        "most_reviewed_products": [
+            {
+                "product_id": 50,
+                "title": "External SSD",
+                "image_url": "https://images.pexels.com/photos/2644597/pexels-photo-2644597.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "category": "Storage",
+                "review_count": 2
+            }
+        ],
+        "least_reviewed_products": [
+            {
+                "product_id": 28,
+                "title": "Air Purifier",
+                "image_url": "https://images.pexels.com/photos/3554239/pexels-photo-3554239.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "category": "Home Appliances",
+                "review_count": 1
+            }
+        ],
+        "most_active_reviewers": [
+            {
+                "user_id": 10004,
+                "name": "AdrianoCustomer",
+                "review_count": 2
+            }
+        ],
+        "review_growth": [
+            {
+                "month": "2025-05",
+                "review_count": 4
+            }
+        ],
+        "products_no_reviews": 46,
+        "number_of_products": 49,
+        "review_length_stats": {
+            "average_length": 62.8,
+            "min_length": 32,
+            "max_length": 116,
+            "median_length": 51.5
+        },
+        "avg_score_per_category": [
+            {
+                "category": "Home Appliances",
+                "average_score": 4
+            },
+            {
+                "category": "Kitchen",
+                "average_score": 3
+            },
+            {
+                "category": "Storage",
+                "average_score": 3.5
+            }
+        ],
+        "percent_products_with_reviews": 6.1,
+        "top_rated_with_min_reviews": [
+            {
+                "product_id": 50,
+                "title": "External SSD",
+                "image_url": "https://images.pexels.com/photos/2644597/pexels-photo-2644597.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "category": "Storage",
+                "average_rating": 3.5,
+                "review_count": 2
+            }
+        ]
+    }
+}
+```
+
+#### Example Response (Single Stat)
+
+```json
+{
+    "status": "success",
+    "timestamp": 1748006100000,
+    "code": 200,
+    "message": "Review statistics fetched successfully",
+    "data": {
+        "pie_percentages": { "1": 5.0, "2": 12.5, "3": 25.0, "4": 45.0, "5": 12.5 }
+    }
+}
+```
+
+#### Example Response (Error: Not Authenticated)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1748006200000,
+    "code": 401,
+    "message": "API key is required to authenticate user"
+}
+```
+
+#### Example Response (Error: Not Authorised)
+
+```json
+{
+    "status": "error",
+    "timestamp": 1748006300000,
+    "code": 403,
+    "message": "User type (Unknown) not allowed to use this request"
 }
 ```

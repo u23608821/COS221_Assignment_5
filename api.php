@@ -913,6 +913,12 @@ class ADMIN {
         $stmt->execute();
         $stmt->close();
 
+        // Delete all watchlist entries for this product
+        $stmt = $conn->prepare("DELETE FROM watchlist WHERE product_id = ?");
+        $stmt->bind_param("i", $product_id);
+        $stmt->execute();
+        $stmt->close();
+
         // Delete the product
         $stmt = $conn->prepare("DELETE FROM Product WHERE id = ?");
         $stmt->bind_param("i", $product_id);
@@ -1481,6 +1487,12 @@ class ADMIN {
         $stmt->execute();
         $stmt->close();
 
+        // Delete all watchlist entries for this user
+        $stmt = $conn->prepare("DELETE FROM watchlist WHERE cust_id = ?");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $stmt->close();
+
         // Delete from Customer or Admin_staff table
         if (strcasecmp($user_type, 'Customer') === 0) {
             $stmt = $conn->prepare("DELETE FROM Customer WHERE user_id = ?");
@@ -1512,62 +1524,60 @@ class ADMIN {
         }
         Authorise::authenticate($requestData['apikey'], 'Admin');
 
-        // Validate input
-        if (empty($requestData['user_id']) || !is_numeric($requestData['user_id'])) {
-            ResponseAPI::error("User ID is required and must be an integer.", null, 422);
-        }
-        if (empty($requestData['product_id']) || !is_numeric($requestData['product_id'])) {
-            ResponseAPI::error("Product ID is required and must be an integer.", null, 422);
-        }
-        $user_id = (int)$requestData['user_id'];
-        $product_id = (int)$requestData['product_id'];
-
         $db = Database::getInstance();
         $conn = $db->getConnection();
 
-        // Check if user exists
-        $stmt = $conn->prepare("SELECT id FROM User WHERE id = ?");
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $stmt->store_result();
-        if ($stmt->num_rows === 0) {
-            $stmt->close();
-            ResponseAPI::error("User does not exist.", null, 404);
-        }
-        $stmt->close();
+        // Identify review: by review_id OR by user_id + product_id
+        $review_id = null;
+        $user_id = null;
+        $product_id = null;
 
-        // Check if product exists
-        $stmt = $conn->prepare("SELECT id FROM Product WHERE id = ?");
-        $stmt->bind_param("i", $product_id);
-        $stmt->execute();
-        $stmt->store_result();
-        if ($stmt->num_rows === 0) {
+        if (!empty($requestData['review_id']) && is_numeric($requestData['review_id'])) {
+            $review_id = (int)$requestData['review_id'];
+            // Fetch user_id and product_id for this review
+            $stmt = $conn->prepare("SELECT user_id, product_id FROM Rating WHERE id = ?");
+            $stmt->bind_param("i", $review_id);
+            $stmt->execute();
+            $stmt->bind_result($user_id, $product_id);
+            if (!$stmt->fetch()) {
+                $stmt->close();
+                ResponseAPI::error("Rating does not exist for this review ID.", null, 404);
+            }
             $stmt->close();
-            ResponseAPI::error("Product does not exist.", null, 404);
-        }
-        $stmt->close();
-
-        // Check if rating exists
-        $stmt = $conn->prepare("SELECT * FROM Rating WHERE user_id = ? AND product_id = ?");
-        $stmt->bind_param("ii", $user_id, $product_id);
-        $stmt->execute();
-        $stmt->store_result();
-        if ($stmt->num_rows === 0) {
+        } elseif (
+            !empty($requestData['user_id']) && is_numeric($requestData['user_id']) &&
+            !empty($requestData['product_id']) && is_numeric($requestData['product_id'])
+        ) {
+            $user_id = (int)$requestData['user_id'];
+            $product_id = (int)$requestData['product_id'];
+            // Check if rating exists
+            $stmt = $conn->prepare("SELECT id FROM Rating WHERE user_id = ? AND product_id = ?");
+            $stmt->bind_param("ii", $user_id, $product_id);
+            $stmt->execute();
+            $stmt->bind_result($review_id);
+            if (!$stmt->fetch()) {
+                $stmt->close();
+                ResponseAPI::error("Rating does not exist for this user and product.", null, 404);
+            }
             $stmt->close();
-            ResponseAPI::error("Rating does not exist for this user and product.", null, 404);
+        } else {
+            ResponseAPI::error("Either review_id or both user_id and product_id are required.", null, 422);
         }
-        $stmt->close();
 
         // Delete the rating
-        $stmt = $conn->prepare("DELETE FROM Rating WHERE user_id = ? AND product_id = ?");
-        $stmt->bind_param("ii", $user_id, $product_id);
+        $stmt = $conn->prepare("DELETE FROM Rating WHERE id = ?");
+        $stmt->bind_param("i", $review_id);
         if (!$stmt->execute()) {
             $stmt->close();
             ResponseAPI::error("Failed to delete rating: " . $conn->error, ['database_error' => $conn->error], 500);
         }
         $stmt->close();
 
-        ResponseAPI::send("Rating deleted successfully", ['user_id' => $user_id, 'product_id' => $product_id], 200);
+        ResponseAPI::send("Rating deleted successfully", [
+            'review_id' => $review_id,
+            'user_id' => $user_id,
+            'product_id' => $product_id
+        ], 200);
     }//deleteRating
 
     public static function deleteRetailer($requestData) {
@@ -2187,21 +2197,44 @@ class CUSTOMER {
         }
         $stmt->close();
 
-        // Insert review
-        $stmt = $conn->prepare("INSERT INTO Rating (score, description, user_id, product_id) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("isii", $score, $description, $user_id, $product_id);
-        if (!$stmt->execute()) {
+        // Check if review already exists for this user and product
+        $stmt = $conn->prepare("SELECT id FROM Rating WHERE user_id = ? AND product_id = ?");
+        $stmt->bind_param("ii", $user_id, $product_id);
+        $stmt->execute();
+        $stmt->bind_result($existing_review_id);
+        if ($stmt->fetch()) {
+            // Review exists: update it
             $stmt->close();
-            ResponseAPI::error("Failed to add review: " . $conn->error, ['database_error' => $conn->error], 500);
-        }
-        $review_id = $stmt->insert_id;
-        $stmt->close();
+            $stmt = $conn->prepare("UPDATE Rating SET score = ?, description = ?, updated_at = NOW() WHERE id = ?");
+            $stmt->bind_param("isi", $score, $description, $existing_review_id);
+            if (!$stmt->execute()) {
+                $stmt->close();
+                ResponseAPI::error("Failed to update review: " . $conn->error, ['database_error' => $conn->error], 500);
+            }
+            $stmt->close();
+            ResponseAPI::send("Review updated successfully", [
+                'review_id' => $existing_review_id,
+                'customer_id' => $user_id,
+                'product_id' => $product_id
+            ], 200);
+        } else {
+            $stmt->close();
+            // Insert new review
+            $stmt = $conn->prepare("INSERT INTO Rating (score, description, user_id, product_id) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("isii", $score, $description, $user_id, $product_id);
+            if (!$stmt->execute()) {
+                $stmt->close();
+                ResponseAPI::error("Failed to add review: " . $conn->error, ['database_error' => $conn->error], 500);
+            }
+            $review_id = $stmt->insert_id;
+            $stmt->close();
 
-        ResponseAPI::send("Review added successfully", [
-            'review_id' => $review_id,
-            'customer_id' => $user_id,
-            'product_id' => $product_id
-        ], 201);//201 Created
+            ResponseAPI::send("Review added successfully", [
+                'review_id' => $review_id,
+                'customer_id' => $user_id,
+                'product_id' => $product_id
+            ], 201);
+        }
     }// writeReview
 
     public static function editMyReview($requestData) {
@@ -2366,6 +2399,782 @@ class CUSTOMER {
         ], 200);
     }// deleteMyReview
 
+    public static function getProductDetails($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Customer');
+
+        if (empty($requestData['product_id']) || !is_numeric($requestData['product_id'])) {
+            ResponseAPI::error("Product ID is required and must be an integer.", null, 422);
+        }
+        $product_id = (int)$requestData['product_id'];
+
+        // Handle "return" parameter
+        $returnType = isset($requestData['return']) ? ucfirst(strtolower($requestData['return'])) : 'All';
+        $allowedReturnTypes = ['All', 'Product', 'Retailers', 'Reviews'];
+        if (!in_array($returnType, $allowedReturnTypes)) {
+            ResponseAPI::error("Invalid value for 'return' parameter. Allowed: All, Product, Retailers, Reviews.", null, 422);
+        }
+
+        // Sorting options for reviews
+        $sort_reviews = isset($requestData['sort_reviews']) ? $requestData['sort_reviews'] : 'time_DESC';
+        $allowed_review_sorts = [
+            'time_ASC' => 'r.updated_at ASC',
+            'time_DESC' => 'r.updated_at DESC',
+            'score_ASC' => 'r.score ASC',
+            'score_DESC' => 'r.score DESC',
+            'name_ASC' => 'u.name ASC',
+            'name_DESC' => 'u.name DESC'
+        ];
+        $review_order = isset($allowed_review_sorts[$sort_reviews]) ? $allowed_review_sorts[$sort_reviews] : $allowed_review_sorts['time_DESC'];
+
+        // Sorting options for retailers
+        $sort_retailers = isset($requestData['sort_retailers']) ? $requestData['sort_retailers'] : 'price_ASC';
+        $allowed_retailer_sorts = [
+            'name_ASC' => 'r.name ASC',
+            'name_DESC' => 'r.name DESC',
+            'price_ASC' => 'sb.price ASC',
+            'price_DESC' => 'sb.price DESC'
+        ];
+        $retailer_order = isset($allowed_retailer_sorts[$sort_retailers]) ? $allowed_retailer_sorts[$sort_retailers] : $allowed_retailer_sorts['price_ASC'];
+
+        // Filter reviews by score
+        $filter_reviews_by_score = null;
+        if (isset($requestData['filter_reviews_by_score'])) {
+            if (!is_numeric($requestData['filter_reviews_by_score']) || $requestData['filter_reviews_by_score'] < 1 || $requestData['filter_reviews_by_score'] > 5) {
+                ResponseAPI::error("filter_reviews_by_score must be an integer between 1 and 5.", null, 422);
+            }
+            $filter_reviews_by_score = (int)$requestData['filter_reviews_by_score'];
+        }
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Check if product exists and get all product fields
+        $stmt = $conn->prepare("SELECT * FROM Product WHERE id = ?");
+        $stmt->bind_param("i", $product_id);
+        $stmt->execute();
+        $productResult = $stmt->get_result();
+        $product = $productResult->fetch_assoc();
+        $stmt->close();
+
+        if (!$product) {
+            ResponseAPI::error("Product does not exist.", null, 404);
+        }
+
+        // Always fetch these for all return types except "Reviews"
+        if ($returnType !== 'Reviews') {
+            // Get cheapest price and retailer
+            $stmt = $conn->prepare("
+                SELECT sb.price AS cheapest_price, r.id AS retailer_id, r.name AS retailer_name
+                FROM Supplied_By sb
+                INNER JOIN Retailer r ON sb.retailer_id = r.id
+                WHERE sb.product_id = ?
+                ORDER BY sb.price ASC
+                LIMIT 1
+            ");
+            $stmt->bind_param("i", $product_id);
+            $stmt->execute();
+            $stmt->bind_result($cheapest_price, $cheapest_retailer_id, $cheapest_retailer_name);
+            if ($stmt->fetch()) {
+                $product['cheapest_price'] = $cheapest_price !== null ? (float)number_format($cheapest_price, 2, '.', '') : null;
+                $product['cheapest_retailer'] = $cheapest_retailer_name !== null ? $cheapest_retailer_name : null;
+                $product['cheapest_retailer_id'] = $cheapest_retailer_id !== null ? (int)$cheapest_retailer_id : null;
+            } else {
+                $product['cheapest_price'] = null;
+                $product['cheapest_retailer'] = null;
+                $product['cheapest_retailer_id'] = null;
+            }
+            $stmt->close();
+
+            // Get average review
+            $stmt = $conn->prepare("SELECT ROUND(AVG(score), 1) AS average_review FROM Rating WHERE product_id = ?");
+            $stmt->bind_param("i", $product_id);
+            $stmt->execute();
+            $stmt->bind_result($average_review);
+            $stmt->fetch();
+            $product['average_review'] = $average_review !== null ? (float)$average_review : null;
+            $stmt->close();
+        }
+
+        // Get all retailers for this product (with sorting)
+        if ($returnType === 'All' || $returnType === 'Retailers') {
+            $sql = "
+                SELECT r.id AS retailer_id, r.name AS retailer_name, sb.price
+                FROM Supplied_By sb
+                INNER JOIN Retailer r ON sb.retailer_id = r.id
+                WHERE sb.product_id = ?
+                ORDER BY $retailer_order
+            ";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("i", $product_id);
+            $stmt->execute();
+            $retailersResult = $stmt->get_result();
+            $retailers = [];
+            while ($row = $retailersResult->fetch_assoc()) {
+                $retailers[] = [
+                    'retailer_id' => (int)$row['retailer_id'],
+                    'retailer_name' => $row['retailer_name'],
+                    'price' => (float)number_format($row['price'], 2, '.', '')
+                ];
+            }
+            $stmt->close();
+        }
+
+        // Get all reviews for this product (with sorting and optional score filter)
+        if ($returnType === 'All' || $returnType === 'Reviews') {
+            $sql = "
+                SELECT r.id AS review_id, r.score, r.description, r.updated_at, u.id AS user_id, u.name AS user_name
+                FROM Rating r
+                INNER JOIN User u ON r.user_id = u.id
+                WHERE r.product_id = ?
+            ";
+            $types = "i";
+            $params = [$product_id];
+            if ($filter_reviews_by_score !== null) {
+                $sql .= " AND r.score = ?";
+                $types .= "i";
+                $params[] = $filter_reviews_by_score;
+            }
+            $sql .= " ORDER BY $review_order";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            $reviewsResult = $stmt->get_result();
+            $reviews = [];
+            while ($row = $reviewsResult->fetch_assoc()) {
+                $reviews[] = [
+                    'review_id' => (int)$row['review_id'],
+                    'customer_id' => (int)$row['user_id'],
+                    'customer_name' => $row['user_name'],
+                    'score' => (int)$row['score'],
+                    'description' => $row['description'],
+                    'updated_at' => $row['updated_at']
+                ];
+            }
+            $stmt->close();
+        }
+
+        // Build response based on "return" parameter
+        if ($returnType === 'All') {
+            $product['retailers'] = isset($retailers) ? $retailers : [];
+            $product['reviews'] = isset($reviews) ? $reviews : [];
+            ResponseAPI::send("Product details fetched successfully", $product, 200);
+        } elseif ($returnType === 'Product') {
+            // Only product info (including cheapest price/retailer and average review)
+            unset($product['retailers'], $product['reviews']);
+            ResponseAPI::send("Product details fetched successfully", $product, 200);
+        } elseif ($returnType === 'Retailers') {
+            ResponseAPI::send("Retailers fetched successfully", isset($retailers) ? $retailers : [], 200);
+        } elseif ($returnType === 'Reviews') {
+            ResponseAPI::send("Reviews fetched successfully", isset($reviews) ? $reviews : [], 200);
+        }
+    }// getProductDetails
+
+    public static function addTowatchlist($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Customer');
+
+        if (empty($requestData['product_id']) || !is_numeric($requestData['product_id'])) {
+            ResponseAPI::error("Product ID is required and must be an integer.", null, 422);
+        }
+        $product_id = (int)$requestData['product_id'];
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Get customer id
+        $stmt = $conn->prepare("SELECT id FROM User WHERE apikey = ?");
+        $stmt->bind_param("s", $requestData['apikey']);
+        $stmt->execute();
+        $stmt->bind_result($cust_id);
+        if (!$stmt->fetch()) {
+            $stmt->close();
+            ResponseAPI::error("User not found.", null, 404);
+        }
+        $stmt->close();
+
+        // Check if product exists
+        $stmt = $conn->prepare("SELECT id FROM Product WHERE id = ?");
+        $stmt->bind_param("i", $product_id);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows === 0) {
+            $stmt->close();
+            ResponseAPI::error("Product does not exist.", null, 404);
+        }
+        $stmt->close();
+
+        // Check if already in watchlist
+        $stmt = $conn->prepare("SELECT * FROM watchlist WHERE cust_id = ? AND product_id = ?");
+        $stmt->bind_param("ii", $cust_id, $product_id);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows > 0) {
+            $stmt->close();
+            ResponseAPI::send("Product already in watchlist", ['product_id' => $product_id], 200);
+        }
+        $stmt->close();
+
+        // Add to watchlist
+        $stmt = $conn->prepare("INSERT INTO watchlist (cust_id, product_id) VALUES (?, ?)");
+        $stmt->bind_param("ii", $cust_id, $product_id);
+        if (!$stmt->execute()) {
+            $stmt->close();
+            ResponseAPI::error("Failed to add to watchlist: " . $conn->error, ['database_error' => $conn->error], 500);
+        }
+        $stmt->close();
+
+        ResponseAPI::send("Product added to watchlist successfully", ['product_id' => $product_id], 201);
+    }//addTowatchlist
+
+    public static function removeFromwatchlist($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Customer');
+
+        if (empty($requestData['product_id']) || !is_numeric($requestData['product_id'])) {
+            ResponseAPI::error("Product ID is required and must be an integer.", null, 422);
+        }
+        $product_id = (int)$requestData['product_id'];
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Get customer id
+        $stmt = $conn->prepare("SELECT id FROM User WHERE apikey = ?");
+        $stmt->bind_param("s", $requestData['apikey']);
+        $stmt->execute();
+        $stmt->bind_result($cust_id);
+        if (!$stmt->fetch()) {
+            $stmt->close();
+            ResponseAPI::error("User not found.", null, 404);
+        }
+        $stmt->close();
+
+        // Check if product exists
+        $stmt = $conn->prepare("SELECT id FROM Product WHERE id = ?");
+        $stmt->bind_param("i", $product_id);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows === 0) {
+            $stmt->close();
+            ResponseAPI::error("Product does not exist.", null, 404);
+        }
+        $stmt->close();
+
+        // Remove from watchlist
+        $stmt = $conn->prepare("DELETE FROM watchlist WHERE cust_id = ? AND product_id = ?");
+        $stmt->bind_param("ii", $cust_id, $product_id);
+        $stmt->execute();
+        $affected = $stmt->affected_rows;
+        $stmt->close();
+
+        if ($affected === 0) {
+            ResponseAPI::send("Product not in watchlist", ['product_id' => $product_id], 200);
+        }
+
+        ResponseAPI::send("Product removed from watchlist successfully", ['product_id' => $product_id], 200);
+    }//removeFromwatchlist
+
+    public static function getMywatchlist($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        Authorise::authenticate($requestData['apikey'], 'Customer');
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        // Get customer id
+        $stmt = $conn->prepare("SELECT id FROM User WHERE apikey = ?");
+        $stmt->bind_param("s", $requestData['apikey']);
+        $stmt->execute();
+        $stmt->bind_result($cust_id);
+        if (!$stmt->fetch()) {
+            $stmt->close();
+            ResponseAPI::error("User not found.", null, 404);
+        }
+        $stmt->close();
+
+        // Get all products in watchlist with product details (same as getAllProducts for customer)
+        $sql = "
+            SELECT 
+                p.id AS product_id,
+                p.name AS title,
+                p.image_url,
+                p.category,
+                ROUND(AVG(r.score), 1) AS average_rating,
+                sp.cheapest_price,
+                sp.retailer_id,
+                rt.name AS retailer_name
+            FROM watchlist w
+            INNER JOIN Product p ON w.product_id = p.id
+            LEFT JOIN Rating r ON r.product_id = p.id
+            LEFT JOIN (
+                SELECT sb.product_id, sb.retailer_id, sb.price AS cheapest_price
+                FROM Supplied_By sb
+                INNER JOIN (
+                    SELECT product_id, MIN(price) AS min_price
+                    FROM Supplied_By
+                    GROUP BY product_id
+                ) minp ON sb.product_id = minp.product_id AND sb.price = minp.min_price
+            ) sp ON sp.product_id = p.id
+            LEFT JOIN Retailer rt ON sp.retailer_id = rt.id
+            WHERE w.cust_id = ?
+            GROUP BY p.id
+            ORDER BY p.name ASC
+        ";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $cust_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $products = [];
+        while ($row = $result->fetch_assoc()) {
+            $products[] = [
+                'product_id' => (int)$row['product_id'],
+                'title' => $row['title'],
+                'image_url' => $row['image_url'],
+                'category' => $row['category'],
+                'average_rating' => $row['average_rating'] !== null ? (float)number_format($row['average_rating'], 1) : null,
+                'cheapest_price' => $row['cheapest_price'] !== null ? (float)number_format($row['cheapest_price'], 2, '.', '') : null,
+                'retailer_id' => $row['retailer_id'] !== null ? (int)$row['retailer_id'] : null,
+                'retailer_name' => $row['retailer_name'] !== null ? $row['retailer_name'] : null
+            ];
+        }
+        $stmt->close();
+
+        ResponseAPI::send("watchlist fetched successfully", $products, 200);
+    }//getMywatchlist
+
+    public static function getReviewStats($requestData) {
+        if (empty($requestData['apikey'])) {
+            ResponseAPI::error("API key is required to authenticate user", null, 401);
+        }
+        // Allow both Admin and Customer to view stats
+        Authorise::authenticate($requestData['apikey'], 'Both');
+
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+
+        $returnType = isset($requestData['return']) ? $requestData['return'] : 'All';
+
+        // Initialize all variables
+        $starCounts = [];
+        $starAverage_Counts = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
+        $totalReviews = 0;
+        $piePercentages = [];
+        $avgReviewScore = null;
+        $bestProducts = [];
+        $worstProducts = [];
+        $mostReviewed = [];
+        $leastReviewed = [];
+        $mostActiveReviewers = [];
+        $recentReviews = [];
+        $reviewGrowth = [];
+        $productsNoReviews = [];
+        $reviewLengthStats = [];
+        $avgScorePerCategory = [];
+        $percentProductsWithReviews = null;
+        $topRatedWithMinReviews = [];
+
+        // 1. Count of reviews for each star rating (1-5)
+        if ($returnType === 'All' || $returnType === 'star_counts') {
+            $sql = "SELECT score, COUNT(*) as count FROM Rating GROUP BY score";
+            $result = $conn->query($sql);
+            $starCounts = array_fill(1, 5, 0);
+            if ($result) {
+                while ($row = $result->fetch_assoc()) {
+                    if ($row && isset($row['score'])) {
+                        $starCounts[(int)$row['score']] = (int)$row['count'];
+                    }
+                }
+            }
+        }
+
+        // 1b. Count of products by average review (binned, 1.0-1.9, 2.0-2.9, ..., 5.0)
+        if ($returnType === 'All' || $returnType === 'starAverage_Counts' || $returnType === 'pie_percentages') {
+        $sql = "
+            SELECT 
+                ROUND(AVG(r.score), 1) AS avg_rating
+            FROM Product p
+            JOIN Rating r ON r.product_id = p.id
+            GROUP BY p.id
+        ";
+        $result = $conn->query($sql);
+        $starAverage_Counts = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                if ($row && isset($row['avg_rating']) && $row['avg_rating'] !== null) {
+                    $avg = (float)$row['avg_rating'];
+                    if ($avg >= 1.0 && $avg < 2.0) $starAverage_Counts[1]++;
+                    else if ($avg >= 2.0 && $avg < 3.0) $starAverage_Counts[2]++;
+                    else if ($avg >= 3.0 && $avg < 4.0) $starAverage_Counts[3]++;
+                    else if ($avg >= 4.0 && $avg < 5.0) $starAverage_Counts[4]++;
+                    else if ($avg == 5.0) $starAverage_Counts[5]++;
+                }
+            }
+        }
+    }
+
+        // 2. Total number of reviews
+        if ($returnType === 'All' || $returnType === 'total_reviews') {
+            $sql = "SELECT COUNT(*) as total FROM Rating";
+            $result = $conn->query($sql);
+            if ($result && ($row = $result->fetch_assoc()) && isset($row['total'])) {
+                $totalReviews = (int)$row['total'];
+            } else {
+                $totalReviews = 0;
+            }
+        }
+
+        // 3. Pie chart percentages for each star rating (1-5)
+        if ($returnType === 'All' || $returnType === 'pie_percentages') {
+        $totalProductsWithReviews = array_sum($starAverage_Counts);
+        if ($totalProductsWithReviews > 0) {
+            foreach ($starAverage_Counts as $star => $count) {
+                $piePercentages[$star] = round(($count / $totalProductsWithReviews) * 100, 1);
+            }
+        }
+    }
+
+        // 4. Average review rating across all products (float, using average of product averages)
+        if ($returnType === 'All' || $returnType === 'average_review') {
+            $sql = "
+                SELECT AVG(avg_rating) as avg_score
+                FROM (
+                    SELECT ROUND(AVG(r.score), 1) as avg_rating
+                    FROM Product p
+                    JOIN Rating r ON r.product_id = p.id
+                    GROUP BY p.id
+                ) as product_averages
+            ";
+            $result = $conn->query($sql);
+            if ($result && ($row = $result->fetch_assoc()) && isset($row['avg_score'])) {
+                $avgReviewScore = $row['avg_score'] !== null ? (float)$row['avg_score'] : null;
+            } else {
+                $avgReviewScore = null;
+            }
+        }
+
+        // 5. Best and worst review(s) star rating only: According to the average rating of each product
+        if ($returnType === 'All' || $returnType === 'best_worst_products') {
+            // Best
+            $sql = "
+                SELECT p.id, p.name, p.image_url, p.category, ROUND(AVG(r.score), 1) as avg_score, COUNT(r.id) as review_count
+                FROM Product p
+                JOIN Rating r ON r.product_id = p.id
+                GROUP BY p.id
+                HAVING review_count > 0
+                ORDER BY avg_score DESC
+                LIMIT 1
+            ";
+            $result = $conn->query($sql);
+            if ($result && ($row = $result->fetch_assoc())) {
+                $bestProducts[] = [
+                    'product_id' => (int)$row['id'],
+                    'title' => $row['name'],
+                    'image_url' => $row['image_url'],
+                    'category' => $row['category'],
+                    'average_rating' => round($row['avg_score'], 1),
+                    'review_count' => (int)$row['review_count']
+                ];
+            }
+            // Worst
+            $sql = "
+                SELECT p.id, p.name, p.image_url, p.category, ROUND(AVG(r.score), 1) as avg_score, COUNT(r.id) as review_count
+                FROM Product p
+                JOIN Rating r ON r.product_id = p.id
+                GROUP BY p.id
+                HAVING review_count > 0
+                ORDER BY avg_score ASC
+                LIMIT 1
+            ";
+            $result = $conn->query($sql);
+            if ($result && ($row = $result->fetch_assoc())) {
+                $worstProducts[] = [
+                    'product_id' => (int)$row['id'],
+                    'title' => $row['name'],
+                    'image_url' => $row['image_url'],
+                    'category' => $row['category'],
+                    'average_rating' => round($row['avg_score'], 1),
+                    'review_count' => (int)$row['review_count']
+                ];
+            }
+        }
+
+        // 6. Most Reviewed Product(s)
+        if ($returnType === 'All' || $returnType === 'most_reviewed_products') {
+            $sql = "
+                SELECT p.id, p.name, p.image_url, p.category, COUNT(r.id) as review_count
+                FROM Product p
+                JOIN Rating r ON r.product_id = p.id
+                GROUP BY p.id
+                ORDER BY review_count DESC
+                LIMIT 1
+            ";
+            $result = $conn->query($sql);
+            if ($result && ($row = $result->fetch_assoc())) {
+                $mostReviewed[] = [
+                    'product_id' => (int)$row['id'],
+                    'title' => $row['name'],
+                    'image_url' => $row['image_url'],
+                    'category' => $row['category'],
+                    'review_count' => (int)$row['review_count']
+                ];
+            }
+        }
+
+        // 7. Least Reviewed Product(s) (but >0)
+        if ($returnType === 'All' || $returnType === 'least_reviewed_products') {
+            $sql = "
+                SELECT p.id, p.name, p.image_url, p.category, COUNT(r.id) as review_count
+                FROM Product p
+                JOIN Rating r ON r.product_id = p.id
+                GROUP BY p.id
+                HAVING review_count > 0
+                ORDER BY review_count ASC
+                LIMIT 1
+            ";
+            $result = $conn->query($sql);
+            if ($result && ($row = $result->fetch_assoc())) {
+                $leastReviewed[] = [
+                    'product_id' => (int)$row['id'],
+                    'title' => $row['name'],
+                    'image_url' => $row['image_url'],
+                    'category' => $row['category'],
+                    'review_count' => (int)$row['review_count']
+                ];
+            }
+        }
+
+        // 8. Most Active Reviewer(s)
+        if ($returnType === 'All' || $returnType === 'most_active_reviewers') {
+            $sql = "
+                SELECT u.id, u.name, COUNT(r.id) as review_count
+                FROM User u
+                JOIN Rating r ON r.user_id = u.id
+                GROUP BY u.id
+                ORDER BY review_count DESC
+                LIMIT 1
+            ";
+            $result = $conn->query($sql);
+            if ($result && ($row = $result->fetch_assoc())) {
+                $mostActiveReviewers[] = [
+                    'user_id' => (int)$row['id'],
+                    'name' => $row['name'],
+                    'review_count' => (int)$row['review_count']
+                ];
+            }
+        }
+
+        // 9. Recent Reviews (last 5)
+        if ($returnType === 'All' || $returnType === 'recent_reviews') {
+            $sql = "
+                SELECT r.id AS review_id, r.score, r.description, r.updated_at, u.id AS user_id, u.name AS user_name, p.id AS product_id, p.name AS product_name
+                FROM Rating r
+                INNER JOIN User u ON r.user_id = u.id
+                INNER JOIN Product p ON r.product_id = p.id
+                ORDER BY r.updated_at DESC
+                LIMIT 5
+            ";
+            $result = $conn->query($sql);
+            if ($result) {
+                while ($row = $result->fetch_assoc()) {
+                    if ($row) {
+                        $recentReviews[] = [
+                            'review_id' => (int)$row['review_id'],
+                            'score' => (int)$row['score'],
+                            'description' => $row['description'],
+                            'updated_at' => $row['updated_at'],
+                            'user_id' => (int)$row['user_id'],
+                            'user_name' => $row['user_name'],
+                            'product_id' => (int)$row['product_id'],
+                            'product_name' => $row['product_name']
+                        ];
+                    }
+                }
+            }
+        }
+
+        // 10. Review Growth Over Time (last 12 months)
+        if ($returnType === 'All' || $returnType === 'review_growth') {
+            $sql = "
+                SELECT DATE_FORMAT(updated_at, '%Y-%m') AS month, COUNT(*) AS review_count
+                FROM Rating
+                WHERE updated_at >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+                GROUP BY month
+                ORDER BY month ASC
+            ";
+            $result = $conn->query($sql);
+            if ($result) {
+                while ($row = $result->fetch_assoc()) {
+                    if ($row) {
+                        $reviewGrowth[] = [
+                            'month' => $row['month'],
+                            'review_count' => (int)$row['review_count']
+                        ];
+                    }
+                }
+            }
+        }
+
+        // 11. Products With No Reviews
+        if ($returnType === 'All' || $returnType === 'products_no_reviews') {
+        $sql = "
+            SELECT COUNT(*) AS count
+            FROM Product p
+            LEFT JOIN Rating r ON r.product_id = p.id
+            WHERE r.id IS NULL
+        ";
+        $result = $conn->query($sql);
+        if ($result && ($row = $result->fetch_assoc()) && isset($row['count'])) {
+            $productsNoReviews = (int)$row['count'];
+        } else {
+            $productsNoReviews = 0;
+        }
+    }
+
+        // 12. Distribution of Review Lengths
+        if ($returnType === 'All' || $returnType === 'review_length_stats') {
+            $sql = "
+                SELECT 
+                    AVG(CHAR_LENGTH(description)) AS avg_length,
+                    MIN(CHAR_LENGTH(description)) AS min_length,
+                    MAX(CHAR_LENGTH(description)) AS max_length
+                FROM Rating
+            ";
+            $result = $conn->query($sql);
+            $row = $result && ($tmp = $result->fetch_assoc()) ? $tmp : null;
+            $reviewLengthStats = [
+                'average_length' => $row && $row['avg_length'] !== null ? round($row['avg_length'], 1) : null,
+                'min_length' => $row && $row['min_length'] !== null ? (int)$row['min_length'] : null,
+                'max_length' => $row && $row['max_length'] !== null ? (int)$row['max_length'] : null
+            ];
+            // Median
+            $sql = "SELECT CHAR_LENGTH(description) AS len FROM Rating ORDER BY len";
+            $result = $conn->query($sql);
+            $lengths = [];
+            if ($result) {
+                while ($row = $result->fetch_assoc()) {
+                    if ($row && isset($row['len'])) {
+                        $lengths[] = (int)$row['len'];
+                    }
+                }
+            }
+            $count = count($lengths);
+            if ($count > 0) {
+                sort($lengths);
+                $mid = (int)($count / 2);
+                $reviewLengthStats['median_length'] = $count % 2 === 0 ? ($lengths[$mid - 1] + $lengths[$mid]) / 2 : $lengths[$mid];
+            } else {
+                $reviewLengthStats['median_length'] = null;
+            }
+        }
+
+        // 13. Average Review Score Per Category (rounded to 1 decimal)
+        if ($returnType === 'All' || $returnType === 'avg_score_per_category') {
+            $sql = "
+                SELECT p.category, ROUND(AVG(r.score), 1) AS avg_score
+                FROM Product p
+                JOIN Rating r ON r.product_id = p.id
+                WHERE p.category IS NOT NULL AND p.category != ''
+                GROUP BY p.category
+            ";
+            $result = $conn->query($sql);
+            if ($result) {
+                while ($row = $result->fetch_assoc()) {
+                    if ($row) {
+                        $avgScorePerCategory[] = [
+                            'category' => $row['category'],
+                            'average_score' => $row['avg_score'] !== null ? (float)$row['avg_score'] : null
+                        ];
+                    }
+                }
+            }
+        }
+
+        // 14. Percentage of Products With At Least One Review
+        if ($returnType === 'All' || $returnType === 'percent_products_with_reviews') {
+            $sql = "SELECT COUNT(*) AS total FROM Product";
+            $result = $conn->query($sql);
+            $totalProducts = ($result && ($row = $result->fetch_assoc()) && isset($row['total'])) ? (int)$row['total'] : 0;
+            $sql = "SELECT COUNT(DISTINCT product_id) AS reviewed FROM Rating";
+            $result = $conn->query($sql);
+            $reviewedProducts = ($result && ($row = $result->fetch_assoc()) && isset($row['reviewed'])) ? (int)$row['reviewed'] : 0;
+            $percentProductsWithReviews = $totalProducts > 0 ? round(($reviewedProducts / $totalProducts) * 100, 1) : 0.0;
+        }
+
+        // 15. Top Rated Product(s) With At Least X Reviews (average rounded to 1 decimal)
+        if ($returnType === 'All' || $returnType === 'top_rated_with_min_reviews') {
+            $min_reviews = isset($requestData['min_reviews']) && is_numeric($requestData['min_reviews']) ? (int)$requestData['min_reviews'] : 2;
+            $sql = "
+                SELECT p.id, p.name, p.image_url, p.category, ROUND(AVG(r.score), 1) as avg_score, COUNT(r.id) as review_count
+                FROM Product p
+                JOIN Rating r ON r.product_id = p.id
+                GROUP BY p.id
+                HAVING review_count >= ?
+                ORDER BY avg_score DESC
+                LIMIT 1
+            ";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("i", $min_reviews);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($result && ($row = $result->fetch_assoc())) {
+                $topRatedWithMinReviews[] = [
+                    'product_id' => (int)$row['id'],
+                    'title' => $row['name'],
+                    'image_url' => $row['image_url'],
+                    'category' => $row['category'],
+                    'average_rating' => round($row['avg_score'], 1),
+                    'review_count' => (int)$row['review_count']
+                ];
+            }
+            $stmt->close();
+        }
+
+        // 16. Total number of products in the database
+        if ($returnType === 'All' || $returnType === 'number_of_products') {
+            $sql = "SELECT COUNT(*) AS total FROM Product";
+            $result = $conn->query($sql);
+            if ($result && ($row = $result->fetch_assoc()) && isset($row['total'])) {
+                $numberOfProducts = (int)$row['total'];
+            } else {
+                $numberOfProducts = 0;
+            }
+        }
+
+        // Build response
+        $data = [];
+        if ($returnType === 'All' || $returnType === 'star_counts') $data['star_counts'] = $starCounts;
+        if ($returnType === 'All' || $returnType === 'starAverage_Counts') $data['starAverage_Counts'] = $starAverage_Counts;
+        if ($returnType === 'All' || $returnType === 'total_reviews') $data['total_reviews'] = $totalReviews;
+        if ($returnType === 'All' || $returnType === 'pie_percentages') $data['pie_percentages'] = $piePercentages;
+        if ($returnType === 'All' || $returnType === 'average_review') $data['average_review'] = $avgReviewScore;
+        if ($returnType === 'All' || $returnType === 'best_worst_products') {
+            $data['best_products'] = $bestProducts;
+            $data['worst_products'] = $worstProducts;
+        }
+        if ($returnType === 'All' || $returnType === 'most_reviewed_products') $data['most_reviewed_products'] = $mostReviewed;
+        if ($returnType === 'All' || $returnType === 'least_reviewed_products') $data['least_reviewed_products'] = $leastReviewed;
+        if ($returnType === 'All' || $returnType === 'most_active_reviewers') $data['most_active_reviewers'] = $mostActiveReviewers;
+        if ($returnType === 'All' || $returnType === 'review_growth') $data['review_growth'] = $reviewGrowth;
+        if ($returnType === 'All' || $returnType === 'products_no_reviews') $data['products_no_reviews'] = $productsNoReviews;
+        if ($returnType === 'All' || $returnType === 'number_of_products') $data['number_of_products'] = $numberOfProducts;
+        if ($returnType === 'All' || $returnType === 'review_length_stats') $data['review_length_stats'] = $reviewLengthStats;
+        if ($returnType === 'All' || $returnType === 'avg_score_per_category') $data['avg_score_per_category'] = $avgScorePerCategory;
+        if ($returnType === 'All' || $returnType === 'percent_products_with_reviews') $data['percent_products_with_reviews'] = $percentProductsWithReviews;
+        if ($returnType === 'All' || $returnType === 'top_rated_with_min_reviews') $data['top_rated_with_min_reviews'] = $topRatedWithMinReviews;
+
+        ResponseAPI::send("Review statistics fetched successfully", $data, 200);
+    }
+
 }
 
 
@@ -2512,7 +3321,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             case 'deleteMyReview':
                 CUSTOMER::deleteMyReview($requestData);
-                break;                
+                break;            
+                
+            case 'getProductDetails':
+                CUSTOMER::getProductDetails($requestData);
+                break;
+
+            case 'addToWatchlist':
+                CUSTOMER::addTowatchlist($requestData);
+                break;
+
+            case 'removeFromWatchlist':
+                CUSTOMER::removeFromwatchlist($requestData);
+                break;
+
+            case 'getMyWatchlist':
+                CUSTOMER::getMywatchlist($requestData);
+                break;
+
+            case 'getReviewStats':
+                CUSTOMER::getReviewStats($requestData);
+                break;
                 
             default:
                 ResponseAPI::error("Invalid request type", null, 400);
@@ -2525,651 +3354,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 //UP TO HERE WORKS IS UPDATED
-
-
-
-// class API
-// {
-//     // Access the environment variables
-
-//     private $dbHost;
-//     private $dbName;
-//     private $dbUser;
-//     private $dbPassword;
-//     private $dbPort;
-
-//     private $conn;
-
-//     public function __construct()
-//     {
-//         $this->dbHost = getenv('DB_HOST');
-//         $this->dbName = getenv('DB_NAME');
-//         $this->dbUser = getenv('DB_USER');
-//         $this->dbPassword = getenv('DB_PASSWORD');
-//         $this->dbPort = getenv('DB_PORT') ?: 3306;  // default to 3306 if not set
-//     }
-
-//     //methods////////
-//     // Method to send JSON response
-//     public function sendResponse($status, $message, $data = [])
-//     {
-//         header('Content-Type: application/json');
-//         $response = [
-//             'status' => $status,
-//             'timestamp' => time() * 1000 // Convert to milliseconds
-//         ];
-//         if (!empty($message)) {
-//             $response['message'] = $message;
-//         } elseif (!empty($data)) {
-//             $response['data'] = $data;
-//         }
-//         echo json_encode($response);
-//         exit;
-//     }
-
-//     public function TestResponse($requestData)
-//     {
-//         try {
-//             $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, (int) $this->dbPort);
-
-//             if ($conn->connect_error) {
-//                 die("Connection failed: " . $conn->connect_error);
-//             }
-//             $hello = isset($requestData['hello']) ? trim($requestData['hello']) : '';
-//             $world = isset($requestData['world']) ? trim($requestData['world']) : '';
-
-//             if (empty($hello) || empty($world)) {
-//                 $this->sendResponse('error', "missing required fields");
-//             }
-
-//             file_put_contents("debug.json", json_encode($requestData, JSON_PRETTY_PRINT));
-
-
-
-//             $this->sendResponse("Success", "Hello world back to you!");
-//             $conn->close();
-//         } catch (mysqli_sql_exception $e) {
-//             echo "Connection failed: " . $e->getMessage();
-//             exit;
-//         }
-
-//     }
-
-//     public function Register($requestData)
-//     {
-
-//         try {
-//             $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
-
-//             if ($conn->connect_error) {
-//                 die("Connection failed: " . $conn->connect_error);
-//             }
-//             $name = isset($requestData["name"]) ? trim($requestData["name"]) : "";
-//             $surname = isset($requestData["surname"]) ? trim($requestData["surname"]) : "";
-//             $phone_number = isset($requestData["phone_number"]) ? trim($requestData["phone_number"]) : "";
-//             $email = isset($requestData["email"]) ? trim($requestData["email"]) : "";
-//             $password = isset($requestData["password"]) ? trim($requestData["password"]) : "";
-//             $street_number = isset($requestData["street_number"]) ? trim($requestData["street_number"]) : "";
-//             $street_name = isset($requestData["street_name"]) ? trim($requestData["street_name"]) : "";
-//             $suburb = isset($requestData["suburb"]) ? trim($requestData["suburb"]) : "";
-//             $city = isset($requestData["city"]) ? trim($requestData["city"]) : "";
-//             $zip_code = isset($requestData["zip_code"]) ? trim($requestData["zip_code"]) : "";
-//             $user_type = isset($requestData["user_type"]) ? trim($requestData["user_type"]) : "";
-
-
-
-//             //must have unique email
-//             if (empty($name) || empty($surname) || empty($phone_number) || empty($email) || empty($password)) {
-//                 $this->sendResponse('error', 'Missing required fields');
-//             } elseif (!preg_match('/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/', $email)) {
-//                 $this->sendResponse('emailError', 'Invalid email address');
-//             } elseif (!preg_match("/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/", $password)) {
-//                 $this->sendResponse('passwordError', 'Password does not meet requirements');
-//             } else {
-//                 //check if email is unique
-//                 $emailcheck = $conn->prepare("SELECT * FROM User WHERE email = ?");
-//                 $emailcheck->bind_param("s", $email);
-//                 $emailcheck->execute();
-
-//                 if ($emailcheck->get_result()->fetch_assoc()) {
-//                     $this->sendResponse("error", "Email already exists");
-//                 }
-
-//                 //All good so we can insert the user
-//                 //set api key
-//                 $apikey = base64_encode(random_bytes(32));
-//                 $password = password_hash($password, PASSWORD_DEFAULT);
-//                 $sqlInsert = $conn->prepare("INSERT INTO User(name,surname, phone_number,apikey, email, password, street_number, street_name, suburb,city,zip_code, user_type) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
-//                 $sqlInsert->bind_param("ssssssssssss", $name, $surname, $phone_number, $apikey, $email, $password, $street_number, $street_name, $suburb, $city, $zip_code, $user_type);
-
-//                 if ($sqlInsert->execute()) {
-//                     $user_id = mysqli_insert_id($conn);
-//                     if ($user_type === "Customer") {
-//                         $pfp = isset($requestData["profile_picture"]) ? trim($requestData["profile_picture"]) : "";
-//                         $insertC = $conn->prepare("INSERT INTO Customer(user_id, profile_picture) VALUES (?,?)");
-//                         $insertC->bind_param("is", $user_id, $pfp);
-//                         $insertC->execute();
-//                         $insertC->close();
-//                     } else if ($user_type === "Admin") {
-//                         $salary = isset($requestData["salary"]) ? trim($requestData["salary"]) : "";
-//                         $position = isset($requestData["position"]) ? trim($requestData["position"]) : "";
-//                         $insertA = $conn->prepare("INSERT INTO Admin(user_id, salary, position) VALUES (?,?,?)");
-//                         $insertA->bind_param("ids", $user_id, $salary, $position);
-//                         $insertA->execute();
-//                         $insertA->close();
-//                     } else {
-//                         $this->sendResponse("error", "user type unrecognized");
-//                         return;
-//                     }
-//                 } else {
-//                     $this->sendResponse("error", "User registration failed");
-//                 }
-
-//                 $sqlInsert->close();
-//                 $conn->close();
-
-
-//             }
-
-//             $this->sendResponse("success", "Inserted new user");
-
-
-
-//         } catch (mysqli_sql_exception $e) {
-//             echo "Connection failed: " . $e->getMessage();
-//             $this->sendResponse("error", $e->getMessage());
-//             exit;
-//         }
-
-//     }
-
-//     public function Login($requestData)
-//     {
-//         try {
-//             $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
-
-//             if ($conn->connect_error) {
-//                 die("Connection failed: " . $conn->connect_error);
-//             }
-//             $email = isset($requestData["email"]) ? trim($requestData["email"]) : "";
-//             $password = isset($requestData["password"]) ? trim($requestData["password"]) : "";
-
-//             if (empty($email) || empty($password)) {
-//                 $this->sendResponse("error", "All fields must be valid");
-//             }
-
-
-//             $stmt = $conn->prepare("SELECT * FROM User WHERE email=?");
-//             $stmt->bind_param("s", $email);
-//             $stmt->execute();
-
-//             $result = $stmt->get_result()->fetch_assoc();
-//             //echo("Email: ".$result["email"] );
-//             //echo("Password: ".$result["password"] );
-//             if (password_verify($password, $result["password"])) {
-//                 $cookie_email = $result["email"];
-//                 $cookie_name = $result["name"]; //To use when displaying the users profile
-//                 $cookie_surname = $result["surname"];
-//                 $cookie_key = $result["apikey"];
-
-//                 setcookie("userapikey", $cookie_key, time() + (259200 * 30), "/"); //set for 3 days
-//                 setcookie("useremail", $cookie_email, time() + (259200 * 30), "/"); //set for 3 days
-//                 setcookie("username", $cookie_name, time() + (259200 * 30), "/"); //set for 3 days
-//                 setcookie("usersurname", $cookie_surname, time() + (259200 * 30), "/"); //set for 3 days
-
-
-//                 $this->sendResponse(
-//                     "success"
-//                     ,
-//                     [
-//                         'apikey' => $result["apikey"]
-//                         ,
-//                         'username' => $result["name"]
-//                         ,
-//                         'surname' => $result["surname"]
-//                         ,
-//                         'email' => $result["email"]
-//                     ]
-//                 );
-//             } else {
-//                 $this->sendResponse("error", "Unknown email or password");
-//             }
-
-
-//             $stmt->close();
-//             $conn->close();
-
-//         } catch (mysqli_sql_exception $e) {
-//             echo "Connection failed: " . $e->getMessage();
-//             exit;
-//         }
-
-
-
-
-
-//     }
-//     public function ViewAllProducts($requestData)
-//     {
-
-//         try {
-
-//             $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
-//             if ($conn->connect_error) {
-//                 die("Connection failed: " . $conn->connect_error);
-//             }
-//             $stmt = $conn->prepare("SELECT * FROM Product");
-//             $stmt->execute();
-//             $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-//             //$data = $result->fetch_all(MYSQLI_ASSOC);
-//             if (!empty($result)) {
-//                 $this->sendResponse("success", $result);
-//             }
-//             $stmt->close();
-//             $conn->close();
-//         } catch (mysqli_sql_exception $e) {
-//             echo "Connection failed: " . $e->getMessage();
-//             exit;
-//         }
-
-//     }
-//     public function RateProduct($requestData)
-//     {
-
-//         try {
-
-//             $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
-//             if ($conn->connect_error) {
-//                 die("Connection failed: " . $conn->connect_error);
-//             }
-//             $productid = isset($requestData["product_id"]) ? $requestData["product_id"] :"";
-//             $score = isset($requestData["score"]) ? $requestData["score"] : 5;
-//             $description = isset($requestData["description"]) ? $requestData["description"] :"";
-//             $userid = isset($requestData["user_id"]) ? $requestData["user_id"] :"";
-
-//             $sqlInsert = $conn->prepare("INSERT INTO Rating(score, description, user_id, product_id) VALUES (?,?,?,?)");
-//             $sqlInsert->bind_param("isii", $score, $description,$userid, $productid);
-//             $sqlInsert->execute();
-//             $result = $sqlInsert->get_result();
-//             if(!empty($result)){
-//                 $this->sendResponse("success", "Inserted rating");
-//             }
-
-//             $conn->close();
-//         } catch (mysqli_sql_exception $e) {
-//             echo "Connection failed: " . $e->getMessage();
-//             exit;
-//         }
-//     }
-//     public function AddProduct($requestData)
-//     {
-//         try {
-
-//             $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
-//             if ($conn->connect_error) {
-//                 die("Connection failed: " . $conn->connect_error);
-//             }
-//         } catch (mysqli_sql_exception $e) {
-//             echo "Connection failed: " . $e->getMessage();
-//             exit;
-//         }
-//     }
-//     public function UpdateProduct($requestData)
-//     {
-
-//         try {
-
-//             $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
-//             if ($conn->connect_error) {
-//                 die("Connection failed: " . $conn->connect_error);
-//             }
-//         } catch (mysqli_sql_exception $e) {
-//             echo "Connection failed: " . $e->getMessage();
-//             exit;
-//         }
-//     }
-//     public function DeleteProduct($requestData)
-//     {
-
-//         try {
-
-//             $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
-//             if ($conn->connect_error) {
-//                 die("Connection failed: " . $conn->connect_error);
-//             }
-//         } catch (mysqli_sql_exception $e) {
-//             echo "Connection failed: " . $e->getMessage();
-//             exit;
-//         }
-//     }
-//     public function ViewRatings($requestData)
-//     {
-//         try {
-
-//             $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
-//             if ($conn->connect_error) {
-//                 die("Connection failed: " . $conn->connect_error);
-//             }
-
-//             $productid = isset($requestData["product_id"]) ? $requestData["product_id"] : 0;
-//             $stmt = $conn->prepare("SELECT * FROM Rating WHERE product_id=?");
-//             $stmt->bind_param("i", $productid);
-//             $stmt->execute();
-//             $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-//             if(!empty($result)) {
-//                 $this->sendResponse("success", $result);
-//             }
-//             $stmt->close();
-//             $conn->close();
-//         } catch (mysqli_sql_exception $e) {
-//             echo "Connection failed: " . $e->getMessage();
-//             exit;
-//         }
-//     }
-//     public function FilterProducts($requestData)
-//     {
-//         //filter based on whatever
-//         try {
-
-//             $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
-//             if ($conn->connect_error) {
-//                 die("Connection failed: " . $conn->connect_error);
-//             }
-//         } catch (mysqli_sql_exception $e) {
-//             echo "Connection failed: " . $e->getMessage();
-//             exit;
-//         }
-//     }
-
-//     public function UpdateAdmin($requestData)
-//     {
-//         //filter based on whatever
-//         try {
-
-//             $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
-//             if ($conn->connect_error) {
-//                 die("Connection failed: " . $conn->connect_error);
-//             }
-
-//             $fields = [];
-//             $adminFields =[];
-//             $values = [];
-//             $adminValues = [];
-//             $types = "";
-//             $adminTypes = "";
-//             $fieldMap = [
-//                 "name" => "s",
-//                 "surname" => "s",
-//                 "phone_number" => "s",
-//                 "apikey" => "s",
-//                 "email" => "s",
-//                 "password" => "s",
-//                 "street_number" => "s",
-//                 "street_name" => "s",
-//                 "suburb" => "s",
-//                 "city" => "s",
-//                 "zip_code" => "s",
-//                 "user_type" => "s"
-//             ];
-//             $adminFieldMap = [
-
-//                 "salary" => "d",
-//                 "position" => "s"
-//             ];
-
-//             foreach ($fieldMap as $key => $type) {
-//                 if (isset($requestData[$key])) {
-//                     $fields[] = "$key = ?";
-//                     $values[] = $requestData[$key];
-//                     $types .= $type;
-//                 }
-//             }
-
-//             foreach ($adminFieldMap as $key => $type) {
-//                 if (isset($requestData[$key])) {
-//                     $adminFields[] = "$key = ?";
-//                     $adminValues[] = $requestData[$key];
-//                     $adminTypes .= $type;
-//                 }
-//             }
-
-//             if(count($fields) > 0 && isset($fieldMap['id']))
-//             {
-
-//             $conn->begin_transaction();
-
-//             // Update User table
-//             $userSql = "UPDATE User SET ". implode(", ", $fields) . "WHERE id=?";
-//             $userStmt = $conn->prepare($userSql);
-//             $userStmt->bind_param($types, $values);
-//             $userStmt->execute();
-
-//             // Update Admin table
-//             $adminSql = "UPDATE Admin SET " . implode(", ", $adminFields) ." WHERE user_id=?";
-//             $adminStmt = $conn->prepare($adminSql);
-//             $adminStmt->bind_param($adminTypes, $adminValues, $fieldMap['id']); // d for double (salary), s for string, i for int
-//             $adminStmt->execute();
-
-//             $conn->commit();
-
-//             $conn->close();
-
-//             }
-//         } catch (Exception $e) {
-//             if (isset($conn)) {
-//                 $conn->rollback();
-//             } 
-//             $this->sendResponse("error", $e->getMessage());
-//             echo "Update failed: " . $e->getMessage();
-//         } finally {
-//             if (isset($userStmt))
-//                 $userStmt->close();
-//             if (isset($adminStmt))
-//                 $adminStmt->close();
-//             if (isset($conn))
-//                 $conn->close();
-//         }
-
-
-
-//     }
-//     public function UpdateCustomer($requestData)
-//     {
-//         //filter based on whatever
-//         try {
-
-//             $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
-//             if ($conn->connect_error) {
-//                 die("Connection failed: " . $conn->connect_error);
-//             }
-
-
-//             $fields = [];
-//             $cusFields =[];
-//             $values = [];
-//             $custValues = [];
-//             $types = "";
-//             $custTypes = "";
-//             $fieldMap = [
-//                 "name" => "s",
-//                 "surname" => "s",
-//                 "phone_number" => "s",
-//                 "apikey" => "s",
-//                 "email" => "s",
-//                 "password" => "s",
-//                 "street_number" => "s",
-//                 "street_name" => "s",
-//                 "suburb" => "s",
-//                 "city" => "s",
-//                 "zip_code" => "s",
-//                 "user_type" => "s"
-//             ];
-//             $cusFieldMap = [
-
-//                 "profile_picture" => "s"
-//             ];
-
-//             foreach ($fieldMap as $key => $type) {
-//                 if (isset($requestData[$key])) {
-//                     $fields[] = "$key = ?";
-//                     $values[] = $requestData[$key];
-//                     $types .= $type;
-//                 }
-//             }
-
-//             foreach ($cusFieldMap as $key => $type) {
-//                 if (isset($requestData[$key])) {
-//                     $cusFields[] = "$key = ?";
-//                     $custValues[] = $requestData[$key];
-//                     $custTypes .= $type;
-//                 }
-//             }
-
-//             if(count($fields) > 0 && isset($fieldMap['id']))
-//             {
-
-//             $conn->begin_transaction();
-
-//             // Update User table
-//             $userSql = "UPDATE User SET ". implode(", ", $fields) . "WHERE id=?";
-//             $userStmt = $conn->prepare($userSql);
-//             $userStmt->bind_param($types, $values);
-//             $userStmt->execute();
-
-//             // Update Admin table
-//             $adminSql = "UPDATE Admin SET " . implode(", ", $cusFields) ." WHERE user_id=?";
-//             $adminStmt = $conn->prepare($adminSql);
-//             $adminStmt->bind_param($custTypes, $custValues, $fieldMap['id']); // d for double (salary), s for string, i for int
-//             $adminStmt->execute();
-
-//             $conn->commit();
-
-//             $conn->close();
-
-//             }
-//         } catch (Exception $e) {
-//             if (isset($conn)) {
-//                 $conn->rollback();
-//             }
-//                         $this->sendResponse("error", $e->getMessage());
-
-//             echo "Update failed: " . $e->getMessage();
-//         } finally {
-//             if (isset($userStmt))
-//                 $userStmt->close();
-//             if (isset($cusStmt))
-//                 $cusStmt->close();
-//             if (isset($conn))
-//                 $conn->close();
-//         }
-
-
-
-//     }
-//     public function ViewSupplier($requestData)
-//     {
-//         //filter based on whatever
-//         try {
-
-//             $conn = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbName, $this->dbPort);
-//             if ($conn->connect_error) {
-//                 die("Connection failed: " . $conn->connect_error);
-//             }
-//         } catch (mysqli_sql_exception $e) {
-//             echo "Connection failed: " . $e->getMessage();
-//             exit;
-//         }
-
-//         $productid = isset($requestData["id"]) ? $requestData["id"] : "";
-//         $retailid = isset($requestData["retailer_id"]) ? $requestData["retailer_id"] : "";
-
-//         $stmt = $conn->prepare("SELECT * FROM Retailer WHERE id = ?");
-//         $stmt->bind_param("i", $retailid);
-//         $stmt->execute();
-//         $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);        
-//         if (!empty($result)) {
-//             $this->sendResponse("success",  $result);
-//         }
-//         $this->sendResponse("error", "No results found");
-
-//         $stmt->close();
-//         $conn->close();
-//     }
-
-
-
-
-
-
-
-
-//     ///////////
-
-// }
-
-
-// $api = new API();
-
-// if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-//     $requestData = json_decode(file_get_contents('php://input'), true);
-
-//     if (isset($requestData['type'])) {
-//         $apiKey = isset($requestData['apikey']) ? $requestData['apikey'] :'null';
-//         if($apikey === 'null')
-//         {
-//             $api->sendResponse('error','No apikey');
-//         }
-
-//         $stmt = $conn->prepare('SELECT * FROM User WHERE apikey=?');
-//         $stmt->bind_param('s', $apiKey);
-//         $stmt->execute();
-//         $result = $stmt->get_result();
-//         if($result->num_rows <= 0)
-//         {
-//             $api->sendResponse('error','Invalid API key');
-//         }
-//         $stmt->close();
-//         $conn->close();
-        
-//         if ($requestData['type'] === "Test") { //done
-//             $api->TestResponse($requestData);
-//         } else if ($requestData['type'] === "Login") { //50% done
-//             $api->Login($requestData);
-//         } else if ($requestData['type'] === "Register") { //50% done
-//             $api->Register($requestData);
-//         } else if ($requestData['type'] === "ViewAllProducts") { //done
-//             $api->ViewAllProducts($requestData);
-//         } else if ($requestData['type'] === "RateProduct") { //done
-//             $api->RateProduct($requestData);
-//         } else if ($requestData['type'] === "AddProduct") {
-//             $api->AddProduct($requestData);
-//         } else if ($requestData['type'] === "UpdateProduct") {
-//             $api->UpdateProduct($requestData);
-//         } else if ($requestData['type'] === "DeleteProduct") {
-//             $api->DeleteProduct($requestData);
-//         } else if ($requestData['type'] === "ViewRatings") { //done
-//             $api->ViewRatings($requestData);
-//         } else if ($requestData['type'] === "FilterProducts") {
-//             $api->FilterProducts($requestData);
-//         } else if ($requestData['type'] === "UpdateCustomer") { //50% done
-//             $api->UpdateCustomer($requestData);
-//         } else if ($requestData['type'] === "UpdateAdmin") { //50% done
-//             $api->UpdateAdmin($requestData);
-//         } else if ($requestData['type'] === "ViewSupplier") { //done
-//             $api->ViewSupplier($requestData);
-//         } else {
-//             echo "please specify type";
-//         }
-//     } else {
-//         http_response_code(400);
-//         $api->sendResponse("error", "Missing or invalid parameters");
-//     }
-// } else {
-//     http_response_code(405);
-//     $api->sendResponse("error", "Method not allowed");
-// }
-
-
-
-
 ?>
