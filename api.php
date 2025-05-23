@@ -188,7 +188,64 @@ class Authorise {
         $stmt->execute();
         $result = $stmt->get_result();
         return ($result->num_rows > 0);
-    }
+    }//checkIfAPIKeyExists
+
+    public static function isRateLimited($userIP, $endpoint, $requestLimit = 5, $windowsInSeconds = 60){
+        $directory = __DIR__ . '/rate_limit';
+        if (!is_dir($directory)) {
+            mkdir($directory, 0777, true); // Create the directory if it doesn't exist
+        }//if
+
+        //Generate the json file path
+        $filePath = $directory . '/' . md5($userIP . $endpoint) . '.json'; //Uses MD5 hash so that we cannot guess the file name
+
+        $timeNow = time();
+        $timestamps = [];
+
+        $fileOpen = fopen($filePath, 'c+'); //c+ mode to create the file if it doesn't exist
+        if( flock($fileOpen, LOCK_EX) ) { //Try to get an exclusive lock
+            $contents = stream_get_contents($fileOpen);
+            if ($contents !== false) {
+                $data = json_decode($contents, true);
+                if (is_array($data) && isset($data['timestamps'])) {
+                    // Filter out timestamps that are older than the window
+                    $timestamps = array_filter($data['timestamps'], function($ts) use ($timeNow, $windowsInSeconds) {
+                        return ($timeNow - (int)$ts) < $windowsInSeconds;
+                    });
+                }//if array
+            }//if contents
+
+            if (count($timestamps) >= $requestLimit) {
+                flock($fileOpen, LOCK_UN); //Release the lock
+                fclose($fileOpen);
+                return true; // Rate limit exceeded
+            }//if
+
+            $timestamps[] = $timeNow; // Add the current timestamp to the array
+            $data = ['timestamps' => $timestamps];
+
+            ftruncate($fileOpen, 0); // Clear the file
+            rewind($fileOpen); // Move the pointer to the beginning of the file
+            fwrite($fileOpen, json_encode($data)); // Write the updated data
+            fflush($fileOpen); // Flush the output to the file (ensure it's written)
+            flock($fileOpen, LOCK_UN); //Release the lock
+        }//if we were able to get the lock
+
+        fclose($fileOpen); // Close the file
+        return false; // Rate limit not exceeded
+
+    }//isRateLimited
+
+    public static function cleanupRateLimitFiles($dir, $maxAgeSeconds) {
+        if (!is_dir($dir)) return;  // Check if the directory exists
+        $now = time();
+        foreach (glob($dir . '/*.json') as $file) { // Iterate through all JSON files and delete old ones
+            if (filemtime($file) < ($now - $maxAgeSeconds)) {
+                unlink($file); //delete
+            }//if
+        }//for
+
+    }//cleanupRateLimitFiles
 }//Authorise class
 
 class Tester {
@@ -3247,9 +3304,13 @@ class CUSTOMER {
 
 }
 
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $requestData = json_decode(file_get_contents('php://input'), true);
+
+    //For every 100 requests, clean up old rate limit files
+    if (mt_rand(1, 100) === 1) {
+        Authorise::cleanupRateLimitFiles(__DIR__ . '/rate_limit', 1800); //Deletes files older than 30 minutes
+    }
 
     if (empty($requestData) || !is_array($requestData)) {
         ResponseAPI::error("Invalid request data: Is your request a valid JSON object?", null, 400); //400 Bad Request
@@ -3269,151 +3330,248 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             //ADMIN
             case 'Register':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'register', 5, 60)) { //5 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 USER::register($requestData);
                 break;
 
             case 'Login':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'login', 5, 60)) { //5 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 USER::login($requestData);
                 break;
 
             case 'QuickAddUser':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'quick_add_user', 5, 60)) { //5 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 ADMIN::QuickAddUser($requestData);
                 break;
 
             case 'QuickEditProductPrice':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'quick_edit_product_price', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 ADMIN::QuickEditProductPrice($requestData);
                 break;
 
             case 'AdminRecentReviews':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'admin_recent_reviews', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 ADMIN::AdminRecentReviews($requestData);
                 break;
 
             case 'AddNewProduct':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'add_new_product', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 ADMIN::AddNewProduct($requestData);
                 break;
 
             case 'deleteProduct':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'delete_product', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 ADMIN::deleteProduct($requestData);
                 break;
 
             case 'GetAllRetailers':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'get_all_retailers', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 ADMIN::GetAllRetailers($requestData);
                 break;
 
             case 'AddRetailer':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'add_retailer', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 ADMIN::AddRetailer($requestData);
                 break;
 
             case 'EditRetailer':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'edit_retailer', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 ADMIN::EditRetailer($requestData);
                 break;
 
             case 'getAllUsers':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'get_all_users', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 ADMIN::getAllUsers($requestData);
                 break;
 
             case 'AddNewStaff':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'add_new_staff', 5, 60)) { //5 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 ADMIN::AddNewStaff($requestData);
                 break;
             
             case 'editUser':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'edit_user', 5, 60)) { //5 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 ADMIN::editUser($requestData);
                 break;
 
             case 'deleteUser':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'delete_user', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 ADMIN::deleteUser($requestData);
                 break;
 
             case 'deleteRating':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'delete_rating', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 ADMIN::deleteRating($requestData);
                 break;
 
             case 'deleteRetailer':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'delete_retailer', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 ADMIN::deleteRetailer($requestData);
                 break;
 
             case 'editProduct':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'edit_product', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 ADMIN::editProduct($requestData);
                 break;
 
             //BOTH
             case 'getAllProducts':
-            // Check user type
-            if (empty($requestData['apikey'])) {
-                ResponseAPI::error("API key is required to authenticate user", null, 401);
-            }
-            // Get user type from API key
-            $db = Database::getInstance();
-            $conn = $db->getConnection();
-            $stmt = $conn->prepare('SELECT user_type FROM User WHERE apikey=?');
-            $stmt->bind_param('s', $requestData['apikey']);
-            $stmt->execute();
-            $stmt->bind_result($user_type);
-            if (!$stmt->fetch()) {
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'get_all_products', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
+                // Check user type
+                if (empty($requestData['apikey'])) {
+                    ResponseAPI::error("API key is required to authenticate user", null, 401);
+                }
+                // Get user type from API key
+                $db = Database::getInstance();
+                $conn = $db->getConnection();
+                $stmt = $conn->prepare('SELECT user_type FROM User WHERE apikey=?');
+                $stmt->bind_param('s', $requestData['apikey']);
+                $stmt->execute();
+                $stmt->bind_result($user_type);
+                if (!$stmt->fetch()) {
+                    $stmt->close();
+                    ResponseAPI::error("Invalid API key or User not found", null, 401);
+                }
                 $stmt->close();
-                ResponseAPI::error("Invalid API key or User not found", null, 401);
-            }
-            $stmt->close();
 
-            if (strcasecmp($user_type, 'Admin') === 0) {
-                ADMIN::getAllProducts($requestData);
-            } else if (strcasecmp($user_type, 'Customer') === 0) {
-                CUSTOMER::getAllProducts($requestData);
-            } else {
-                ResponseAPI::error("Unknown user type", null, 403); //403 Forbidden
-            }
-            break;
+                if (strcasecmp($user_type, 'Admin') === 0) {
+                    ADMIN::getAllProducts($requestData);
+                } else if (strcasecmp($user_type, 'Customer') === 0) {
+                    CUSTOMER::getAllProducts($requestData);
+                } else {
+                    ResponseAPI::error("Unknown user type", null, 403); //403 Forbidden
+                }
+                break;
 
             //CUSTOMER
             case 'getAllCategories':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'get_all_categories', 20, 60)) { //20 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 CUSTOMER::getAllCategories($requestData);
                 break;
 
             case 'getMyDetails':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'get_my_details', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 CUSTOMER::getMyDetails($requestData);
                 break;
 
             case 'updateMyDetails':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'update_my_details', 5, 60)) { //5 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 CUSTOMER::updateMyDetails($requestData);
                 break;
 
             case 'getMyReviews':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'get_my_reviews', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 CUSTOMER::getMyReviews($requestData);
                 break;
 
             case 'writeReview':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'write_review', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 CUSTOMER::writeReview($requestData);
                 break;
             
             case 'editMyReview':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'edit_my_review', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 CUSTOMER::editMyReview($requestData);
                 break;
 
             case 'deleteMyReview':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'delete_my_review', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 CUSTOMER::deleteMyReview($requestData);
                 break;            
                 
             case 'getProductDetails':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'get_product_details', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 CUSTOMER::getProductDetails($requestData);
                 break;
 
             case 'addToWatchlist':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'add_to_watchlist', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 CUSTOMER::addTowatchlist($requestData);
                 break;
 
             case 'removeFromWatchlist':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'remove_from_watchlist', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 CUSTOMER::removeFromwatchlist($requestData);
                 break;
 
             case 'getMyWatchlist':
+                if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'get_my_watchlist', 10, 60)) { //10 requests per minute
+                    ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                }
                 CUSTOMER::getMywatchlist($requestData);
                 break;
 
             case 'getReviewStats':
+                //Check if it gets all review stats or just one
+                if (isset($requestData['return']) && $requestData['return'] === 'All') {
+                    if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'get_review_stats_all', 3, 60)) { //3 requests per minute
+                        ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                    }//if
+                } else {
+                    if (Authorise::isRateLimited($_SERVER['REMOTE_ADDR'], 'get_review_stats', 10, 60)) { //10 requests per minute
+                        ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+                    }//if
+                }
                 CUSTOMER::getReviewStats($requestData);
                 break;
                 
-            default:
+            default:                
                 ResponseAPI::error("Invalid request type", null, 400);
         }
     } catch (Exception $e) {
