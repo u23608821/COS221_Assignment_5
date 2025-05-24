@@ -99,6 +99,7 @@
                 Clear
               </button>
             </div>
+            <div id="retailerFormMessage" class="result-message"></div>
           </form>
         </div>
       </div>
@@ -115,34 +116,59 @@
           <div class="form-group">
             <label for="retailer-select">Select Retailer</label>
             <select id="retailer-select" class="retailer-select">
-              <option value="">-- Select a retailer --</option>
-              <option value="1">Pick n Pay (Sandton)</option>
-              <option value="2">Woolworths (Rosebank)</option>
-              <option value="3">Checkers (Fourways)</option>
+        
             </select>
           </div>
           
           <div id="retailer-details" class="retailer-details hidden">
-            <div class="form-group">
-              <label for="edit-name">Retailer Name</label>
-              <input type="text" id="edit-name" name="edit-name">
-            </div>
-            
-            <div class="form-group">
-              <label for="edit-email">Email</label>
-              <input type="email" id="edit-email" name="edit-email">
-            </div>
-            
-            <div class="form-actions">
-              <button id="update-retailer" class="btn-primary">
-                <span class="material-symbols-outlined">update</span>
-                Update
-              </button>
-              <button id="delete-retailer" class="btn-danger">
-                <span class="material-symbols-outlined">delete</span>
-                Delete
-              </button>
-            </div>
+    <div class="form-group">
+        <label for="edit-name">Retailer Name</label>
+        <input type="text" id="edit-name" name="edit-name">
+    </div>
+    
+    <div class="form-group">
+        <label for="edit-email">Email</label>
+        <input type="email" id="edit-email" name="edit-email">
+    </div>
+    
+    <div class="address-grid">
+        <div class="form-group">
+            <label for="edit-street-number">Street Number</label>
+            <input type="text" id="edit-street-number" name="edit-street-number">
+        </div>
+        
+        <div class="form-group">
+            <label for="edit-street-name">Street Name</label>
+            <input type="text" id="edit-street-name" name="edit-street-name">
+        </div>
+        
+        <div class="form-group">
+            <label for="edit-suburb">Suburb</label>
+            <input type="text" id="edit-suburb" name="edit-suburb">
+        </div>
+        
+        <div class="form-group">
+            <label for="edit-city">City</label>
+            <input type="text" id="edit-city" name="edit-city">
+        </div>
+        
+        <div class="form-group">
+            <label for="edit-zipcode">Zip Code</label>
+            <input type="text" id="edit-zipcode" name="edit-zipcode">
+        </div>
+    </div>
+    
+    <div class="form-actions">
+        <button id="update-retailer" class="btn-primary">
+            <span class="material-symbols-outlined">update</span>
+            Update
+        </button>
+        <button id="delete-retailer" class="btn-danger">
+            <span class="material-symbols-outlined">delete</span>
+            Delete
+        </button>
+    </div>
+</div>
           </div>
         </div>
       </div>
@@ -156,6 +182,7 @@
           All Retailers
         </h3>
       </div>
+      <div id="retailerListMessage" class="result-message"></div>
       <div class="card-content">
         <div class="table-responsive">
           <table class="retailer-table">
@@ -169,27 +196,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>1</td>
-                <td>Pick n Pay</td>
-                <td>contact@pnp.co.za</td>
-                <td>Sandton, Johannesburg</td>
-                <td>123 Main Road, 2196</td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td>Woolworths</td>
-                <td>info@woolworths.co.za</td>
-                <td>Rosebank, Johannesburg</td>
-                <td>45 Oxford Rd, 2196</td>
-              </tr>
-              <tr>
-                <td>3</td>
-                <td>Checkers</td>
-                <td>support@checkers.co.za</td>
-                <td>Fourways, Johannesburg</td>
-                <td>78 Cedar Ave, 2055</td>
-              </tr>
+              
             </tbody>
           </table>
         </div>
