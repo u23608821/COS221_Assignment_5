@@ -4,7 +4,10 @@ const themeToggle = document.getElementById("themeToggle");
 const themeIcon = document.getElementById("themeIcon");
 const menuToggle = document.getElementById("menuToggle");
 const navLinks = document.getElementById("navLinks");
-const API_BASE_URL = "http://localhost:8000/api.php"; // API base URL
+const API_BASE_URL = "https://wheatley.cs.up.ac.za/u24634434/COS221/api.php"; // API base URL
+const headers = new Headers();
+headers.append("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
+headers.append("Content-Type", "application/json");
 
 // Theme management functions
 function updateIcon() {
@@ -24,7 +27,7 @@ function applySavedTheme() {
 // Cookie management functions
 function setCookie(name, value, days) {
   const d = new Date();
-  d.setTime(d.getTime() + (days*24*60*60*1000));
+  d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
   let expires = "expires=" + d.toUTCString();
   document.cookie = name + "=" + value + ";" + expires + ";path=/";
 }
@@ -33,7 +36,7 @@ function getCookie(name) {
   let cname = name + "=";
   let decodedCookie = decodeURIComponent(document.cookie);
   let ca = decodedCookie.split(';');
-  for(let i = 0; i < ca.length; i++) {
+  for (let i = 0; i < ca.length; i++) {
     let c = ca[i].trim();
     if (c.indexOf(cname) === 0) {
       return c.substring(cname.length, c.length);
@@ -44,9 +47,7 @@ function getCookie(name) {
 
 // Get admin API key from storage
 function getAdminApiKey() {
-  return localStorage.getItem('adminApiKey') || 
-         sessionStorage.getItem('adminApiKey') || 
-         getCookie('adminApiKey');
+  return localStorage.getItem('apiKey');
 }
 
 // Event listeners for UI elements
@@ -72,7 +73,7 @@ window.addEventListener("click", function (e) {
 });
 
 // Initialize the page
-window.addEventListener("load", function() {
+window.addEventListener("load", function () {
   applySavedTheme();
   fetchAllUsers();
 });
@@ -82,9 +83,9 @@ function showAlert(type, message) {
   const alertDiv = document.createElement('div');
   alertDiv.className = `alert alert-${type}`;
   alertDiv.textContent = message;
-  
+
   document.body.appendChild(alertDiv);
-  
+
   setTimeout(() => {
     alertDiv.remove();
   }, 5000);
@@ -137,9 +138,8 @@ async function fetchAllUsers() {
   try {
     const response = await fetch(API_BASE_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: headers,
+
       body: JSON.stringify({
         type: "getAllUsers",
         apikey: adminApiKey
@@ -147,7 +147,7 @@ async function fetchAllUsers() {
     });
 
     const result = await response.json();
-    
+
     if (result.status === 'success') {
       renderUsersTable(result.data);
     } else {
@@ -193,9 +193,9 @@ function renderUsersTable(users) {
 }
 
 // Add Staff Member Form Submission
-document.getElementById('user-form').addEventListener('submit', async function(e) {
+document.getElementById('user-form').addEventListener('submit', async function (e) {
   e.preventDefault();
-  
+
   const adminApiKey = getAdminApiKey();
   if (!adminApiKey) {
     showAlert("error", "Admin session expired. Please log in again.");
@@ -203,7 +203,7 @@ document.getElementById('user-form').addEventListener('submit', async function(e
   }
 
   const phoneNumber = document.getElementById('user-phone').value.trim().replace(/\D/g, '');
-  
+
   const formData = {
     type: "AddNewStaff",
     apikey: adminApiKey,
@@ -217,8 +217,8 @@ document.getElementById('user-form').addEventListener('submit', async function(e
   };
 
   // Validate required fields
-  if (!formData.name || !formData.surname || !formData.email || !formData.phone_number || 
-      !formData.password || !formData.position || !formData.salary) {
+  if (!formData.name || !formData.surname || !formData.email || !formData.phone_number ||
+    !formData.password || !formData.position || !formData.salary) {
     showAlert("error", "Please fill all required fields");
     return;
   }
@@ -232,14 +232,13 @@ document.getElementById('user-form').addEventListener('submit', async function(e
   try {
     const response = await fetch(API_BASE_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: headers,
+
       body: JSON.stringify(formData)
     });
 
     const result = await response.json();
-    
+
     if (result.status === 'success') {
       showAlert("success", "Staff member added successfully!");
       this.reset();
@@ -257,16 +256,16 @@ document.getElementById('user-form').addEventListener('submit', async function(e
 function populateModifyForm(userId) {
   // Switch to modify tab
   document.querySelector('.tab-btn[data-tab="modify"]').click();
-  
+
   // Set the user ID
   document.getElementById('modify-user-id').value = userId;
-  
+
   // Focus on the field to update
   document.getElementById('modify-field').focus();
 }
 
 // Update User Functionality
-document.getElementById('update-user').addEventListener('click', async function() {
+document.getElementById('update-user').addEventListener('click', async function () {
   const userId = document.getElementById('modify-user-id').value.trim();
   const field = document.getElementById('modify-field').value;
   const value = document.getElementById('modify-value').value.trim();
@@ -289,7 +288,7 @@ document.getElementById('update-user').addEventListener('click', async function(
   };
 
   // Map the form field to the API field names
-  switch(field) {
+  switch (field) {
     case "name":
       requestData.name = value;
       break;
@@ -316,14 +315,13 @@ document.getElementById('update-user').addEventListener('click', async function(
   try {
     const response = await fetch(API_BASE_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: headers,
+
       body: JSON.stringify(requestData)
     });
 
     const result = await response.json();
-    
+
     if (result.status === 'success') {
       showAlert("success", `User ${userId} updated successfully!`);
       document.getElementById('modify-user-id').value = '';
@@ -357,9 +355,8 @@ async function deleteUser(userId) {
   try {
     const response = await fetch(API_BASE_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: headers,
+
       body: JSON.stringify({
         type: "deleteUser",
         apikey: adminApiKey,
@@ -368,7 +365,7 @@ async function deleteUser(userId) {
     });
 
     const result = await response.json();
-    
+
     if (result.status === 'success') {
       showAlert("success", `User ${userId} deleted successfully!`);
       fetchAllUsers(); // Refresh the users list
@@ -383,10 +380,10 @@ async function deleteUser(userId) {
 
 // Tab Switching Functionality
 document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
+  btn.addEventListener('click', function () {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    
+
     this.classList.add('active');
     const tabId = this.getAttribute('data-tab') + '-tab';
     document.getElementById(tabId).classList.add('active');
@@ -394,13 +391,13 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 // Add this to your Admin_users.js file, right after the tab switching functionality
-document.getElementById('confirm-delete').addEventListener('click', function() {
+document.getElementById('confirm-delete').addEventListener('click', function () {
   const userId = document.getElementById('delete-user-id').value.trim();
-  
+
   if (!userId) {
     showAlert("error", "Please enter a user ID");
     return;
   }
-  
+
   confirmDeleteUser(userId);
 });

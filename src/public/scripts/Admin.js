@@ -7,6 +7,7 @@ const navLinks = document.getElementById("navLinks");
 const API_BASE_URL = "https://wheatley.cs.up.ac.za/u24634434/COS221/api.php"; // API base URL
 const headers = new Headers();
 headers.append("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
+headers.append("Content-Type", "application/json");
 
 function updateIcon() {
     themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
