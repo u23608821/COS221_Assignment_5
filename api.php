@@ -126,12 +126,11 @@ class ResponseAPI
         $response = [
             'status' => $code < 400 ? 'success' : 'error',
             'timestamp' => time() * 1000,
-            'code' => $code
+            'code' => $code,
             'status' => $code < 400 ? 'success' : 'error',
             'timestamp' => time() * 1000,
             'code' => $code
         ];
-        if ($message !== null) {
         if ($message !== null) {
             $response['message'] = $message;
         }
