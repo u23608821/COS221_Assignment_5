@@ -5,17 +5,20 @@ const themeToggle = document.getElementById("themeToggle");
 const themeIcon = document.getElementById("themeIcon");
 const menuToggle = document.getElementById("menuToggle");
 const navLinks = document.getElementById("navLinks");
-const API_BASE_URL = "http://localhost:8000/api.php";
+const API_BASE_URL = "https://wheatley.cs.up.ac.za/u24634434/COS221/api.php"; // API base URL
+const headers = new Headers();
+headers.append("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
+headers.append("Content-Type", "application/json");
 
 
 function showSuccessMessage(elementId, message) {
     const element = document.getElementById(elementId);
     if (!element) return;
-    
+
     element.innerHTML = message;
     element.className = 'result-message success';
     element.style.display = 'block';
-    
+
     setTimeout(() => {
         element.style.display = 'none';
     }, 5000);
@@ -24,85 +27,83 @@ function showSuccessMessage(elementId, message) {
 function showErrorMessage(elementId, message) {
     const element = document.getElementById(elementId);
     if (!element) return;
-    
+
     element.innerHTML = message;
     element.className = 'result-message error';
     element.style.display = 'block';
-    
+
     setTimeout(() => {
         element.style.display = 'none';
     }, 5000);
 }
 
 function getAdminApiKey() {
-    return localStorage.getItem('adminApiKey') || 
-           sessionStorage.getItem('adminApiKey') || 
-           getCookie('adminApiKey');
+    return localStorage.getItem('apiKey');
 }
 
 function updateIcon() {
-  themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
+    themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
 }
 
 function applySavedTheme() {
-  const savedTheme = getCookie("theme");
-  if (savedTheme === "dark") {
-    document.body.classList.add("dark");
-  } else {
-    document.body.classList.remove("dark");
-  }
-  updateIcon();
+    const savedTheme = getCookie("theme");
+    if (savedTheme === "dark") {
+        document.body.classList.add("dark");
+    } else {
+        document.body.classList.remove("dark");
+    }
+    updateIcon();
 }
 
 window.addEventListener("load", applySavedTheme);
 
 accountBtn.addEventListener("click", function () {
-  accountMenu.classList.toggle("show");
+    accountMenu.classList.toggle("show");
 });
 
 themeToggle.addEventListener("click", function () {
-  document.body.classList.toggle("dark");
-  const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
-  setCookie("theme", newTheme, 30);
-  updateIcon();
+    document.body.classList.toggle("dark");
+    const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
+    setCookie("theme", newTheme, 30);
+    updateIcon();
 });
 
 menuToggle.addEventListener("click", function () {
-  navLinks.classList.toggle("show");
+    navLinks.classList.toggle("show");
 });
 
 window.addEventListener("click", function (e) {
-  if (!accountBtn.contains(e.target) && !accountMenu.contains(e.target)) {
-    accountMenu.classList.remove("show");
-  }
+    if (!accountBtn.contains(e.target) && !accountMenu.contains(e.target)) {
+        accountMenu.classList.remove("show");
+    }
 });
 
 updateIcon();
 
 function setCookie(name, value, days) {
-  const d = new Date();
-  d.setTime(d.getTime() + (days*24*60*60*1000));
-  let expires = "expires=" + d.toUTCString();
-  document.cookie = name + "=" + value + ";" + expires + ";path=/";
+    const d = new Date();
+    d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+    let expires = "expires=" + d.toUTCString();
+    document.cookie = name + "=" + value + ";" + expires + ";path=/";
 }
 
 function getCookie(name) {
-  let cname = name + "=";
-  let decodedCookie = decodeURIComponent(document.cookie);
-  let ca = decodedCookie.split(';');
-  for(let i = 0; i < ca.length; i++) {
-    let c = ca[i].trim();
-    if (c.indexOf(cname) === 0) {
-      return c.substring(cname.length, c.length);
+    let cname = name + "=";
+    let decodedCookie = decodeURIComponent(document.cookie);
+    let ca = decodedCookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i].trim();
+        if (c.indexOf(cname) === 0) {
+            return c.substring(cname.length, c.length);
+        }
     }
-  }
-  return "";
+    return "";
 }
 
 // Product Form Handling
-document.getElementById('product-form').addEventListener('submit', async function(e) {
+document.getElementById('product-form').addEventListener('submit', async function (e) {
     e.preventDefault();
-    
+
     const adminApiKey = getAdminApiKey();
     if (!adminApiKey) {
         showErrorMessage('productFormMessage', 'Admin session expired. Please log in again.');
@@ -135,14 +136,13 @@ document.getElementById('product-form').addEventListener('submit', async functio
     try {
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: headers,
+
             body: JSON.stringify(formData)
         });
 
         const result = await response.json();
-        
+
         if (result.status === 'success') {
             let successMessage = 'Product added successfully!';
             if (result.message.includes('updated')) {
@@ -183,18 +183,17 @@ async function loadProducts() {
     try {
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: headers,
+
             body: JSON.stringify({
                 type: 'getAllProducts',
                 apikey: adminApiKey
-                
+
             })
         });
 
         const result = await response.json();
-        
+
         if (result.status === 'success') {
             renderProducts(result.data);
         } else {
@@ -309,9 +308,8 @@ async function saveProduct(productId) {
     try {
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: headers,
+
             body: JSON.stringify(payload)
         });
 
@@ -347,9 +345,8 @@ async function deleteProduct(productId) {
     try {
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: headers,
+
             body: JSON.stringify({
                 type: 'deleteProduct',
                 apikey: adminApiKey,
@@ -358,7 +355,7 @@ async function deleteProduct(productId) {
         });
 
         const result = await response.json();
-        
+
         if (result.status === 'success') {
             showSuccessMessage('productListMessage', 'Product deleted successfully!');
             loadProducts(); // Refresh the list
@@ -372,7 +369,7 @@ async function deleteProduct(productId) {
 }
 
 // Initialize the page
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     loadProducts();
 });
 
@@ -381,39 +378,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 // Product Form Handling
-document.getElementById('product-form').addEventListener('submit', function(e) {
+document.getElementById('product-form').addEventListener('submit', function (e) {
     e.preventDefault();
-    
+
     const formData = {
-      name: document.getElementById('product-name').value,
-      description: document.getElementById('product-description').value,
-      price: parseFloat(document.getElementById('product-price').value),
-      retailer_id: parseInt(document.getElementById('product-retailer').value),
-      image_url: document.getElementById('product-image').value,
-      category: document.getElementById('product-category').value
+        name: document.getElementById('product-name').value,
+        description: document.getElementById('product-description').value,
+        price: parseFloat(document.getElementById('product-price').value),
+        retailer_id: parseInt(document.getElementById('product-retailer').value),
+        image_url: document.getElementById('product-image').value,
+        category: document.getElementById('product-category').value
     };
-    
+
     // Here you would typically send this data to your backend
     console.log('Form submitted:', formData);
-    
+
     // Simulate successful submission
     alert('Product saved successfully!');
     this.reset();
-    
+
     // In a real app, you would refresh the product list here
     // loadProducts();
-  });
-  
+});
 
-  
-  // Initialize the page
-  document.addEventListener('DOMContentLoaded', function() {
+
+
+// Initialize the page
+document.addEventListener('DOMContentLoaded', function () {
     loadProducts();
     loadRetailers();
-  });
+});
 
 
-  // Function to load retailers from API
+// Function to load retailers from API
 async function loadRetailers() {
     const adminApiKey = getAdminApiKey();
     if (!adminApiKey) {
@@ -424,9 +421,7 @@ async function loadRetailers() {
     try {
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: headers,
             body: JSON.stringify({
                 type: 'GetAllRetailers',
                 apikey: adminApiKey
@@ -434,7 +429,7 @@ async function loadRetailers() {
         });
 
         const result = await response.json();
-        
+
         if (result.status === 'success') {
             populateRetailerDropdown(result.data);
         } else {

@@ -66,9 +66,9 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
         </a>
         <span class="menu-toggle" id="menuToggle">☰</span>
         <ul class="nav-links" id="navLinks">
-          <li><a href="../html/Admin_Products.html">Products</a></li>
-          <li><a href="../html/Admin_Retailers.html">Retailers</a></li>
-          <li><a href="../html/Admin_Users.html">Users</a></li>
+          <li><a href="../html/Admin_Products.php">Products</a></li>
+          <li><a href="../html/Admin_Retailers.php">Retailers</a></li>
+          <li><a href="../html/Admin_Users.php">Users</a></li>
         </ul>
       </div>
       <div class="nav-actions">

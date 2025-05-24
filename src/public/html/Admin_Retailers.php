@@ -47,6 +47,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -55,6 +56,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="../styles/Admin_Retailers.css">
 </head>
+
 <body class="light">
   <nav class="navbar">
     <div class="container">
@@ -64,9 +66,9 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
         </a>
         <span class="menu-toggle" id="menuToggle">☰</span>
         <ul class="nav-links" id="navLinks">
-          <li><a href="../html/Admin.html">Admin Home</a></li>
-          <li><a href="../html/Admin_Products.html">Products</a></li>
-          <li><a href="../html/Admin_Users.html">Users</a></li>
+          <li><a href="../html/Admin.php">Admin Home</a></li>
+          <li><a href="../html/Admin_Products.php">Products</a></li>
+          <li><a href="../html/Admin_Users.php">Users</a></li>
         </ul>
       </div>
       <div class="nav-actions">
@@ -77,7 +79,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
             <span class="material-symbols-outlined arrow-icon">arrow_drop_down</span>
           </button>
           <div class="dropdown-menu" id="accountMenu" aria-label="Account options">
-            <a href="../html/login.html" class="signout"><span>Sign Out</span></a>
+            <a href="../html/login.php" class="signout"><span>Sign Out</span></a>
           </div>
         </div>
       </div>
@@ -87,7 +89,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   <main>
     <h1 class="page-header">Retailer Management</h1>
     <p class="page-subheader">Manage retail partners and their locations</p>
-    
+
     <div class="admin-grid">
       <!-- Add Retailer Card -->
       <div class="admin-card retailer-card">
@@ -103,39 +105,39 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
               <label for="retailer-name">Retailer Name*</label>
               <input type="text" id="retailer-name" name="name" required placeholder="e.g. Pick n Pay">
             </div>
-            
+
             <div class="form-group">
               <label for="retailer-email">Email*</label>
               <input type="email" id="retailer-email" name="email" required placeholder="contact@retailer.com">
             </div>
-            
+
             <div class="address-grid">
               <div class="form-group">
                 <label for="retailer-street-number">Street Number*</label>
                 <input type="text" id="retailer-street-number" name="street_number" required placeholder="123">
               </div>
-              
+
               <div class="form-group">
                 <label for="retailer-street-name">Street Name*</label>
                 <input type="text" id="retailer-street-name" name="street_name" required placeholder="Main Road">
               </div>
-              
+
               <div class="form-group">
                 <label for="retailer-suburb">Suburb*</label>
                 <input type="text" id="retailer-suburb" name="suburb" required placeholder="Sandton">
               </div>
-              
+
               <div class="form-group">
                 <label for="retailer-city">City*</label>
                 <input type="text" id="retailer-city" name="city" required placeholder="Johannesburg">
               </div>
-              
+
               <div class="form-group">
                 <label for="retailer-zipcode">Zip Code*</label>
                 <input type="text" id="retailer-zipcode" name="zipcode" required placeholder="2196">
               </div>
             </div>
-            
+
             <div class="form-actions">
               <button type="submit" class="btn-primary">
                 <span class="material-symbols-outlined">save</span>
@@ -150,7 +152,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
           </form>
         </div>
       </div>
-      
+
       <!-- Retailer Actions Card -->
       <div class="admin-card retailer-actions">
         <div class="card-header">
@@ -163,64 +165,64 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
           <div class="form-group">
             <label for="retailer-select">Select Retailer</label>
             <select id="retailer-select" class="retailer-select">
-        
+
             </select>
           </div>
-          
+
           <div id="retailer-details" class="retailer-details hidden">
-    <div class="form-group">
-        <label for="edit-name">Retailer Name</label>
-        <input type="text" id="edit-name" name="edit-name">
-    </div>
-    
-    <div class="form-group">
-        <label for="edit-email">Email</label>
-        <input type="email" id="edit-email" name="edit-email">
-    </div>
-    
-    <div class="address-grid">
-        <div class="form-group">
-            <label for="edit-street-number">Street Number</label>
-            <input type="text" id="edit-street-number" name="edit-street-number">
-        </div>
-        
-        <div class="form-group">
-            <label for="edit-street-name">Street Name</label>
-            <input type="text" id="edit-street-name" name="edit-street-name">
-        </div>
-        
-        <div class="form-group">
-            <label for="edit-suburb">Suburb</label>
-            <input type="text" id="edit-suburb" name="edit-suburb">
-        </div>
-        
-        <div class="form-group">
-            <label for="edit-city">City</label>
-            <input type="text" id="edit-city" name="edit-city">
-        </div>
-        
-        <div class="form-group">
-            <label for="edit-zipcode">Zip Code</label>
-            <input type="text" id="edit-zipcode" name="edit-zipcode">
-        </div>
-    </div>
-    
-    <div class="form-actions">
-        <button id="update-retailer" class="btn-primary">
-            <span class="material-symbols-outlined">update</span>
-            Update
-        </button>
-        <button id="delete-retailer" class="btn-danger">
-            <span class="material-symbols-outlined">delete</span>
-            Delete
-        </button>
-    </div>
-</div>
+            <div class="form-group">
+              <label for="edit-name">Retailer Name</label>
+              <input type="text" id="edit-name" name="edit-name">
+            </div>
+
+            <div class="form-group">
+              <label for="edit-email">Email</label>
+              <input type="email" id="edit-email" name="edit-email">
+            </div>
+
+            <div class="address-grid">
+              <div class="form-group">
+                <label for="edit-street-number">Street Number</label>
+                <input type="text" id="edit-street-number" name="edit-street-number">
+              </div>
+
+              <div class="form-group">
+                <label for="edit-street-name">Street Name</label>
+                <input type="text" id="edit-street-name" name="edit-street-name">
+              </div>
+
+              <div class="form-group">
+                <label for="edit-suburb">Suburb</label>
+                <input type="text" id="edit-suburb" name="edit-suburb">
+              </div>
+
+              <div class="form-group">
+                <label for="edit-city">City</label>
+                <input type="text" id="edit-city" name="edit-city">
+              </div>
+
+              <div class="form-group">
+                <label for="edit-zipcode">Zip Code</label>
+                <input type="text" id="edit-zipcode" name="edit-zipcode">
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button id="update-retailer" class="btn-primary">
+                <span class="material-symbols-outlined">update</span>
+                Update
+              </button>
+              <button id="delete-retailer" class="btn-danger">
+                <span class="material-symbols-outlined">delete</span>
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    
+    </div>
+
     <!-- Retailers List Card -->
     <div class="admin-card">
       <div class="card-header">
@@ -243,7 +245,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
               </tr>
             </thead>
             <tbody>
-              
+
             </tbody>
           </table>
         </div>
@@ -253,14 +255,14 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 
   <footer class="footer">
     <div class="footer-container">
-      <span class="footer-left">© 2025 Pick 'n Price, The Primary Keys Group </span> 
+      <span class="footer-left">© 2025 Pick 'n Price, The Primary Keys Group </span>
       <button class="btn" id="themeToggle" title="Toggle theme">
-          <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
-      </button>  
+        <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+      </button>
     </div>
   </footer>
 
-   <script>
+  <script>
     // Set global variables for authentication
     var WHEATLEY_USERNAME = "<?php echo $username; ?>";
     var WHEATLEY_PASSWORD = "<?php echo $password; ?>";
@@ -271,4 +273,5 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 
   <script src="../scripts/Admin_Retailers.js"></script>
 </body>
+
 </html>
