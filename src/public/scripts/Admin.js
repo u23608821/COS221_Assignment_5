@@ -4,6 +4,7 @@ const themeToggle = document.getElementById("themeToggle");
 const themeIcon = document.getElementById("themeIcon");
 const menuToggle = document.getElementById("menuToggle");
 const navLinks = document.getElementById("navLinks");
+const API_BASE_URL = "http://localhost:8000/api.php"; // API base URL
 
 function updateIcon() {
   themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
@@ -132,7 +133,7 @@ async function addUser() {
     }
 
     try {
-        const response = await fetch('http://localhost:8000/api.php', {
+        const response = await fetch(API_BASE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -196,7 +197,7 @@ async function editPrice() {
     }
 
     try {
-        const response = await fetch('http://localhost:8000/api.php', {
+        const response = await fetch(API_BASE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -248,7 +249,7 @@ async function deleteReview(productId, userId) {
     }
 
     try {
-        const response = await fetch('http://localhost:8000/api.php', {
+        const response = await fetch(API_BASE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -338,7 +339,7 @@ async function loadRecentReviews() {
     }
 
     try {
-        const response = await fetch('http://localhost:8000/api.php', {
+        const response = await fetch(API_BASE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

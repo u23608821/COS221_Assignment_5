@@ -745,3 +745,55 @@
     padding: 8px 12px;
   }
 }
+
+/* Add this to your Admin_users.css file */
+.table-responsive {
+  max-height: 500px;
+  max-width: 1200px; /* Adjust this value as needed */
+  overflow-y: auto;
+  margin-top: 1rem;
+  border-radius: var(--radius);
+}
+
+/* Light mode table scrollbar */
+.table-responsive::-webkit-scrollbar {
+  width: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Dark mode table scrollbar */
+.dark .table-responsive::-webkit-scrollbar-track {
+  background: #2d3748;
+}
+
+.dark .table-responsive::-webkit-scrollbar-thumb {
+  background: #4a5568;
+}
+
+.dark .table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
+
+.wide-card {
+  width: 120%;
+  max-width: none;
+}
+
+/* Make the table container full width inside wide-card */
+.wide-card .table-responsive {
+  max-width: 120%;
+  overflow-x: visible;
+}

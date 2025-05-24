@@ -4,6 +4,7 @@ const themeToggle = document.getElementById("themeToggle");
 const themeIcon = document.getElementById("themeIcon");
 const menuToggle = document.getElementById("menuToggle");
 const navLinks = document.getElementById("navLinks");
+const API_BASE_URL = "http://localhost:8000/api.php";
 
 function updateIcon() {
   themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
@@ -191,7 +192,7 @@ async function loadRetailers() {
     }
 
     try {
-        const response = await fetch('http://localhost:8000/api.php', {
+        const response = await fetch(API_BASE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -291,7 +292,7 @@ document.getElementById('retailer-form').addEventListener('submit', async functi
     }
 
     try {
-        const response = await fetch('http://localhost:8000/api.php', {
+        const response = await fetch(API_BASE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -335,7 +336,7 @@ document.getElementById('retailer-select').addEventListener('change', async func
     }
 
     try {
-        const response = await fetch('http://localhost:8000/api.php', {
+        const response = await fetch(API_BASE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -404,7 +405,7 @@ document.getElementById('update-retailer').addEventListener('click', async funct
     });
 
     try {
-        const response = await fetch('http://localhost:8000/api.php', {
+        const response = await fetch(API_BASE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -449,7 +450,7 @@ document.getElementById('delete-retailer').addEventListener('click', async funct
     }
 
     try {
-        const response = await fetch('http://localhost:8000/api.php', {
+        const response = await fetch(API_BASE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

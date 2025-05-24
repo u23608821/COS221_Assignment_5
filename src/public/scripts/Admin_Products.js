@@ -5,6 +5,7 @@ const themeToggle = document.getElementById("themeToggle");
 const themeIcon = document.getElementById("themeIcon");
 const menuToggle = document.getElementById("menuToggle");
 const navLinks = document.getElementById("navLinks");
+const API_BASE_URL = "http://localhost:8000/api.php";
 
 
 function showSuccessMessage(elementId, message) {
@@ -132,7 +133,7 @@ document.getElementById('product-form').addEventListener('submit', async functio
     }
 
     try {
-        const response = await fetch('http://localhost:8000/api.php', {
+        const response = await fetch(API_BASE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -180,7 +181,7 @@ async function loadProducts() {
     productList.innerHTML = '<tr><td colspan="5" class="loading">Loading products...</td></tr>';
 
     try {
-        const response = await fetch('http://localhost:8000/api.php', {
+        const response = await fetch(API_BASE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -306,7 +307,7 @@ async function saveProduct(productId) {
     if (newDescription) payload.description = newDescription;
 
     try {
-        const response = await fetch('http://localhost:8000/api.php', {
+        const response = await fetch(API_BASE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -344,7 +345,7 @@ async function deleteProduct(productId) {
     }
 
     try {
-        const response = await fetch('http://localhost:8000/api.php', {
+        const response = await fetch(API_BASE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -421,7 +422,7 @@ async function loadRetailers() {
     }
 
     try {
-        const response = await fetch('http://localhost:8000/api.php', {
+        const response = await fetch(API_BASE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

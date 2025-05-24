@@ -804,8 +804,21 @@
 }
 
 .btn-edit {
-    background-color: #ff9800;
+    background-color: var(--primary);
     color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 20px; /* Makes it rounded */
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s ease;
+}
+
+.btn-edit:hover {
+    background-color: #2a6bda; /* Slightly darker blue on hover */
 }
 
 .btn-save {
