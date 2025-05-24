@@ -29,7 +29,7 @@ function clickLogin() {
     xhr.onload = function () {
         if (xhr.status === 200 || xhr.status === 201) {
             // The request was successful
-            console.log("SUCCESS");
+            // console.log("SUCCESS");
             var responseData = JSON.parse(xhr.responseText);
             console.log(responseData);
             if (responseData.status === 'success') {
@@ -55,7 +55,7 @@ function clickLogin() {
                         if (userType === 'customer') {
                             window.location.href = 'products.html';
                         } else if (userType === 'admin') {
-                            window.location.href = 'Admin.html';
+                            window.location.href = 'Admin.php';
                         } else {
                             console.error('Unknown user type:', responseData.data.user_type);
                             alert('Error: Unknown user type');

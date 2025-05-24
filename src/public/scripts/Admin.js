@@ -5,64 +5,66 @@ const themeIcon = document.getElementById("themeIcon");
 const menuToggle = document.getElementById("menuToggle");
 const navLinks = document.getElementById("navLinks");
 const API_BASE_URL = "https://wheatley.cs.up.ac.za/u24634434/COS221/api.php"; // API base URL
+const headers = new Headers();
+headers.append("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
 
 function updateIcon() {
-  themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
+    themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
 }
 
 function applySavedTheme() {
-  const savedTheme = getCookie("theme");
-  if (savedTheme === "dark") {
-    document.body.classList.add("dark");
-  } else {
-    document.body.classList.remove("dark");
-  }
-  updateIcon();
+    const savedTheme = getCookie("theme");
+    if (savedTheme === "dark") {
+        document.body.classList.add("dark");
+    } else {
+        document.body.classList.remove("dark");
+    }
+    updateIcon();
 }
 
 window.addEventListener("load", applySavedTheme);
 
 accountBtn.addEventListener("click", function () {
-  accountMenu.classList.toggle("show");
+    accountMenu.classList.toggle("show");
 });
 
 themeToggle.addEventListener("click", function () {
-  document.body.classList.toggle("dark");
-  const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
-  setCookie("theme", newTheme, 30);
-  updateIcon();
+    document.body.classList.toggle("dark");
+    const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
+    setCookie("theme", newTheme, 30);
+    updateIcon();
 });
 
 menuToggle.addEventListener("click", function () {
-  navLinks.classList.toggle("show");
+    navLinks.classList.toggle("show");
 });
 
 window.addEventListener("click", function (e) {
-  if (!accountBtn.contains(e.target) && !accountMenu.contains(e.target)) {
-    accountMenu.classList.remove("show");
-  }
+    if (!accountBtn.contains(e.target) && !accountMenu.contains(e.target)) {
+        accountMenu.classList.remove("show");
+    }
 });
 
 updateIcon();
 
 function setCookie(name, value, days) {
-  const d = new Date();
-  d.setTime(d.getTime() + (days*24*60*60*1000));
-  let expires = "expires=" + d.toUTCString();
-  document.cookie = name + "=" + value + ";" + expires + ";path=/";
+    const d = new Date();
+    d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+    let expires = "expires=" + d.toUTCString();
+    document.cookie = name + "=" + value + ";" + expires + ";path=/";
 }
 
 function getCookie(name) {
-  let cname = name + "=";
-  let decodedCookie = decodeURIComponent(document.cookie);
-  let ca = decodedCookie.split(';');
-  for(let i = 0; i < ca.length; i++) {
-    let c = ca[i].trim();
-    if (c.indexOf(cname) === 0) {
-      return c.substring(cname.length, c.length);
+    let cname = name + "=";
+    let decodedCookie = decodeURIComponent(document.cookie);
+    let ca = decodedCookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i].trim();
+        if (c.indexOf(cname) === 0) {
+            return c.substring(cname.length, c.length);
+        }
     }
-  }
-  return "";
+    return "";
 }
 
 
@@ -70,11 +72,11 @@ function getCookie(name) {
 function showSuccessMessage(elementId, message) {
     const element = document.getElementById(elementId);
     if (!element) return;
-    
+
     element.innerHTML = message;
     element.className = 'result-message success';
     element.style.display = 'block';
-    
+
     // Auto-hide after 5 seconds
     setTimeout(() => {
         element.style.display = 'none';
@@ -84,11 +86,11 @@ function showSuccessMessage(elementId, message) {
 function showErrorMessage(elementId, message) {
     const element = document.getElementById(elementId);
     if (!element) return;
-    
+
     element.innerHTML = message;
     element.className = 'result-message error';
     element.style.display = 'block';
-    
+
     // Auto-hide after 5 seconds
     setTimeout(() => {
         element.style.display = 'none';
@@ -126,21 +128,19 @@ async function addUser() {
         return;
     }
 
-    const adminApiKey = getAdminApiKey(); 
+    const adminApiKey = getAdminApiKey();
     if (!adminApiKey) {
         showErrorMessage('userAddResult', 'Admin session expired. Please log in again.');
         return;
     }
 
     try {
-        let headers = new Headers();
-        headers.append("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
+
 
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
             headers: headers,
-            'Content-Type': 'application/json',
-            
+
             body: JSON.stringify({
                 type: 'QuickAddUser',
                 apikey: adminApiKey,
@@ -153,13 +153,13 @@ async function addUser() {
         });
 
         const result = await response.json();
-        
+
         if (result.status === 'success') {
             const successMessage = `User added successfully!<br>
                                    <small>User ID: ${result.data.user_id}</small><br>
                                    <small>API Key: ${result.data.apikey}</small>`;
             showSuccessMessage('userAddResult', successMessage);
-            
+
             // Clear form
             document.getElementById('userName').value = '';
             document.getElementById('userSurname').value = '';
@@ -202,9 +202,8 @@ async function editPrice() {
     try {
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: headers,
+
             body: JSON.stringify({
                 type: 'QuickEditProductPrice',
                 apikey: adminApiKey,
@@ -215,14 +214,14 @@ async function editPrice() {
         });
 
         const result = await response.json();
-        
+
         if (result.status === 'success') {
             const successMessage = `Price ${result.message.toLowerCase()}<br>
                                   <small>Product: ${result.data.product_id}</small><br>
                                   <small>Retailer: ${result.data.retailer_id}</small><br>
                                   <small>New Price: R${result.data.price.toFixed(2)}</small>`;
             showSuccessMessage('priceEditResult', successMessage);
-            
+
             // Clear form
             document.getElementById('productIdSearch').value = '';
             document.getElementById('retailerIdSearch').value = '';
@@ -243,7 +242,7 @@ async function editPrice() {
 
 //delete recent review.
 async function deleteReview(productId, userId) {
-   // if (!confirm('Are you sure you want to delete this review?')) return;
+    // if (!confirm('Are you sure you want to delete this review?')) return;
 
     const adminApiKey = getAdminApiKey();
     if (!adminApiKey) {
@@ -254,9 +253,8 @@ async function deleteReview(productId, userId) {
     try {
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: headers,
+
             body: JSON.stringify({
                 type: 'deleteRating',
                 apikey: adminApiKey,
@@ -308,10 +306,10 @@ function updateReviewsUI(reviews) {
     reviews.forEach(review => {
         const reviewItem = document.createElement('div');
         reviewItem.className = 'review-item';
-        
+
         // Create stars based on score (assuming score is 1-5)
         const stars = '★'.repeat(review.score) + '☆'.repeat(5 - review.score);
-        
+
         reviewItem.innerHTML = `
             <div class="review-meta">
                 <div class="stars">${stars}</div>
@@ -323,7 +321,7 @@ function updateReviewsUI(reviews) {
             <span class="material-symbols-outlined">delete</span> Delete
             </button>
         `;
-        
+
         reviewsContainer.appendChild(reviewItem);
     });
 }
@@ -344,9 +342,8 @@ async function loadRecentReviews() {
     try {
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: headers,
+
             body: JSON.stringify({
                 type: 'AdminRecentReviews',
                 apikey: adminApiKey,
@@ -355,7 +352,7 @@ async function loadRecentReviews() {
         });
 
         const result = await response.json();
-        
+
         if (result.status === 'success') {
             updateReviewsUI(result.data);
         } else {
@@ -368,23 +365,21 @@ async function loadRecentReviews() {
 
 // Helper function to get admin API key (you'll need to implement storage)
 function getAdminApiKey() {
-    
-    return localStorage.getItem('adminApiKey') || 
-           sessionStorage.getItem('adminApiKey') || 
-           getCookie('adminApiKey');
+
+    return localStorage.getItem('apiKey');
 }
 
 // Initialize the page
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Load recent reviews when page loads
     loadRecentReviews();
-    
+
     // Add event listeners for form submissions
-    document.getElementById('userpassword').addEventListener('keypress', function(e) {
+    document.getElementById('userpassword').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') addUser();
     });
-    
-    document.getElementById('new-price').addEventListener('keypress', function(e) {
+
+    document.getElementById('new-price').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') editPrice();
     });
 });
