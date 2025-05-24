@@ -4,7 +4,7 @@ const themeToggle = document.getElementById("themeToggle");
 const themeIcon = document.getElementById("themeIcon");
 const menuToggle = document.getElementById("menuToggle");
 const navLinks = document.getElementById("navLinks");
-const API_BASE_URL = "http://localhost:8000/api.php"; // API base URL
+const API_BASE_URL = "https://wheatley.cs.up.ac.za/u24634434/COS221/api.php"; // API base URL
 
 function updateIcon() {
   themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
@@ -133,11 +133,14 @@ async function addUser() {
     }
 
     try {
+        let headers = new Headers();
+        headers.append("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
+
         const response = await fetch(API_BASE_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: headers,
+            'Content-Type': 'application/json',
+            
             body: JSON.stringify({
                 type: 'QuickAddUser',
                 apikey: adminApiKey,
