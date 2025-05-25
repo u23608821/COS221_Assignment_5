@@ -1,3 +1,43 @@
+<?php 
+// Determine the correct path to the .env file
+$envPath = dirname(dirname(dirname(dirname(__FILE__)))); // Go up 4 levels to reach the project root
+$envFile = $envPath . '/.env';
+
+// Simple function to read .env file
+function readEnvFile($path)
+{
+  if (!file_exists($path)) {
+    // echo "ENV file not found at: $path<br>";
+    return false;
+  }
+
+  // echo "ENV file found at: $path<br>";
+  $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+  $env = [];
+
+  foreach ($lines as $line) {
+    if (strpos(trim($line), '#') === 0) continue; // Skip comments
+    if (empty(trim($line))) continue;             // Skip empty lines
+
+    list($name, $value) = explode('=', $line, 2);
+    $name = trim($name);
+    $value = trim($value);
+
+    $env[$name] = $value;
+    // Optionally set as environment variable
+    putenv("$name=$value");
+  }
+
+  return $env;
+}
+
+// Read environment variables from .env file
+$env = readEnvFile($envFile);
+
+// Get credentials
+$username = $env ? $env['WHEATLEY_USERNAME'] : getenv("WHEATLEY_USERNAME");
+$password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -47,7 +87,7 @@
 
   <main>
     <h1 class="page-header">My Reviews</h1>
-    <p class="page-subheader">All products reviews you have personally published can be viewed here. </p>
+    <p class="page-subheader">All products reviews you have personally published can be viewed, edited or deleted here. </p>
 
     <div class="reviews-container">
       <!-- Review 1 -->

@@ -63,3 +63,187 @@ function getCookie(name) {
     }
     return "";
 }
+
+function sendReview(payload)
+{
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://wheatley.cs.up.ac.za/u24634434/COS221/api.php', true);
+ //  xhr.open('POST', 'http://localhost:8000/api.php')
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                try {
+                    let responseText = xhr.responseText;
+                    const response = JSON.parse(responseText);
+
+                    if (response.status === 'success') {
+                        alert("Wrote a review: " + (response.message || "Unkown error"));
+                    } else {
+                        alert('Failed to review product: ' + (response.message || 'Unknown error'));
+                    }
+                } catch (e) {
+                    console.error("Error parsing response:", e, xhr.responseText);
+                    alert("Error processing response from server.");
+                }
+            } else {
+                console.error("Server returned error status:", xhr.status);
+                alert("Server error: " + xhr.status);
+            }
+        }
+    };
+
+    xhr.onerror = function (e) {
+        console.error('Network Error', e);
+        alert('Network Error: Could not connect to the server');
+    };
+
+    xhr.send(JSON.stringify(payload));
+}
+
+function writeReview()
+{
+    const payload = {
+        type: "writeReview",
+        apikey: "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef", //getCookie("apiKey"); 
+        product_id: 1,
+        score: 4,
+        description: "Defnitely a product its nice"
+    }
+
+    sendReview(payload);
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    // Attach event listeners to all edit and delete buttons
+    document.querySelectorAll('.review-box').forEach(function (box, idx) {
+        const editBtn = box.querySelector('.edit-btn');
+        const deleteBtn = box.querySelector('.delete-btn');
+        const reviewTextDiv = box.querySelector('.review-text');
+        const starsDiv = box.querySelector('.stars');
+
+        editBtn.addEventListener('click', function () {
+            if (editBtn.textContent === "Edit") {
+                // Make review text editable
+                const currentText = reviewTextDiv.textContent;
+                const textarea = document.createElement('textarea');
+                textarea.className = "edit-review-textarea";
+                textarea.value = currentText;
+                reviewTextDiv.innerHTML = '';
+                reviewTextDiv.appendChild(textarea);
+
+                // Make stars clickable
+                const currentScore = starsDiv.querySelectorAll('.star.filled').length;
+                starsDiv.innerHTML = '';
+                for (let i = 1; i <= 5; i++) {
+                    const star = document.createElement('span');
+                    star.className = 'star' + (i <= currentScore ? ' filled' : '');
+                    star.textContent = '★';
+                    star.style.cursor = 'pointer';
+                    star.addEventListener('click', function () {
+                        // Set stars up to i as filled
+                        starsDiv.querySelectorAll('.star').forEach((s, idx2) => {
+                            s.classList.toggle('filled', idx2 < i);
+                        });
+                    });
+                    starsDiv.appendChild(star);
+                }
+
+                // Change Edit to Save, add Cancel
+                editBtn.textContent = "Save";
+                let cancelBtn = document.createElement('button');
+                cancelBtn.className = "review-btn cancel-btn";
+                cancelBtn.textContent = "Cancel";
+                editBtn.parentNode.insertBefore(cancelBtn, editBtn.nextSibling);
+
+                cancelBtn.addEventListener('click', function () {
+                    // Restore original text and stars
+                    reviewTextDiv.textContent = currentText;
+                    starsDiv.innerHTML = '';
+                    for (let i = 1; i <= 5; i++) {
+                        const star = document.createElement('span');
+                        star.className = 'star' + (i <= currentScore ? ' filled' : '');
+                        star.textContent = '★';
+                        starsDiv.appendChild(star);
+                    }
+                    editBtn.textContent = "Edit";
+                    cancelBtn.remove();
+                });
+            } else if (editBtn.textContent === "Save") {
+                // Save changes
+                const newText = reviewTextDiv.querySelector('textarea').value;
+                const newScore = starsDiv.querySelectorAll('.star.filled').length;
+
+                // TODO: Replace with actual product_id and review_id if available
+                const product_id = 1 + idx; // Example only!
+                const payload = {
+                    type: "editReview",
+                    apikey: getCookie("apiKey"),
+                    product_id: product_id,
+                    score: newScore,
+                    description: newText
+                };
+                sendReview(payload);
+
+                // Update UI
+                reviewTextDiv.textContent = newText;
+                starsDiv.innerHTML = '';
+                for (let i = 1; i <= 5; i++) {
+                    const star = document.createElement('span');
+                    star.className = 'star' + (i <= newScore ? ' filled' : '');
+                    star.textContent = '★';
+                    starsDiv.appendChild(star);
+                }
+                editBtn.textContent = "Edit";
+                const cancelBtn = editBtn.parentNode.querySelector('.cancel-btn');
+                if (cancelBtn) cancelBtn.remove();
+            }
+        });
+
+        // --- DELETE FUNCTIONALITY ---
+        deleteBtn.addEventListener('click', function () {
+            // Create popup
+            let popup = document.createElement('div');
+            popup.className = "delete-popup";
+            popup.style.position = "fixed";
+            popup.style.top = "0";
+            popup.style.left = "0";
+            popup.style.width = "100vw";
+            popup.style.height = "100vh";
+            popup.style.background = "rgba(0,0,0,0.4)";
+            popup.style.display = "flex";
+            popup.style.alignItems = "center";
+            popup.style.justifyContent = "center";
+            popup.style.zIndex = "9999";
+            popup.innerHTML = `
+                <div style="background:#fff;padding:2em;border-radius:8px;box-shadow:0 2px 8px #0003;text-align:center;">
+                    <p>Are you sure you want to delete your review?</p>
+                    <button class="popup-yes">Yes</button>
+                    <button class="popup-no">No</button>
+                </div>
+            `;
+            document.body.appendChild(popup);
+
+            popup.querySelector('.popup-no').onclick = function () {
+                popup.remove();
+            };
+            popup.querySelector('.popup-yes').onclick = function () {
+                
+                const product_id = 1 + idx;
+                const payload = {
+                    type: "deleteReview",
+                    apikey: getCookie("apiKey"),
+                    product_id: product_id
+                };
+                sendReview(payload);
+
+                // Remove review from DOM
+                box.remove();
+                popup.remove();
+            };
+        });
+    });
+});
