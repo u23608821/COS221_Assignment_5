@@ -67,8 +67,7 @@
   }
   
   .logo img {
-    height: 60px;
-    
+    height: 40px;
   }
   
   .nav-links {
@@ -614,7 +613,108 @@
     margin: 0 4px;
   }
   
-  .result-message {
+  /* Product Form Styles */
+.product-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .form-row {
+    display: flex;
+    gap: 1.5rem;
+  }
+  
+  .form-row .form-group {
+    flex: 1;
+  }
+  
+  .form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  textarea {
+    width: 98%;
+    padding: 0.75rem;
+    border: 1px solid #49494a;
+    border-radius: var(--radius);
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    min-height: 120px;
+    resize: vertical;
+  }
+  
+  .dark textarea {
+    background-color: #2d3748;
+    border-color: #4a5568;
+    color: var(--text-light);
+  }
+  
+  /* Product Table Styles */
+  .table-responsive {
+  max-height: 400px; /* adjust height as needed */
+  overflow-y: auto;
+  
+  border-radius: 4px;
+}
+  
+  .product-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .product-table th,
+  .product-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .product-table th {
+    background-color: #f8fafc;
+    font-weight: 600;
+    color: #4a5568;
+  }
+  
+  .product-table tr:hover {
+    background-color: #f8fafc;
+  }
+  
+  .dark .product-table th {
+    background-color: #2d3748;
+    color: #cbd5e0;
+  }
+  
+  .dark .product-table tr:hover {
+    background-color: #2d3748;
+  }
+  
+  .dark .product-table td,
+  .dark .product-table th {
+    border-bottom-color: #4a5568;
+  }
+  
+  .loading {
+    text-align: center;
+    padding: 2rem;
+    color: #718096;
+  }
+  
+  .dark .loading {
+    color: #a0aec0;
+  }
+  
+  /* Active nav link */
+  .nav-links .active {
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+/* Add these styles to your existing Admin_Product.css */
+.result-message {
     display: none;
     padding: 12px;
     margin: 10px 0;
@@ -644,8 +744,139 @@
     opacity: 0.8;
 }
 
-.review-item .result-message {
-    margin: 5px 0 0;
-    padding: 8px;
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+.error {
+    text-align: center;
+    padding: 20px;
+    color: #c62828;
+}
+
+.product-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.product-table thead th {
+  position: sticky;
+  top: 0;
+  background-color: #f8fafc; /* or #fff for light theme */
+  z-index: 1;
+}
+.dark .product-table thead th {
+  background-color: #2d3748;
+}
+
+.product-table th, 
+.product-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.product-table th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+}
+
+.actions {
+    white-space: nowrap;
+}
+
+.btn-sm {
+    padding: 6px 12px;
     font-size: 13px;
+    margin-right: 5px;
+}
+
+.btn-primary {
+    background-color: #1976d2;
+    color: white;
+}
+
+.btn-danger {
+    background-color: #d32f2f;
+    color: white;
+}
+
+.btn-edit {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 20px; /* Makes it rounded */
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s ease;
+}
+
+.btn-edit:hover {
+    background-color: #2a6bda; /* Slightly darker blue on hover */
+}
+
+.btn-save {
+    background-color: #388e3c;
+    color: white;
+}
+
+.btn-cancel {
+    background-color: #757575;
+    color: white;
+}
+
+.product-name-edit,
+.product-price-edit {
+    width: 100%;
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+.dark .product-table th {
+    background-color: #333;
+}
+
+.dark .product-table td {
+    border-bottom-color: #444;
+}
+
+/* Scrollbar styling (light mode default) */
+.table-responsive::-webkit-scrollbar {
+  width: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background-color: #a0aec0;
+  border-radius: 10px;
+  border: 2px solid #f0f0f0;
+}
+
+/* Scrollbar styling for dark mode */
+.dark .table-responsive::-webkit-scrollbar-track {
+  background: #2d3748;
+}
+
+.dark .table-responsive::-webkit-scrollbar-thumb {
+  background-color: #4a5568;
+  border: 2px solid #2d3748;
+}
+
+/* Firefox scrollbar styling */
+.table-responsive {
+  scrollbar-width: thin;
+  scrollbar-color: #a0aec0 #f0f0f0;
+}
+
+.dark .table-responsive {
+  scrollbar-color: #4a5568 #2d3748;
 }

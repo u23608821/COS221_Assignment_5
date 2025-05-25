@@ -1,5 +1,11 @@
-
 function submitReg() {
+    // Captcha Stuff 
+    const captchaResponse = grecaptcha.getResponse();
+    if (!captchaResponse) {
+        alert("Please complete the reCAPTCHA verification first.");
+        return;
+    }
+
     console.log("submitReg function called");
 
     const firstName = document.getElementById("fname").value;
@@ -51,15 +57,9 @@ function submitReg() {
         type: "Register",
         name: firstName,
         surname: lastName,
-        phone_number: null,
         email: email,
         password: password,
-        street_number: null,
-        street_name: null,
-        suburb: null,
-        city: null,
-        zip_code: null,
-
+        recaptcha_token: captchaResponse
     };
 
     console.log("Sending payload:", JSON.stringify(payload));
@@ -67,10 +67,9 @@ function submitReg() {
     // Send the data to the server
     const xhr = new XMLHttpRequest();
     xhr.open('POST', 'https://wheatley.cs.up.ac.za/u24634434/COS221/api.php', true);
-    xhr.setRequestHeader("Content-Type", "application/json");  // Add this line
-
-    // We need auth credentials for Wheatley server
-    xhr.setRequestHeader("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
+    // I THINK WE CAN REMOVE THIS WHEN IT IS ON WHEATLEY. WE DON'T WANT JORGE'S PASSWORD OUT IN THE WILD!!!
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Authorization", "Basic " + btoa("u24634434" + ":" + "Norirotti218754"));
 
     xhr.onreadystatechange = function () {
         console.log("XHR state change:", xhr.readyState, xhr.status);
@@ -124,9 +123,3 @@ function submitReg() {
     xhr.send(JSON.stringify(payload));
     console.log("Request sent to server");
 }
-
-
-
-
-
-

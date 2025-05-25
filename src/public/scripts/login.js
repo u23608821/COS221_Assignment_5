@@ -1,21 +1,27 @@
 function clickLogin() {
+    // Captcha must be completed first
+    const captchaResponse = grecaptcha.getResponse();
+    if (!captchaResponse) {
+        alert("Please complete the reCAPTCHA verification first.");
+        return;
+    }
 
-    var emailInput = document.getElementById("username");
-    var passwordInput = document.getElementById("password");
+    var emailInput = document.getElementById("username").value;
+    var passwordInput = document.getElementById("password").value;
 
     var data = {
         type: "Login",
-        email: emailInput.value,
-        password: passwordInput.value
+        email: emailInput,
+        password: passwordInput,
+        recaptcha_token: captchaResponse
     };
-
-
 
     // Create a new XMLHttpRequest object
     var xhr = new XMLHttpRequest();
 
     // Configure the request
     xhr.open('POST', 'https://wheatley.cs.up.ac.za/u24634434/COS221/api.php', true);
+    
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.setRequestHeader("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
 
@@ -23,6 +29,7 @@ function clickLogin() {
     xhr.onload = function () {
         if (xhr.status === 200 || xhr.status === 201) {
             // The request was successful
+            // console.log("SUCCESS");
             var responseData = JSON.parse(xhr.responseText);
             console.log(responseData);
             if (responseData.status === 'success') {
@@ -48,7 +55,7 @@ function clickLogin() {
                         if (userType === 'customer') {
                             window.location.href = 'products.html';
                         } else if (userType === 'admin') {
-                            window.location.href = 'Admin.html';
+                            window.location.href = 'Admin.php';
                         } else {
                             console.error('Unknown user type:', responseData.data.user_type);
                             alert('Error: Unknown user type');
@@ -94,5 +101,12 @@ function removeLocalStorage(name) {
     localStorage.removeItem(name);
 }
 
-
-
+// Validate the captcha. It must be completed before the user tries to logon. 
+function validateCaptcha() {
+    const response = grecaptcha.getResponse();
+    if (response.length === 0) {
+        alert("Please complete the reCAPTCHA verification first.");
+        return false;
+    }
+    return true;
+}

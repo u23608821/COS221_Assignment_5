@@ -321,16 +321,7 @@
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
   }
   
-  /* Table Styles */
-  .simple-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  .simple-table td,
-  .simple-table th {
-    padding: 12px 8px;
-    border-bottom: 1px solid #464545;
-  }
+
   
   /* Product Grid */
   .product-grid {
@@ -503,82 +494,8 @@
   .btn-danger:hover {
     background-color: #dc2626;
   }
+ 
   
-  /* Product Edit Preview */
-  .product-edit-preview {
-    display: flex;
-    gap: 1.5rem;
-    margin-top: 1.5rem;
-  }
-  
-  .product-image-preview {
-    width: 150px;
-    height: 150px;
-    border-radius: var(--radius);
-    background-color: #f1f5f9;
-    overflow: hidden;
-  }
-  
-  .dark .product-image-preview {
-    background-color: #4a5568;
-  }
-  
-  .product-image-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-  
-  .product-details {
-    flex: 1;
-  }
-  
-  /* Reviews List (Perfect As-Is) */
-  .reviews-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-  
-  .review-item {
-    padding: 1rem;
-    border-radius: var(--radius);
-    background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
-  }
-  
-  .dark .review-item {
-    background-color: #2d3748;
-    border-color: #4a5568;
-  }
-  
-  .review-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .stars {
-    color: #f59e0b;
-    font-size: 1.25rem;
-  }
-  
-  .review-text {
-    margin: 0;
-    color: var(--text-dark);
-    font-size: 0.9375rem;
-    line-height: 1.5;
-  }
-  
-  .dark .review-text {
-    color: var(--text-light);
-  }
-  
-  /* Utility */
-  .hidden {
-    display: none;
-  }
   
   .btn-user {
     display: flex;
@@ -614,7 +531,266 @@
     margin: 0 4px;
   }
   
-  .result-message {
+ /* Retailer Specific Styles */
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.retailer-card {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 1.5rem; /* Added padding to card */
+}
+
+.dark .retailer-card {
+  background-color: #2d3748;
+  border-color: #4a5568;
+}
+
+.retailer-actions {
+  background-color: #f8fafc;
+  border: 1px solid #ebf2ff;
+  padding: 1.5rem; /* Added padding to card */
+}
+
+.dark .retailer-actions {
+  background-color: #2d3748;
+  border-color: #4a5568;
+}
+
+/* Improved Address Grid */
+.address-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.address-grid .form-group {
+  margin: 0; /* Remove default margins */
+}
+
+.address-grid input {
+  width: 100%;
+  box-sizing: border-box; /* Include padding in width calculation */
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: var(--radius);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+}
+
+.dark .address-grid input {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: var(--text-light);
+}
+
+/* Form Improvements */
+.retailer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* Increased gap between form groups */
+}
+
+.retailer-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: var(--radius);
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.dark .retailer-select {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: var(--text-light);
+}
+
+
+
+
+
+.retailer-details {
+  padding: 2.5rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius);
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: left;
+}
+
+/* For form elements inside retailer-details */
+.retailer-details .form-group {
+  width: 100%;
+  max-width: 400px; /* Adjust as needed */
+  margin-bottom: 1.5rem;
+  margin-right: 1.5rem;
+}
+
+.retailer-details input {
+  width: 100%;
+  text-align: center;
+}
+
+/* For buttons container */
+.retailer-details .form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  width: 100%;
+  max-width: 400px;
+}
+
+
+
+
+
+.dark .retailer-details {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .address-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+  /* retailer  Table Styles */
+.table-responsive {
+  overflow-x: auto;
+  margin: 1rem 0;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.retailer-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 800px; /* Ensures table doesn't get too narrow */
+}
+
+.retailer-table th,
+.retailer-table td {
+  padding: 16px 24px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap; /* Prevents text wrapping */
+}
+
+/* Add spacing between columns */
+.retailer-table th:not(:last-child),
+.retailer-table td:not(:last-child) {
+  padding-right: 42px;
+}
+
+/* First column styling */
+.retailer-table th:first-child,
+.retailer-table td:first-child {
+  padding-left: 42px;
+}
+
+/* Last column styling */
+.retailer-table th:last-child,
+.retailer-table td:last-child {
+  padding-right: 42px;
+}
+
+.retailer-table th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  color: #4a5568;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.retailer-table tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Add rounded corners to table */
+.retailer-table {
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* Dark mode styles */
+.dark .retailer-table th {
+  background-color: #2d3748;
+  color: #cbd5e0;
+}
+
+.dark .retailer-table tr:hover {
+  background-color: #374151;
+}
+
+.dark .retailer-table td,
+.dark .retailer-table th {
+  border-bottom-color: #4a5568;
+}
+
+/* Add alternating row colors for better readability */
+.retailer-table tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+.dark .retailer-table tr:nth-child(even) {
+  background-color: #2d3748;
+}
+
+.dark .retailer-table tr:nth-child(odd) {
+  background-color: #1f2937;
+}
+
+
+.btn-secondary:hover {
+  background-color: #475569;
+}
+
+/* Map Preview (visual only) */
+.map-preview {
+  height: 200px;
+  background-color: #e2e8f0;
+  border-radius: var(--radius);
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.dark .map-preview {
+  background-color: #1e293b;
+  color: #94a3b8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* Message styles */
+.result-message {
     display: none;
     padding: 12px;
     margin: 10px 0;
@@ -644,8 +820,64 @@
     opacity: 0.8;
 }
 
-.review-item .result-message {
-    margin: 5px 0 0;
-    padding: 8px;
-    font-size: 13px;
+/* Table styles */
+.table-responsive {
+    max-height: 500px;
+    overflow-y: auto;
+    margin-top: 15px;
+}
+
+.retailer-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.retailer-table th, 
+.retailer-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.retailer-table th {
+    position: sticky;
+    top: 0;
+    background-color: #f5f5f5;
+    font-weight: 600;
+}
+
+/* Dark mode styles */
+.dark .retailer-table th {
+    background-color: #333;
+}
+
+.dark .retailer-table td {
+    border-bottom-color: #444;
+}
+
+/* Form styles */
+.address-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Button styles */
+.btn-primary {
+    background-color: #1976d2;
+    color: white;
+}
+
+.btn-danger {
+    background-color: #d32f2f;
+    color: white;
+}
+
+.hidden {
+  display: none !important;
 }
