@@ -3,7 +3,7 @@ const headers = new Headers();
 headers.append("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
 headers.append("Content-Type", "application/json");
 
-// DOM Elements
+// DOM Elements - page specific (global elements are in global.js)
 const searchInput = document.querySelector(".search-input");
 const searchBtn = document.querySelector(".search-btn");
 const categoryFilter = document.querySelector(".filter-select:nth-of-type(1)");
@@ -37,19 +37,7 @@ function getCookie(name) {
     return "";
 }
 
-function updateIcon() {
-    themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
-}
-
-function applySavedTheme() {
-    const savedTheme = getCookie("theme");
-    if (savedTheme === "dark") {
-        document.body.classList.add("dark");
-    } else {
-        document.body.classList.remove("dark");
-    }
-    updateIcon();
-}
+// Theme functions moved to global.js
 
 // Product loading functions
 async function loadCategories() {
@@ -308,33 +296,9 @@ function getSortValue(selectValue) {
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function () {
-    applySavedTheme();
+    // applySavedTheme handled by global.js
     loadCategories();
     loadProducts();
 });
 
-// Existing event listeners
-window.addEventListener("load", applySavedTheme);
-
-accountBtn.addEventListener("click", function () {
-    accountMenu.classList.toggle("show");
-});
-
-themeToggle.addEventListener("click", function () {
-    document.body.classList.toggle("dark");
-    const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
-    setCookie("theme", newTheme, 30);
-    updateIcon();
-});
-
-menuToggle.addEventListener("click", function () {
-    navLinks.classList.toggle("show");
-});
-
-window.addEventListener("click", function (e) {
-    if (!accountBtn.contains(e.target) && !accountMenu.contains(e.target)) {
-        accountMenu.classList.remove("show");
-    }
-});
-
-updateIcon();
+// Global UI event listeners handled by global.js
