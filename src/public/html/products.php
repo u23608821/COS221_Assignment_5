@@ -82,7 +82,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
           <div class="dropdown-menu" id="accountMenu" aria-label="Account options">
             <a href="../html/my_details.php"><span>My Details</span></a>
             <a href="../html/my_reviews.php"><span>My Reviews</span></a>
-            <a href="../html/my_washlist.php"><span>My Watchlist</span></a>
+            <a href="../html/my_watchlist.php"><span>My Watchlist</span></a>
             <div class="dropdown-divider"></div>
             <a href="../html/login.php" class="signout"><span>Sign Out</span></a>
           </div>
