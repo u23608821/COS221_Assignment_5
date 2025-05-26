@@ -714,3 +714,17 @@
     text-align: justify; 
     color: grey; 
   }
+
+  .retailer-scroll-box {
+  max-height: 300px; /* Adjust as needed to fit 3 boxes */
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+.retailer-box {
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: #f9f9f9;
+}

@@ -1,3 +1,52 @@
+<?php
+// Determine the correct path to the .env file
+$envPath = dirname(dirname(dirname(dirname(__FILE__)))); // Go up 4 levels to reach the project root
+$envFile = $envPath . '/.env';
+
+// Simple function to read .env file
+function readEnvFile($path)
+{
+	if (!file_exists($path)) {
+		// echo "ENV file not found at: $path<br>";
+		return false;
+	}
+
+	// echo "ENV file found at: $path<br>";
+	$lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+	$env = [];
+
+	foreach ($lines as $line) {
+		if (strpos(trim($line), '#') === 0) continue; // Skip comments
+		if (empty(trim($line))) continue;             // Skip empty lines
+
+		list($name, $value) = explode('=', $line, 2);
+		$name = trim($name);
+		$value = trim($value);
+
+		$env[$name] = $value;
+		// Optionally set as environment variable
+		putenv("$name=$value");
+	}
+
+	return $env;
+}
+
+// Read environment variables from .env file
+$env = readEnvFile($envFile);
+
+// Get credentials
+$username = $env ? $env['WHEATLEY_USERNAME'] : getenv("WHEATLEY_USERNAME");
+$password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
+
+
+
+// For debugging - comment these out in production
+// echo "Username from env: " . ($username ?: 'NOT FOUND') . "<br>";
+// echo "Password from env: " . ($password ? '********' : 'NOT FOUND') . "<br>";
+?>
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -46,20 +95,18 @@
       <span>Back to products</span>
     </div>
     
-    <div class="product-container">
+    <div class="product-container" id="productContainer">
       <div class="product-image-container">
-        <img src="/src/private/resources/dummyHeadphones.avif" alt="Sony WH-1000XM4 Headphones" class="product-image-large">
+        <img class="product-image-large" id="productImage"  src="" alt="Product image">
       </div>
       <div class="product-info">
-        <h1 class="product-title">Sony WH-1000XM4 Headphones</h1>
+        <h1 class="product-title" id="productName">Product-Name</h1>
         <div class="best-price-container">
           <span class="best-price-label">Best Price</span>
-          <span class="best-price-value">R348.00</span>
-          <span class="retailer-label">From Takealot</span>
+          <span class="best-price-value" id="productCheapestPrice">R0.00</span>
 
-          <span class="heading">Description</span>
-          <span class="text">A light weight pair of headphones by Sony. They are durable cost-effective, last all day and never skip a beat. You don't want to 
-            miss out getting yourself a pair of Sony WH-1000XM4 Headphones. 
+          <span class="heading" >Description</span>
+          <span class="text" id="productDescription">Product-Description. 
           </span>
 
           <span class="heading">Category</span>
@@ -68,31 +115,13 @@
 
         </div>
       </div>
-      <div class="retailer-prices">
-        <div class="retailer-box best-retailer">
-          <div class="retailer-name">Takealot</div>
-          <div class="retailer-price">R348.00</div>
-          <button class="buy-now-btn">Buy Now</button>
-        </div>
-        <div class="retailer-box">
-          <div class="retailer-name">Evetech</div>
-          <div class="retailer-price">R399.00</div>
-          <button class="buy-now-btn">Buy Now</button>
-        </div>
-        <div class="retailer-box">
-          <div class="retailer-name">Makro</div>
-          <div class="retailer-price">R429.00</div>
-          <button class="buy-now-btn">Buy Now</button>
-        </div>
-        <div class="retailer-box">
-          <div class="retailer-name">Incredible Connection</div>
-          <div class="retailer-price">R449.00</div>
-          <button class="buy-now-btn">Buy Now</button>
-        </div>
+      <div class="retailer-scroll-box" id="retailerContainer">
+      <div class="retailer-prices" id="retailerPricesContainer">
+      </div>
       </div>
     </div>
 
-    <div class="reviews-section">
+    <div class="reviews-section" >
       <div class="reviews-header">
         <h2 class="reviews-title">Reviews</h2>
         <div class="star-rating">
@@ -101,7 +130,7 @@
           <span class="material-symbols-outlined">star</span>
           <span class="material-symbols-outlined">star</span>
           <span class="material-symbols-outlined">star_half</span>
-          <span class="rating-value">(4.6)</span>
+          <span class="rating-value" id="productAvgReview">(0)</span>
           <span class="review-count">128 reviews</span>
         </div>
       </div>
@@ -110,7 +139,7 @@
         <div class="rating-overview">
           <div class="rating-number">4.6</div>
           <div class="rating-out-of">out of 5</div>
-          <button class="write-review-btn">Write a review</button>
+          <button class="write-review-btn" onclick="writeReview()">Write a review</button>
         </div>
         <div class="rating-bars">
           <div class="rating-bar">
@@ -151,60 +180,14 @@
         </div>
       </div>
       
-      <div class="user-reviews">
+      <div class="user-reviews" id="userReviewsContainer">
         <div class="review">
-          <div class="review-header">
-            <div class="review-stars">
-              <span class="material-symbols-outlined">star</span>
-              <span class="material-symbols-outlined">star</span>
-              <span class="material-symbols-outlined">star</span>
-              <span class="material-symbols-outlined">star</span>
-              <span class="material-symbols-outlined">star</span>
-            </div>
-            <div class="reviewer-name">John Smith</div>
-            <div class="review-date">Reviewed on 15 March 2025</div>
-          </div>
-          <div class="review-content">
-            These headphones are absolutely fantastic! The noise cancellation is incredible and the sound quality is top-notch. I use them every day for work and travel.
-          </div>
-        </div>
-        
-        <div class="review">
-          <div class="review-header">
-            <div class="review-stars">
-              <span class="material-symbols-outlined">star</span>
-              <span class="material-symbols-outlined">star</span>
-              <span class="material-symbols-outlined">star</span>
-              <span class="material-symbols-outlined">star</span>
-              <span class="material-symbols-outlined">star_half</span>
-            </div>
-            <div class="reviewer-name">Sarah Johnson</div>
-            <div class="review-date">Reviewed on 10 February 2025</div>
-          </div>
-          <div class="review-content">
-            Great headphones overall. Battery life is excellent and they're very comfortable for long listening sessions. The only minor complaint is that the ear cups can get a bit warm after several hours.
-          </div>
-        </div>
-        
-        <div class="review">
-          <div class="review-header">
-            <div class="review-stars">
-              <span class="material-symbols-outlined">star</span>
-              <span class="material-symbols-outlined">star</span>
-              <span class="material-symbols-outlined">star</span>
-              <span class="material-symbols-outlined">star</span>
-              <span class="material-symbols-outlined">star</span>
-            </div>
-            <div class="reviewer-name">Michael Brown</div>
-            <div class="review-date">Reviewed on 5 January 2025</div>
-          </div>
-          <div class="review-content">
-            Worth every penny! The sound quality is amazing and the noise cancellation works so well that I can't hear anything around me when I'm listening to music. Highly recommend!
-          </div>
-        </div>
+
+        </div>              
+
       </div>
       
-      <button class="view-more-reviews">View more reviews</button>
+      <button class="view-more-reviews" onclick="viewMoreReviews()">View more reviews</button>
     </div>
   </main>
   
@@ -217,7 +200,16 @@
     </div>
   </footer>
 
+  <script>
+    // Set global variables for authentication
+    var WHEATLEY_USERNAME = "<?php echo $username; ?>";
+    var WHEATLEY_PASSWORD = "<?php echo $password; ?>";
+    console.log('Credentials loaded from PHP: ',
+      WHEATLEY_USERNAME ? 'Username found' : 'Username missing',
+      WHEATLEY_PASSWORD ? 'Password found' : 'Password missing');
+  </script>
   <script src="../scripts/global.js"></script>
   <script src="../scripts/view.js"></script>
 </body>
 </html>
+
