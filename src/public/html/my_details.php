@@ -112,7 +112,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
         <div class="form-row">
           <div class="form-group">
             <label for="phone">Phone Number</label>
-            <input type="tel" id="phone" placeholder="+27 12 345 6789" />
+            <input type="tel" id="phone" placeholder="0123456789" />
           </div>
           <div class="form-group">
             <label for="email">Email</label>
