@@ -4,12 +4,6 @@ headers.append("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATL
 headers.append("Content-Type", "application/json");
 
 // DOM Elements
-const accountBtn = document.getElementById("accountBtn");
-const accountMenu = document.getElementById("accountMenu");
-const themeToggle = document.getElementById("themeToggle");
-const themeIcon = document.getElementById("themeIcon");
-const menuToggle = document.getElementById("menuToggle");
-const navLinks = document.getElementById("navLinks");
 const searchInput = document.querySelector(".search-input");
 const searchBtn = document.querySelector(".search-btn");
 const categoryFilter = document.querySelector(".filter-select:nth-of-type(1)");
@@ -273,7 +267,15 @@ searchInput.addEventListener('keypress', function (e) {
 });
 
 // Attach event listeners for filters - don't add duplicate listeners
-categoryFilter.addEventListener('change', performSearch);
+categoryFilter.addEventListener('change', function () {
+    // Reset other filters if "All Categories" is selected
+    if (categoryFilter.value === '__all__') {
+        searchInput.value = '';
+        sortFilter.selectedIndex = 0;
+        priceFilter.selectedIndex = 0;
+    }
+    performSearch();
+});
 sortFilter.addEventListener('change', performSearch);
 priceFilter.addEventListener('change', performSearch);
 
@@ -282,14 +284,14 @@ function performSearch() {
     const category = categoryFilter.value;
     const sortBy = getSortValue(sortFilter.value);
     const priceRange = priceFilter.value;
-    
+
     console.log('Filtering products by:', {
         searchTerm: searchTerm || 'None',
         category: category || 'All',
         sortBy: sortBy || 'Default',
         priceRange: priceRange || 'Any'
     });
-    
+
     loadProducts(searchTerm, category, sortBy, priceRange);
 }
 
