@@ -1,3 +1,51 @@
+<?php
+// Determine the correct path to the .env file
+$envPath = dirname(dirname(dirname(dirname(__FILE__)))); // Go up 4 levels to reach the project root
+$envFile = $envPath . '/.env';
+
+// Simple function to read .env file
+function readEnvFile($path)
+{
+  if (!file_exists($path)) {
+    // echo "ENV file not found at: $path<br>";
+    return false;
+  }
+
+  // echo "ENV file found at: $path<br>";
+  $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+  $env = [];
+
+  foreach ($lines as $line) {
+    if (strpos(trim($line), '#') === 0) continue; // Skip comments
+    if (empty(trim($line))) continue;             // Skip empty lines
+
+    list($name, $value) = explode('=', $line, 2);
+    $name = trim($name);
+    $value = trim($value);
+
+    $env[$name] = $value;
+    // Optionally set as environment variable
+    putenv("$name=$value");
+  }
+
+  return $env;
+}
+
+// Read environment variables from .env file
+$env = readEnvFile($envFile);
+
+// Get credentials
+$username = $env ? $env['WHEATLEY_USERNAME'] : getenv("WHEATLEY_USERNAME");
+$password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
+
+
+
+// For debugging - comment these out in production
+// echo "Username from env: " . ($username ?: 'NOT FOUND') . "<br>";
+// echo "Password from env: " . ($password ? '********' : 'NOT FOUND') . "<br>";
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -64,7 +112,7 @@
       <h2 class="tile-header">Review Aggregate Data</h2>
       <div class="aggregate-content">
         <div class="aggregate-number">
-          <span class="big-number">329</span>
+          <span class="big-number">0</span>
           <span class="aggregate-label">total reviews</span>
         </div>
         
@@ -77,7 +125,7 @@
             <span class="material-symbols-outlined">star_half</span>
           </div>
           <div class="rating-text">
-            <span class="rating-value">4.2</span>
+            <span class="rating-value">0.0</span>
             <span class="aggregate-label">average rating</span>
           </div>
         </div>
@@ -92,7 +140,7 @@
               <span class="material-symbols-outlined">star</span>
               <span class="material-symbols-outlined">star</span>
             </div>
-            <span class="rating-value">5.0</span>
+            <span class="rating-value">0.0</span>
           </div>
           
           <div class="range-item">
@@ -104,7 +152,7 @@
               <span class="material-symbols-outlined">grade</span>
               <span class="material-symbols-outlined">grade</span>
             </div>
-            <span class="rating-value">1.5</span>
+            <span class="rating-value">0.0</span>
           </div>
         </div>
       </div>
@@ -123,6 +171,14 @@
       </button>  
     </div>
   </footer>
+    <script>
+    // Set global variables for authentication
+    var WHEATLEY_USERNAME = "<?php echo $username; ?>";
+    var WHEATLEY_PASSWORD = "<?php echo $password; ?>";
+    console.log('Credentials loaded from PHP: ',
+      WHEATLEY_USERNAME ? 'Username found' : 'Username missing',
+      WHEATLEY_PASSWORD ? 'Password found' : 'Password missing');
+  </script>
 
   <script src="../scripts/global.js"></script>
   <script src="../scripts/review_dashboard.js"></script>
