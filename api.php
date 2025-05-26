@@ -64,8 +64,18 @@ loadEnv(__DIR__ . '/.env');
 
 //Sets the headers for the API
 // header("Access-Control-Allow-Origin: *"); //Wheatley already specifies this in the .htaccess file. Do not add it again
-header("Content-Type: application/json");
-header("Access-Control-Allow-Methods: POST");
+// ======================added adriano===================
+//Sets the headers for the API
+header("Access-Control-Allow-Origin: http://127.0.0.1:5501");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+// If it's an OPTIONS request, return 200 OK and exit
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+//=======================================================
 
 class Database
 {

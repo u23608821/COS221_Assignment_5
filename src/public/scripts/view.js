@@ -1,224 +1,162 @@
-document.addEventListener("DOMContentLoaded", function () {
-    fetchProductDetails();
+const API_URL = 'http://localhost:8000/api.php';
+
+// DOM Elements
+const productImage = document.querySelector('.product-image-large');
+const productTitle = document.querySelector('.product-title');
+const bestPriceValue = document.querySelector('.best-price-value');
+const retailerLabel = document.querySelector('.retailer-label');
+const productDescription = document.querySelectorAll('.product-info .text')[0];
+const productCategory = document.querySelectorAll('.product-info .text')[1];
+const retailersContainer = document.querySelector('.retailer-prices');
+const starRating = document.querySelector('.star-rating');
+const ratingValue = document.querySelector('.rating-value');
+const reviewCount = document.querySelector('.review-count');
+const ratingNumber = document.querySelector('.rating-number');
+const ratingBars = document.querySelector('.rating-bars');
+const userReviews = document.querySelector('.user-reviews');
+
+const currentApiKey =
+  localStorage.getItem('apiKey') ||
+  sessionStorage.getItem('apiKey') ||
+  getCookie('apiKey');
+
+document.querySelector('.back-button').addEventListener('click', () => {
+  window.history.back();
 });
 
-function fetchProductDetails() {
-    const apKey = "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef"; //getCookie("apiKey"); 
-    const productID = 1;
-
-    const payload = {
-        type: "getProductDetails",
-        apikey: apKey,
-        product_id: productID
-    };
-
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://wheatley.cs.up.ac.za/u24634434/COS221/api.php', true);
- //  xhr.open('POST', 'http://localhost:8000/api.php')
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.setRequestHeader("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
-
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                try {
-                    let responseText = xhr.responseText;
-                    let jsonStartIdx = responseText.indexOf('{');
-                    if (jsonStartIdx >= 0) responseText = responseText.substring(jsonStartIdx);
-
-                    const response = JSON.parse(responseText);
-
-                    if (response.status === 'success') {
-                        populateProductView(response.data);
-                    } else {
-                        alert('Failed to load product: ' + (response.message || 'Unknown error'));
-                    }
-                } catch (e) {
-                    console.error("Error parsing response:", e, xhr.responseText);
-                    alert("Error processing response from server.");
-                }
-            } else {
-                console.error("Server returned error status:", xhr.status);
-                alert("Server error: " + xhr.status);
-            }
-        }
-    };
-
-    xhr.onerror = function (e) {
-        console.error('Network Error', e);
-        alert('Network Error: Could not connect to the server');
-    };
-
-    xhr.send(JSON.stringify(payload));
-}
-
-function populateProductView(data) {
-    // Populate main product info
-   // console.log(data);
-    document.getElementById("productName").textContent = data.name;
-    document.getElementById("productDescription").textContent = data.description;
-    document.getElementById("productImage").src = data.Image_url;
-   // document.getElementById("productCategory").textContent = data.category;
-    document.getElementById("productAvgReview").textContent = data.average_review ?? "N/A";
-    document.getElementById("productCheapestPrice").textContent = data.cheapest_price 
-        ? `R${data.cheapest_price.toFixed(2)} from ${data.cheapest_retailer}` 
-        : "Price not available";
-
-    renderRetailerPrices(data.retailers);
-    updateReviewsSection(data); 
-}
-
-function renderRetailerPrices(retailers) {
-    const container = document.getElementById("retailerPricesContainer");
-    container.innerHTML = ''; // Clear existing
-
-    retailers.forEach(({ retailer_name, price }) => {
-        const box = document.createElement("div");
-        box.className = "retailer-box";
-        box.innerHTML = `
-            <div class="retailer-name">${retailer_name}</div>
-            <div class="retailer-price">R${price.toFixed(2)}</div>
-            <button class="buy-now-btn">Buy Now</button>
-        `;
-        container.appendChild(box);
-    });
-}
-
-function updateReviewsSection(productData) {
-  const { average_review, reviews } = productData;
-
-  document.getElementById("productAvgReview").textContent = `(${average_review?.toFixed(1) || '0.0'})`;
-  document.querySelector(".review-count").textContent = `${reviews.length} reviews`;
-  document.querySelector(".rating-number").textContent = average_review?.toFixed(1) || '0.0';
-
-  const starContainer = document.querySelector(".star-rating");
-  starContainer.querySelectorAll(".material-symbols-outlined").forEach(s => s.remove());
-
-  const fullStars = Math.floor(average_review || 0);
-  const halfStar = (average_review || 0) % 1 >= 0.5;
-
-  for (let i = 0; i < fullStars; i++) {
-    const star = document.createElement("span");
-    star.className = "material-symbols-outlined";
-    star.textContent = "star";
-    starContainer.insertBefore(star, starContainer.children[i]);
-  }
-
-  if (halfStar) {
-    const half = document.createElement("span");
-    half.className = "material-symbols-outlined";
-    half.textContent = "star_half";
-    starContainer.insertBefore(half, starContainer.children[fullStars]);
-  }
-
-  const distribution = [0, 0, 0, 0, 0]; // index 0 = 1 star, index 4 = 5 stars
-  reviews.forEach(({ score }) => {
-    if (score >= 1 && score <= 5) distribution[score - 1]++;
-  });
-  const total = reviews.length || 1;
-
-  const bars = document.querySelectorAll(".rating-bar");
-  for (let i = 5; i >= 1; i--) {
-    const count = distribution[i - 1];
-    const percentage = (count / total * 100).toFixed(1);
-    const bar = bars[5 - i]; 
-
-    bar.querySelector(".bar").style.width = `${percentage}%`;
-    bar.querySelector("span:last-child").textContent = count;
-  }
-
-  const container = document.getElementById("userReviewsContainer");
-  container.innerHTML = "";
-
-  reviews.forEach(({ customer_name, score, description, updated_at }) => {
-    const review = document.createElement("div");
-    review.className = "review";
-
-    const stars = Array.from({ length: 5 }, (_, i) =>
-      `<span class="material-symbols-outlined">${i < score ? 'star' : 'star_border'}</span>`
-    ).join("");
-
-    const reviewDate = new Date(updated_at).toLocaleDateString(undefined, {
-      year: "numeric", month: "long", day: "numeric"
-    });
-
-    review.innerHTML = `
-      <div class="review-header">
-        <div class="review-stars">${stars}</div>
-        <div class="reviewer-name">${customer_name}</div>
-        <div class="review-date">Reviewed on ${reviewDate}</div>
-      </div>
-      <div class="review-content">${description}</div>
-    `;
-    container.appendChild(review);
-  });
-}
+document.addEventListener('DOMContentLoaded', loadProductDetails);
 
 function getCookie(name) {
-    const cname = name + "=";
-    const decodedCookie = decodeURIComponent(document.cookie);
-    const ca = decodedCookie.split(';');
-    for (let c of ca) {
-        c = c.trim();
-        if (c.indexOf(cname) === 0) return c.substring(cname.length);
+  const cookieArr = document.cookie.split(';');
+  for (let c of cookieArr) {
+    const [key, val] = c.trim().split('=');
+    if (key === name) return decodeURIComponent(val);
+  }
+  return null;
+}
+
+async function loadProductDetails() {
+  const productId = sessionStorage.getItem('currentProductId');
+  if (!productId) {
+    window.location.href = '../html/products.html';
+    return;
+  }
+
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'getProductDetails',
+        apikey: currentApiKey,
+        product_id: parseInt(productId),
+        return: 'All'
+      })
+    });
+
+    const result = await response.json();
+
+    if (result.status === 'success' && result.data) {
+      displayProductDetails(result.data);
+    } else {
+      console.error('Error loading product:', result.message);
     }
-    return "";
+  } catch (error) {
+    console.error('Network error:', error);
+  }
 }
 
-function sendReview(payload)
-{
+function displayProductDetails(product) {
+  productImage.src = product.image_url || product.Image_url || '/fallback.png';
+productImage.alt = product.name || 'Product image';
+  productTitle.textContent = product.name;
+  productDescription.textContent = product.description;
+  productCategory.textContent = product.category;
 
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://wheatley.cs.up.ac.za/u24634434/COS221/api.php', true);
- //  xhr.open('POST', 'http://localhost:8000/api.php')
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.setRequestHeader("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
+  if (product.cheapest_price) {
+    bestPriceValue.textContent = `R${product.cheapest_price.toFixed(2)}`;
+    retailerLabel.textContent = `From ${product.cheapest_retailer}`;
+  } else {
+    bestPriceValue.textContent = 'N/A';
+    retailerLabel.textContent = 'No retailer available';
+  }
 
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                try {
-                    let responseText = xhr.responseText;
-                    const response = JSON.parse(responseText);
+  // Sort and render retailers
+  const sortedRetailers = [...product.retailers].sort((a, b) => a.price - b.price);
+  retailersContainer.innerHTML = '';
+  sortedRetailers.forEach((r, index) => {
+    const div = document.createElement('div');
+    div.className = `retailer-box ${index === 0 ? 'best-retailer' : ''}`;
+    div.innerHTML = `
+      <div class="retailer-name">${r.retailer_name}</div>
+      <div class="retailer-price">R${r.price.toFixed(2)}</div>
+      <button class="buy-now-btn">Buy Now</button>
+    `;
+    retailersContainer.appendChild(div);
+  });
 
-                    if (response.status === 'success') {
-                        alert("Wrote a review: " + (response.message || "Unkown error"));
-                    } else {
-                        alert('Failed to review product: ' + (response.message || 'Unknown error'));
-                    }
-                } catch (e) {
-                    console.error("Error parsing response:", e, xhr.responseText);
-                    alert("Error processing response from server.");
-                }
-            } else {
-                console.error("Server returned error status:", xhr.status);
-                alert("Server error: " + xhr.status);
-            }
-        }
-    };
+  // Reviews
+  if (product.average_review !== null) {
+    ratingValue.textContent = `(${product.average_review.toFixed(1)})`;
+    ratingNumber.textContent = product.average_review.toFixed(1);
+    reviewCount.textContent = `${product.reviews.length} reviews`;
 
-    xhr.onerror = function (e) {
-        console.error('Network Error', e);
-        alert('Network Error: Could not connect to the server');
-    };
+    // Stars
+    const fullStars = Math.floor(product.average_review);
+    const hasHalf = product.average_review % 1 >= 0.5;
+    const starEls = starRating.querySelectorAll('.material-symbols-outlined');
+    starEls.forEach((star, i) => {
+      if (i < fullStars) star.textContent = 'star';
+      else if (i === fullStars && hasHalf) star.textContent = 'star_half';
+      else star.textContent = 'star';
+    });
 
-    xhr.send(JSON.stringify(payload));
-}
-
-function writeReview()
-{
-    const payload = {
-        type: "writeReview",
-        apikey: "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef", //getCookie("apiKey"); 
-        product_id: 1,
-        score: 4,
-        description: "Defnitely a product its nice"
+    // Rating distribution
+    const dist = [0, 0, 0, 0, 0];
+    product.reviews.forEach(r => dist[r.score - 1]++);
+    ratingBars.innerHTML = '';
+    for (let i = 5; i >= 1; i--) {
+      const count = dist[i - 1];
+      const percent = (count / product.reviews.length) * 100;
+      const bar = document.createElement('div');
+      bar.className = 'rating-bar';
+      bar.innerHTML = `
+        <span>${i} stars</span>
+        <div class="bar-container">
+          <div class="bar" style="width: ${percent}%;"></div>
+        </div>
+        <span>${count}</span>
+      `;
+      ratingBars.appendChild(bar);
     }
 
-    sendReview(payload);
+    // User reviews
+    userReviews.innerHTML = '';
+    product.reviews.slice(0, 3).forEach(r => {
+      const reviewEl = document.createElement('div');
+      reviewEl.className = 'review';
+      reviewEl.innerHTML = `
+        <div class="review-header">
+          <div class="review-stars">
+            ${'<span class="material-symbols-outlined">star</span>'.repeat(r.score)}
+            ${'<span class="material-symbols-outlined">star</span>'.repeat(5 - r.score)}
+          </div>
+          <div class="reviewer-name">${r.customer_name}</div>
+          <div class="review-date">Reviewed on ${formatDate(r.updated_at)}</div>
+        </div>
+        <div class="review-content">${r.description}</div>
+      `;
+      userReviews.appendChild(reviewEl);
+    });
+  } else {
+    reviewCount.textContent = 'No reviews yet';
+    ratingBars.innerHTML = '<p>No ratings available</p>';
+    userReviews.innerHTML = '<p>Be the first to review this product!</p>';
+  }
 }
 
-function viewMoreReviews()
-{
-    alert("Yeah nah, ur done");
+function formatDate(dateStr) {
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    year: 'numeric', month: 'long', day: 'numeric'
+  });
 }

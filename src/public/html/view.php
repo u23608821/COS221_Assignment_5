@@ -52,17 +52,17 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>View Page</title>
+  <title>View Product</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-  <link href="../styles/view.css" rel="stylesheet">
+  <link href="../styles/view.css" rel="stylesheet" />
 </head>
 <body class="light">
   <nav class="navbar">
     <div class="container">
       <div class="nav-left">
-        <a href="#" class="logo">
-          <img src="https://wheatley.cs.up.ac.za/u24634434/COS221/Images/Logo.png" alt="Logo Placeholder" />
+        <a href="../html/products.html" class="logo">
+          <img src="https://URL_HERE.co.za/" alt="Pick 'n Price Logo" />
         </a>
         <span class="menu-toggle" id="menuToggle">☰</span>
         <ul class="nav-links" id="navLinks">
@@ -72,17 +72,16 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
       </div>
       <div class="nav-actions">
         <div class="dropdown">
-          <button class="btn-user dropdown-toggle" id="accountBtn" aria-haspopup="true" aria-expanded="false">
+          <button class="btn-user dropdown-toggle" id="accountBtn">
             <span class="material-symbols-outlined user-icon">account_circle</span>
             <span class="user-text">User</span>
             <span class="material-symbols-outlined arrow-icon">arrow_drop_down</span>
           </button>
-          <div class="dropdown-menu" id="accountMenu" aria-label="Account options">
+          <div class="dropdown-menu" id="accountMenu">
             <a href="../html/my_details.html"><span>My Details</span></a>
             <a href="../html/my_reviews.html"><span>My Reviews</span></a>
-            <a href="../html/my_watchlist.html"><span>My Watchlist</span></a>
             <div class="dropdown-divider"></div>
-            <a href="../html/login.php" class="signout"><span>Sign Out</span></a>
+            <a href="../html/login.html" class="signout"><span>Sign Out</span></a>
           </div>
         </div>
       </div>
@@ -94,31 +93,27 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
       <span class="material-symbols-outlined">arrow_back</span>
       <span>Back to products</span>
     </div>
-    
-    <div class="product-container" id="productContainer">
+
+    <div class="product-container">
       <div class="product-image-container">
-        <img class="product-image-large" id="productImage"  src="" alt="Product image">
+        <img class="product-image-large" alt="Product Image">
       </div>
       <div class="product-info">
-        <h1 class="product-title" id="productName">Product-Name</h1>
+        <h1 class="product-title"></h1>
         <div class="best-price-container">
           <span class="best-price-label">Best Price</span>
-          <span class="best-price-value" id="productCheapestPrice">R0.00</span>
+          <span class="best-price-value">Loading...</span>
+          <span class="retailer-label">From</span>
 
-          <span class="heading" >Description</span>
-          <span class="text" id="productDescription">Product-Description. 
-          </span>
+          <span class="heading">Description</span>
+          <span class="text"></span>
 
           <span class="heading">Category</span>
-          <span class="text">Electronics</span>
-
-
+          <span class="text"></span>
         </div>
       </div>
-      <div class="retailer-scroll-box" id="retailerContainer">
-      <div class="retailer-prices" id="retailerPricesContainer">
-      </div>
-      </div>
+
+      <div class="retailer-prices"></div>
     </div>
 
     <div class="reviews-section" >
@@ -129,74 +124,32 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
           <span class="material-symbols-outlined">star</span>
           <span class="material-symbols-outlined">star</span>
           <span class="material-symbols-outlined">star</span>
-          <span class="material-symbols-outlined">star_half</span>
-          <span class="rating-value" id="productAvgReview">(0)</span>
-          <span class="review-count">128 reviews</span>
+          <span class="material-symbols-outlined">star</span>
+          <span class="rating-value"></span>
+          <span class="review-count"></span>
         </div>
       </div>
-      
+
       <div class="rating-summary">
         <div class="rating-overview">
-          <div class="rating-number">4.6</div>
+          <div class="rating-number"></div>
           <div class="rating-out-of">out of 5</div>
           <button class="write-review-btn" onclick="writeReview()">Write a review</button>
         </div>
-        <div class="rating-bars">
-          <div class="rating-bar">
-            <span>5 stars</span>
-            <div class="bar-container">
-              <div class="bar" style="width: 70%;"></div>
-            </div>
-            <span>90</span>
-          </div>
-          <div class="rating-bar">
-            <span>4 stars</span>
-            <div class="bar-container">
-              <div class="bar" style="width: 20%;"></div>
-            </div>
-            <span>26</span>
-          </div>
-          <div class="rating-bar">
-            <span>3 stars</span>
-            <div class="bar-container">
-              <div class="bar" style="width: 7%;"></div>
-            </div>
-            <span>9</span>
-          </div>
-          <div class="rating-bar">
-            <span>2 stars</span>
-            <div class="bar-container">
-              <div class="bar" style="width: 2%;"></div>
-            </div>
-            <span>3</span>
-          </div>
-          <div class="rating-bar">
-            <span>1 star</span>
-            <div class="bar-container">
-              <div class="bar" style="width: 1%;"></div>
-            </div>
-            <span>  1</span>
-          </div>
-        </div>
+        <div class="rating-bars"></div>
       </div>
-      
-      <div class="user-reviews" id="userReviewsContainer">
-        <div class="review">
 
-        </div>              
-
-      </div>
-      
-      <button class="view-more-reviews" onclick="viewMoreReviews()">View more reviews</button>
+      <div class="user-reviews"></div>
+      <button class="view-more-reviews">View more reviews</button>
     </div>
   </main>
-  
+
   <footer class="footer">
     <div class="footer-container">
-      <span class="footer-left">© 2025 Pick 'n Price, The Primary Keys Group </span> 
+      <span class="footer-left">© 2025 Pick 'n Price, The Primary Keys Group</span>
       <button class="btn" id="themeToggle" title="Toggle theme">
-          <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
-      </button>  
+        <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+      </button>
     </div>
   </footer>
 
@@ -212,4 +165,3 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   <script src="../scripts/view.js"></script>
 </body>
 </html>
-
