@@ -11,11 +11,14 @@
 * [Demo slides]()
 
 ## Technologies
-![PHP](https://raw.githubusercontent.com/marwin1991/profile-technology-icons/refs/heads/main/icons/php.png)
-![JS](https://raw.githubusercontent.com/marwin1991/profile-technology-icons/refs/heads/main/icons/javascript.png)
-![HTML](https://raw.githubusercontent.com/marwin1991/profile-technology-icons/refs/heads/main/icons/html.png)
-![CSS](https://raw.githubusercontent.com/marwin1991/profile-technology-icons/refs/heads/main/icons/css.png)
-![PhpMyAdmin]()
+<p align="center">
+  <span style="margin: 0 10 px;"><img src="https://raw.githubusercontent.com/marwin1991/profile-technology-icons/refs/heads/main/icons/php.png" width="80" height="80" alt="PHP"></span>
+  <span style="margin: 0 10 px;"><img src="https://raw.githubusercontent.com/marwin1991/profile-technology-icons/refs/heads/main/icons/javascript.png" width="80" height="80" alt="JS"></span>
+  <span style="margin: 0 10 px;"><img src="https://raw.githubusercontent.com/marwin1991/profile-technology-icons/refs/heads/main/icons/html.png" width="80" height="80" alt="HTML"></span>
+  <span style="margin: 0 10 px;"><img src="https://raw.githubusercontent.com/marwin1991/profile-technology-icons/refs/heads/main/icons/css.png" width="80" height="80" alt="CSS"></span>
+  <span style="margin: 0 10 px;"><img src="" width="70" height="70" alt="PHPMyAdmin"></span>
+</p>
+
 
 ## Team
 * Dewald Colesky u2536030 [LinkedIn](www.linkedin.com/in/dewald-colesky-165400217) [Github](https://github.com/amJohnnyma)
