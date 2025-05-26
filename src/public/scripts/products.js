@@ -273,7 +273,15 @@ searchInput.addEventListener('keypress', function (e) {
 });
 
 // Attach event listeners for filters - don't add duplicate listeners
-categoryFilter.addEventListener('change', performSearch);
+categoryFilter.addEventListener('change', function() {
+    // Reset other filters if "All Categories" is selected
+    if (categoryFilter.value === '__all__') {
+        searchInput.value = '';
+        sortFilter.selectedIndex = 0;
+        priceFilter.selectedIndex = 0;
+    }
+    performSearch();
+});
 sortFilter.addEventListener('change', performSearch);
 priceFilter.addEventListener('change', performSearch);
 
@@ -336,12 +344,3 @@ window.addEventListener("click", function (e) {
 });
 
 updateIcon();
-
-categoryFilter.addEventListener('change', () => {
-    if (categoryFilter.value === '__all__') {
-        searchInput.value = '';
-        sortFilter.selectedIndex = 0;
-        priceFilter.selectedIndex = 0;
-    }
-    performSearch();
-});

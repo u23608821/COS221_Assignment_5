@@ -64,8 +64,6 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
       <div class="nav-left">
         <a href="../html/products.php" class="logo">
           <img src="../../private/resources/Logo.png" alt="Logo Placeholder" />
-        <a href="../html/products.php" class="logo">
-          <img src="../../private/resources/Logo.png" alt="Logo Placeholder" />
         </a>
         <span class="menu-toggle" id="menuToggle">☰</span>
         <ul class="nav-links" id="navLinks">
