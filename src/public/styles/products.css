@@ -985,3 +985,17 @@ main {
   margin: 0 4px;
 }
 
+.stars {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+.star {
+    color: #e5e7eb;
+    font-size: 1.5rem;
+}
+
+.star.filled {
+    color: #f59e0b;
+}
