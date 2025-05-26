@@ -1,4 +1,4 @@
-# COS221 Assignment 5
+<h1 align="center"> Pick 'n Price </h1>
 <p align="center">
 <img src = "https://github.com/u23608821/COS221_Assignment_5/blob/dev/src/public/images/dummyLogo.png" alt="Logo" width="300" height="300">  
 </p>
