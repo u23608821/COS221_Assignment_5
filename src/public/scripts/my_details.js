@@ -27,12 +27,6 @@ document.addEventListener('DOMContentLoaded', function () {
         accountMenu.classList.toggle("display");
     });
 
-    themeToggle.addEventListener("click", function () {
-        document.body.classList.toggle("dark");
-        const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
-        setCookie("theme", newTheme, 30);
-        updateIcon();
-    });
 
     menuToggle.addEventListener("click", function () {
         navLinks.classList.toggle("show");

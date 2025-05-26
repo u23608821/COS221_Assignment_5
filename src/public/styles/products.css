@@ -771,18 +771,12 @@ main {
     overflow: hidden; /* Ensure images don't overflow */
 }
 
-/*.product-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain; /* This will maintain aspect ratio while fitting within the container 
-    padding: 10px; /* Add some padding around the image 
-} */ 
-
 .product-image img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* instead of contain */
-    padding: 0; /* remove padding */
+    object-fit: cover; 
+    padding: 0; 
+    max-width: 50%;
 }
 
 
@@ -985,3 +979,17 @@ main {
   margin: 0 4px;
 }
 
+.stars {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+.star {
+    color: #e5e7eb;
+    font-size: 1.5rem;
+}
+
+.star.filled {
+    color: #f59e0b;
+}

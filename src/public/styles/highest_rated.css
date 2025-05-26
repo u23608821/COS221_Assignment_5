@@ -783,6 +783,7 @@ main {
     height: 100%;
     object-fit: cover; /* instead of contain */
     padding: 0; /* remove padding */
+    max-width: 50%;
 }
 
 
