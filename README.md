@@ -11,12 +11,11 @@
 * [Demo slides]()
 
 ## Technologies
-![PHP]()
-![JS]()
-![HTML]()
-![CSS]()
+![PHP](https://raw.githubusercontent.com/marwin1991/profile-technology-icons/refs/heads/main/icons/php.png)
+![JS](https://raw.githubusercontent.com/marwin1991/profile-technology-icons/refs/heads/main/icons/javascript.png)
+![HTML](https://raw.githubusercontent.com/marwin1991/profile-technology-icons/refs/heads/main/icons/html.png)
+![CSS](https://raw.githubusercontent.com/marwin1991/profile-technology-icons/refs/heads/main/icons/css.png)
 ![PhpMyAdmin]()
-![Wheatley]()
 
 ## Team
 * Dewald Colesky u2536030 [LinkedIn](www.linkedin.com/in/dewald-colesky-165400217) [Github](https://github.com/amJohnnyma)
