@@ -173,3 +173,23 @@
  .dark .create-account a {
      color: #d1d5db;
  }
+
+
+
+
+ /* reCAPTCHA styling */
+.g-recaptcha {
+    margin: 1rem 0;
+    display: flex;
+    justify-content: center;
+}
+
+/* Adjust the captcha container to fit properly */
+.g-recaptcha > div {
+    width: 100% !important;
+}
+
+/* Dark mode adjustments */
+.dark .g-recaptcha iframe {
+    filter: invert(1) hue-rotate(180deg);
+}

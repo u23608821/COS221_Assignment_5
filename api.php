@@ -29,7 +29,25 @@
 
 */
 
+/* HTTP Status Codes
+200 OK
+201 Created
+204 No Content (Request was successful but no content to return)
+400 Bad Request
+401 Unauthorized
+403 Forbidden
+404 Not Found
+405 Method Not Allowed
+409 Conflict 
+422 Unprocessable Entity
+500 Internal Server Error
+501 Not Implemented
+503 Service Unavailable
+
+*/
+
 function loadEnv($path)
+//Function that loads the environment variables from the .env file
 //Function that loads the environment variables from the .env file
 {
     if (!file_exists($path))
@@ -49,56 +67,66 @@ loadEnv(__DIR__ . '/.env');
 header("Content-Type: application/json");
 header("Access-Control-Allow-Methods: POST");
 
-class Database {
-        private static $instance = null;
-        private $conn;
+class Database
+{
+    private static $instance = null;
+    private $conn;
 
-        private function __construct() {
-            //Constructor using the environment variables
-            $this->conn = new mysqli(
-                getenv('DB_HOST'),
-                getenv('DB_USER'),
-                getenv('DB_PASSWORD'),
-                getenv('DB_NAME'),
-                getenv('DB_PORT') ?: 3306
-            );
+    private function __construct()
+    {
+        //Constructor using the environment variables
+        $this->conn = new mysqli(
+            getenv('DB_HOST'),
+            getenv('DB_USER'),
+            getenv('DB_PASSWORD'),
+            getenv('DB_NAME'),
+            getenv('DB_PORT') ?: 3306
+        );
 
-            if ($this->conn->connect_error) {
-                throw new Exception("Database connection failed: " . $this->conn->connect_error);
-            }
+        if ($this->conn->connect_error) {
+            throw new Exception("Database connection failed: " . $this->conn->connect_error);
         }
+    }
 
-        public static function getInstance() {
-            //If we are not connected to the database, create a new instance
-            if (!self::$instance) {
-                self::$instance = new Database();
-            }
-            return self::$instance;
+    public static function getInstance()
+    {
+        //If we are not connected to the database, create a new instance
+        if (!self::$instance) {
+            self::$instance = new Database();
         }
+        return self::$instance;
+    }
 
-        public function getConnection() {
-            //Returns the connection to the database
-            return $this->conn;
+    public function getConnection()
+    {
+        //Returns the connection to the database
+        return $this->conn;
+    }
+
+    public function __destruct()
+    {
+        //Closes the connection to the database
+        if ($this->conn) {
+            $this->conn->close();
         }
+    }
 
-        public function __destruct() {
-            //Closes the connection to the database
-            if ($this->conn) {
-                $this->conn->close();
-            }
-        }
+    private function __clone() {}
+    public function __wakeup() {}
+} //Database class
 
-        private function __clone() {}
-        public function __wakeup() {}
-}//Database class
-
-class ResponseAPI {
-    public static function send($message, $data = null, $code = 200) {
+class ResponseAPI
+{
+    public static function send($message, $data = null, $code = 200)
+    {
         //Sends a JSON response to the client.
         http_response_code($code); //Set the HTTP response code
 
         header('Content-Type: application/json');
         $response = [
+            'status' => $code < 400 ? 'success' : 'error',
+            'timestamp' => time() * 1000,
+            'code' => $code,
             'status' => $code < 400 ? 'success' : 'error',
             'timestamp' => time() * 1000,
             'code' => $code
@@ -107,20 +135,26 @@ class ResponseAPI {
             $response['message'] = $message;
         }
         if ($data !== null && $data !== []) {
+        }
+        if ($data !== null && $data !== []) {
             $response['data'] = $data;
         }
         echo json_encode($response);
 
+
         exit;
     }
 
-    public static function error($message, $data = null, $httpCode = 400) {
+    public static function error($message, $data = null, $httpCode = 400)
+    {
         self::send($message, $data, $httpCode);
     }
-}//ResponseAPI class
+} //ResponseAPI class
 
-class Authorise {
-    public static function authenticate($apikey, $requiredUserType){
+class Authorise
+{
+    public static function authenticate($apikey, $requiredUserType)
+    {
         //Checks if the API key is valid, and if it is it checks if the user type is valid (able to do the required action)
         if (empty($apikey)) {
             ResponseAPI::error('API key is required to authenticate user', 401);
@@ -239,14 +273,17 @@ class Authorise {
 
 }//Authorise class
 
-class Tester {
-    public static function handleTest($requestData) {
+class Tester
+{
+    public static function handleTest($requestData)
+    {
         // Return the request data directly as the data field and a success message
         ResponseAPI::send("Test Successful!", $requestData, 200);
     }
-}//Tester class
+} //Tester class
 
-class USER {
+class USER
+{
     // Validation rules for each field
     private static $validationRules = [
         'name' => [
@@ -305,7 +342,8 @@ class USER {
         ]
     ];
 
-    private static function validateField($field, $value, $ignoreRequired = false) {
+    private static function validateField($field, $value, $ignoreRequired = false)
+    {
         if (!isset(self::$validationRules[$field])) {
             return true;
         }
@@ -369,6 +407,15 @@ class USER {
                 }
             }
         }
+            if (isset(self::$validationRules[$field])) {
+                $validationResult = self::validateField($field, $value);
+                if ($validationResult !== true) {
+                    $errors[$field] = $validationResult;
+                } else {
+                    $validFields[$field] = trim($value);
+                }
+            }
+        }
 
             // Check required fields are present
             foreach (self::$validationRules as $field => $rule) {
@@ -391,7 +438,7 @@ class USER {
         $stmt->store_result();
         if ($stmt->num_rows > 0) {
             $stmt->close();
-            ResponseAPI::error("Email already exists: Please use a different email or log into your account",null, 409); //409 Conflict
+            ResponseAPI::error("Email already exists: Please use a different email or log into your account", null, 409); //409 Conflict
         }
         $stmt->close();
 
@@ -423,10 +470,10 @@ class USER {
         // Prepare placeholders and types
         $placeholders = str_repeat('?,', count($userFields) - 1) . '?';
         $types = str_repeat('s', count($userFields));
-        
+
         // Build column list
         $columns = implode(', ', $userFields);
-        
+
         // Build values array in correct order
         $values = [];
         foreach ($userFields as $field) {
@@ -458,7 +505,7 @@ class USER {
             'user_id' => $user_id,
             'apikey' => $apikey
         ], 201); //201 Created
-    }//register
+    } //register
 
     public static function login($requestData) {
         //Verifuing the reCAPTCHA token
@@ -478,7 +525,7 @@ class USER {
         $validFields = [];
 
         //Validate email and password (do not check password against its regex)
-        if(isset($requestData['email'])) {
+        if (isset($requestData['email'])) {
             $validationResult = self::validateField('email', $requestData['email']);
             if ($validationResult !== true) {
                 $errors['email'] = $validationResult;
@@ -535,11 +582,12 @@ class USER {
             ],
             200
         );
-    }//login
+    } //login
 
-}//USER class
+} //USER class
 
-class ADMIN {
+class ADMIN
+{
     // Validation rules for QuickAddUser
     private static $quickAddUserRules = [
         'name' => [
@@ -570,7 +618,8 @@ class ADMIN {
         ]
     ];
 
-    public static function QuickAddUser($requestData) {
+    public static function QuickAddUser($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -653,10 +702,11 @@ class ADMIN {
         ResponseAPI::send("User added successfully", [
             'user_id' => $user_id,
             'apikey' => $apikey
-        ], 201);//201 Created
-    }//QuickAddUser
+        ], 201); //201 Created
+    } //QuickAddUser
 
-    public static function QuickEditProductPrice($requestData) {
+    public static function QuickEditProductPrice($requestData)
+    {
         // Authenticate as Admin
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
@@ -734,9 +784,10 @@ class ADMIN {
             $stmt->close();
             ResponseAPI::send("Product price added successfully", ['product_id' => $product_id, 'retailer_id' => $retailer_id, 'price' => $price], 201);
         }
-    }//QuickEditProductPrice
+    } //QuickEditProductPrice
 
-    public static function AdminRecentReviews($requestData) {
+    public static function AdminRecentReviews($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401); //401 Unauthorized
         }
@@ -764,9 +815,10 @@ class ADMIN {
         $stmt->close();
 
         ResponseAPI::send("Recent reviews fetched successfully", $reviews, 200);
-    }//AdminRecentReviews
+    } //AdminRecentReviews
 
-    public static function AddNewProduct($requestData) {
+    public static function AddNewProduct($requestData)
+    {
         // Authenticate as Admin
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
@@ -786,7 +838,7 @@ class ADMIN {
         }
 
         $optionalFields = [
-            'description' => ['max_length' => null], 
+            'description' => ['max_length' => null],
             'image_url' => ['max_length' => 255],
             'category' => ['max_length' => 100]
         ];
@@ -957,15 +1009,15 @@ class ADMIN {
             } else {
                 ResponseAPI::send("Product added successfully", $responseData, 201); //201 Created
             }
-
         } catch (Exception $e) {
             // Rollback transaction on any error
             $conn->rollback();
-            ResponseAPI::error("Database error:" . $e->getMessage(), ['database_error' => $conn->error], 500);//500 Internal Server Error
+            ResponseAPI::error("Database error:" . $e->getMessage(), ['database_error' => $conn->error], 500); //500 Internal Server Error
         }
-    }//AddNewProduct
+    } //AddNewProduct
 
-    public static function getAllProducts($requestData) {
+    public static function getAllProducts($requestData)
+    {
         // Authenticate as Admin
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
@@ -988,9 +1040,10 @@ class ADMIN {
         }
 
         ResponseAPI::send("All products fetched successfully", $products, 200);
-    }// getAllProducts
+    } // getAllProducts
 
-    public static function deleteProduct($requestData) {
+    public static function deleteProduct($requestData)
+    {
         // Authenticate as Admin
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
@@ -1045,9 +1098,10 @@ class ADMIN {
         $stmt->close();
 
         ResponseAPI::send("Product deleted successfully", ['product_id' => $product_id], 200);
-    }//deleteProduct
+    } //deleteProduct
 
-    public static function GetAllRetailers($requestData) {
+    public static function GetAllRetailers($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -1069,9 +1123,10 @@ class ADMIN {
         }
 
         ResponseAPI::send("All retailers fetched successfully", $retailers, 200);
-    }// GetAllRetailers
+    } // GetAllRetailers
 
-    public static function AddRetailer($requestData) {
+    public static function AddRetailer($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -1160,10 +1215,11 @@ class ADMIN {
             'suburb' => $fields['suburb'],
             'city' => $fields['city'],
             'zip_code' => $fields['zip_code']
-        ], 201);//201 Created
-    }//AddRetailer
+        ], 201); //201 Created
+    } //AddRetailer
 
-    public static function EditRetailer($requestData) {
+    public static function EditRetailer($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -1249,9 +1305,10 @@ class ADMIN {
         $stmt->close();
 
         ResponseAPI::send("Retailer updated successfully", ['retailer_id' => $retailer_id], 200);
-    }//EditRetailer
+    } //EditRetailer
 
-    public static function getAllUsers($requestData) {
+    public static function getAllUsers($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -1302,9 +1359,10 @@ class ADMIN {
         }
 
         ResponseAPI::send("All users fetched successfully", $users, 200);
-    }// getAllUsers
+    } // getAllUsers
 
-    public static function AddNewStaff($requestData) {
+    public static function AddNewStaff($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -1397,16 +1455,17 @@ class ADMIN {
             'user_id' => $user_id,
             'apikey' => $apikey
         ], 201);
-    }//AddNewStaff
+    } //AddNewStaff
 
-    public static function editUser($requestData) {
+    public static function editUser($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401); //401 Unauthorized
         }
         Authorise::authenticate($requestData['apikey'], 'Admin');
 
         if (empty($requestData['id']) || !is_numeric($requestData['id'])) {
-            ResponseAPI::error("User ID is required and must be an integer.", null, 422);//422 Unprocessable Entity
+            ResponseAPI::error("User ID is required and must be an integer.", null, 422); //422 Unprocessable Entity
         }
         $user_id = (int)$requestData['id'];
 
@@ -1420,7 +1479,7 @@ class ADMIN {
         $stmt->bind_result($current_type);
         if (!$stmt->fetch()) {
             $stmt->close();
-            ResponseAPI::error("User does not exist.", null, 404);//404 Not Found
+            ResponseAPI::error("User does not exist.", null, 404); //404 Not Found
         }
         $stmt->close();
 
@@ -1571,9 +1630,10 @@ class ADMIN {
         }
 
         ResponseAPI::send("User updated successfully", ['user_id' => $user_id], 200);
-    }//editUser
+    } //editUser
 
-    public static function deleteUser($requestData) {
+    public static function deleteUser($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -1634,9 +1694,10 @@ class ADMIN {
         $stmt->close();
 
         ResponseAPI::send("User deleted successfully", ['user_id' => $user_id], 200);
-    }//deleteUser
+    } //deleteUser
 
-    public static function deleteRating($requestData) {
+    public static function deleteRating($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -1696,9 +1757,10 @@ class ADMIN {
             'user_id' => $user_id,
             'product_id' => $product_id
         ], 200);
-    }//deleteRating
+    } //deleteRating
 
-    public static function deleteRetailer($requestData) {
+    public static function deleteRetailer($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -1740,9 +1802,10 @@ class ADMIN {
         $stmt->close();
 
         ResponseAPI::send("Retailer deleted successfully", ['retailer_id' => $retailer_id], 200);
-    }//deleteRetailer
+    } //deleteRetailer
 
-    public static function editProduct($requestData) {
+    public static function editProduct($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -1840,11 +1903,13 @@ class ADMIN {
         $stmt->close();
 
         ResponseAPI::send("Product updated successfully", ['product_id' => $product_id], 200);
-    }//editProduct
+    } //editProduct
 }
 
-class CUSTOMER {
-    public static function getAllCategories($requestData) {
+class CUSTOMER
+{
+    public static function getAllCategories($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -1866,9 +1931,10 @@ class CUSTOMER {
         }
 
         ResponseAPI::send("All categories fetched successfully", $categories, 200); //200 OK
-    }// getAllCategories
+    } // getAllCategories
 
-    public static function getAllProducts($requestData) {
+    public static function getAllProducts($requestData)
+    {
         // Only customers can use this endpoint - customers are routed here by the switch statement
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
@@ -1952,27 +2018,27 @@ class CUSTOMER {
         // Sorting
         $order = "";
         switch ($sort_by) {
-        case "price_asc":
-            $order = "ORDER BY (sp.cheapest_price IS NULL), sp.cheapest_price ASC";
-            break;
-        case "price_desc":
-            $order = "ORDER BY (sp.cheapest_price IS NULL), sp.cheapest_price DESC";
-            break;
-        case "name_asc":
-            $order = "ORDER BY p.name ASC";
-            break;
-        case "name_desc":
-            $order = "ORDER BY p.name DESC";
-            break;
-        case "rating_asc":
-            $order = "ORDER BY (AVG(r.score) IS NULL), ROUND(AVG(r.score), 1) ASC";
-            break;
-        case "rating_desc":
-            $order = "ORDER BY (AVG(r.score) IS NULL), ROUND(AVG(r.score), 1) DESC";
-            break;
-        default:
-            $order = "ORDER BY p.name ASC";
-    }
+            case "price_asc":
+                $order = "ORDER BY (sp.cheapest_price IS NULL), sp.cheapest_price ASC";
+                break;
+            case "price_desc":
+                $order = "ORDER BY (sp.cheapest_price IS NULL), sp.cheapest_price DESC";
+                break;
+            case "name_asc":
+                $order = "ORDER BY p.name ASC";
+                break;
+            case "name_desc":
+                $order = "ORDER BY p.name DESC";
+                break;
+            case "rating_asc":
+                $order = "ORDER BY (AVG(r.score) IS NULL), ROUND(AVG(r.score), 1) ASC";
+                break;
+            case "rating_desc":
+                $order = "ORDER BY (AVG(r.score) IS NULL), ROUND(AVG(r.score), 1) DESC";
+                break;
+            default:
+                $order = "ORDER BY p.name ASC";
+        }
 
         // Build final SQL
         if (!empty($where)) {
@@ -2013,9 +2079,10 @@ class CUSTOMER {
         $stmt->close();
 
         ResponseAPI::send("All products fetched successfully", $products, 200);
-    }// getAllProducts
+    } // getAllProducts
 
-    public static function getMyDetails($requestData) {
+    public static function getMyDetails($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -2054,9 +2121,10 @@ class CUSTOMER {
         // Merge and return
         $details = array_merge($user, $customer);
         ResponseAPI::send("Customer details fetched successfully", $details, 200); //200 OK
-    }//getMyDetails
+    } //getMyDetails
 
-    public static function updateMyDetails($requestData) {
+    public static function updateMyDetails($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -2191,9 +2259,10 @@ class CUSTOMER {
         }
 
         ResponseAPI::send("Customer details updated successfully", ['user_id' => $user_id], 200);
-    }//updateMyDetails
+    } //updateMyDetails
 
-    public static function getMyReviews($requestData) {
+    public static function getMyReviews($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -2264,9 +2333,10 @@ class CUSTOMER {
         $stmt->close();
 
         ResponseAPI::send("My reviews fetched successfully", $reviews, 200);
-    }// getMyReviews
+    } // getMyReviews
 
-    public static function writeReview($requestData) {
+    public static function writeReview($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -2353,9 +2423,10 @@ class CUSTOMER {
                 'product_id' => $product_id
             ], 201);
         }
-    }// writeReview
+    } // writeReview
 
-    public static function editMyReview($requestData) {
+    public static function editMyReview($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -2450,9 +2521,10 @@ class CUSTOMER {
             'customer_id' => $user_id,
             'product_id' => isset($product_id) ? $product_id : null
         ], 200);
-    }// editMyReview
+    } // editMyReview
 
-    public static function deleteMyReview($requestData) {
+    public static function deleteMyReview($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -2515,9 +2587,10 @@ class CUSTOMER {
             'customer_id' => $user_id,
             'product_id' => $product_id
         ], 200);
-    }// deleteMyReview
+    } // deleteMyReview
 
-    public static function getProductDetails($requestData) {
+    public static function getProductDetails($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -2688,9 +2761,10 @@ class CUSTOMER {
         } elseif ($returnType === 'Reviews') {
             ResponseAPI::send("Reviews fetched successfully", isset($reviews) ? $reviews : [], 200);
         }
-    }// getProductDetails
+    } // getProductDetails
 
-    public static function addTowatchlist($requestData) {
+    public static function addTowatchlist($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -2747,9 +2821,10 @@ class CUSTOMER {
         $stmt->close();
 
         ResponseAPI::send("Product added to watchlist successfully", ['product_id' => $product_id], 201);
-    }//addTowatchlist
+    } //addTowatchlist
 
-    public static function removeFromwatchlist($requestData) {
+    public static function removeFromwatchlist($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -2797,9 +2872,10 @@ class CUSTOMER {
         }
 
         ResponseAPI::send("Product removed from watchlist successfully", ['product_id' => $product_id], 200);
-    }//removeFromwatchlist
+    } //removeFromwatchlist
 
-    public static function getMywatchlist($requestData) {
+    public static function getMywatchlist($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -2868,9 +2944,10 @@ class CUSTOMER {
         $stmt->close();
 
         ResponseAPI::send("watchlist fetched successfully", $products, 200);
-    }//getMywatchlist
+    } //getMywatchlist
 
-    public static function getReviewStats($requestData) {
+    public static function getReviewStats($requestData)
+    {
         if (empty($requestData['apikey'])) {
             ResponseAPI::error("API key is required to authenticate user", null, 401);
         }
@@ -2917,28 +2994,28 @@ class CUSTOMER {
 
         // 1b. Count of products by average review (binned, 1.0-1.9, 2.0-2.9, ..., 5.0)
         if ($returnType === 'All' || $returnType === 'starAverage_Counts' || $returnType === 'pie_percentages') {
-        $sql = "
+            $sql = "
             SELECT 
                 ROUND(AVG(r.score), 1) AS avg_rating
             FROM Product p
             JOIN Rating r ON r.product_id = p.id
             GROUP BY p.id
         ";
-        $result = $conn->query($sql);
-        $starAverage_Counts = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
-        if ($result) {
-            while ($row = $result->fetch_assoc()) {
-                if ($row && isset($row['avg_rating']) && $row['avg_rating'] !== null) {
-                    $avg = (float)$row['avg_rating'];
-                    if ($avg >= 1.0 && $avg < 2.0) $starAverage_Counts[1]++;
-                    else if ($avg >= 2.0 && $avg < 3.0) $starAverage_Counts[2]++;
-                    else if ($avg >= 3.0 && $avg < 4.0) $starAverage_Counts[3]++;
-                    else if ($avg >= 4.0 && $avg < 5.0) $starAverage_Counts[4]++;
-                    else if ($avg == 5.0) $starAverage_Counts[5]++;
+            $result = $conn->query($sql);
+            $starAverage_Counts = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
+            if ($result) {
+                while ($row = $result->fetch_assoc()) {
+                    if ($row && isset($row['avg_rating']) && $row['avg_rating'] !== null) {
+                        $avg = (float)$row['avg_rating'];
+                        if ($avg >= 1.0 && $avg < 2.0) $starAverage_Counts[1]++;
+                        else if ($avg >= 2.0 && $avg < 3.0) $starAverage_Counts[2]++;
+                        else if ($avg >= 3.0 && $avg < 4.0) $starAverage_Counts[3]++;
+                        else if ($avg >= 4.0 && $avg < 5.0) $starAverage_Counts[4]++;
+                        else if ($avg == 5.0) $starAverage_Counts[5]++;
+                    }
                 }
             }
         }
-    }
 
         // 2. Total number of reviews
         if ($returnType === 'All' || $returnType === 'total_reviews') {
@@ -2953,13 +3030,13 @@ class CUSTOMER {
 
         // 3. Pie chart percentages for each star rating (1-5)
         if ($returnType === 'All' || $returnType === 'pie_percentages') {
-        $totalProductsWithReviews = array_sum($starAverage_Counts);
-        if ($totalProductsWithReviews > 0) {
-            foreach ($starAverage_Counts as $star => $count) {
-                $piePercentages[$star] = round(($count / $totalProductsWithReviews) * 100, 1);
+            $totalProductsWithReviews = array_sum($starAverage_Counts);
+            if ($totalProductsWithReviews > 0) {
+                foreach ($starAverage_Counts as $star => $count) {
+                    $piePercentages[$star] = round(($count / $totalProductsWithReviews) * 100, 1);
+                }
             }
         }
-    }
 
         // 4. Average review rating across all products (float, using average of product averages)
         if ($returnType === 'All' || $returnType === 'average_review') {
@@ -3144,19 +3221,19 @@ class CUSTOMER {
 
         // 11. Products With No Reviews
         if ($returnType === 'All' || $returnType === 'products_no_reviews') {
-        $sql = "
+            $sql = "
             SELECT COUNT(*) AS count
             FROM Product p
             LEFT JOIN Rating r ON r.product_id = p.id
             WHERE r.id IS NULL
         ";
-        $result = $conn->query($sql);
-        if ($result && ($row = $result->fetch_assoc()) && isset($row['count'])) {
-            $productsNoReviews = (int)$row['count'];
-        } else {
-            $productsNoReviews = 0;
+            $result = $conn->query($sql);
+            if ($result && ($row = $result->fetch_assoc()) && isset($row['count'])) {
+                $productsNoReviews = (int)$row['count'];
+            } else {
+                $productsNoReviews = 0;
+            }
         }
-    }
 
         // 12. Distribution of Review Lengths
         if ($returnType === 'All' || $returnType === 'review_length_stats') {
@@ -3292,7 +3369,6 @@ class CUSTOMER {
 
         ResponseAPI::send("Review statistics fetched successfully", $data, 200);
     }
-
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -3423,7 +3499,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'AddNewStaff':
                 ADMIN::AddNewStaff($requestData);
                 break;
-            
+
             case 'editUser':
                 ADMIN::editUser($requestData);
                 break;
@@ -3462,7 +3538,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ResponseAPI::error("Invalid API key or User not found", null, 401);
                 }
                 $stmt->close();
+                // Check user type
+                if (empty($requestData['apikey'])) {
+                    ResponseAPI::error("API key is required to authenticate user", null, 401);
+                }
+                // Get user type from API key
+                $db = Database::getInstance();
+                $conn = $db->getConnection();
+                $stmt = $conn->prepare('SELECT user_type FROM User WHERE apikey=?');
+                $stmt->bind_param('s', $requestData['apikey']);
+                $stmt->execute();
+                $stmt->bind_result($user_type);
+                if (!$stmt->fetch()) {
+                    $stmt->close();
+                    ResponseAPI::error("Invalid API key or User not found", null, 401);
+                }
+                $stmt->close();
 
+                if (strcasecmp($user_type, 'Admin') === 0) {
+                    ADMIN::getAllProducts($requestData);
+                } else if (strcasecmp($user_type, 'Customer') === 0) {
+                    CUSTOMER::getAllProducts($requestData);
+                } else {
+                    ResponseAPI::error("Unknown user type", null, 403); //403 Forbidden
+                }
+                break;
                 if (strcasecmp($user_type, 'Admin') === 0) {
                     ADMIN::getAllProducts($requestData);
                 } else if (strcasecmp($user_type, 'Customer') === 0) {
@@ -3492,15 +3592,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'writeReview':
                 CUSTOMER::writeReview($requestData);
                 break;
-            
+
             case 'editMyReview':
                 CUSTOMER::editMyReview($requestData);
                 break;
 
             case 'deleteMyReview':
                 CUSTOMER::deleteMyReview($requestData);
-                break;            
-                
+                break;
+
             case 'getProductDetails':
                 CUSTOMER::getProductDetails($requestData);
                 break;
@@ -3532,4 +3632,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 //UP TO HERE WORKS IS UPDATED
-?>
