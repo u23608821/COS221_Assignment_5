@@ -6,10 +6,7 @@ headers.append("Content-Type", "application/json");
 
 // DOM Elements - Only include elements that exist in highest_rated.html
 const productsContainer = document.getElementById("products-list");
-const themeToggle = document.getElementById("themeToggle");
-const themeIcon = document.getElementById("themeIcon");
-const menuToggle = document.getElementById("menuToggle");
-const navLinks = document.getElementById("navLinks");
+
 
 
 let currentApiKey =
