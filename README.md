@@ -1,11 +1,8 @@
-# COS221_Assignment_5
-
-
-Connor likes doing README files so he can do that (Edit this as you like).
+# COS221 Assignment 5
 
 ## Getting started
 
-**Please make sure that you have signed into github in your vs code using your tuks account before doing the following and if you have not used github before and you are using Windows, please ensure you install git first**
+**Please make sure that you have signed into GitHub in your Visual Studio Code using your Tuks account before doing the following. Please ensure that Git is installed on your system first**
 
 1. Cloning the repository:
    - Open your terminal in whatever file directory on you computer you want to save this reposity to and paste the following:
@@ -40,4 +37,70 @@ Connor likes doing README files so he can do that (Edit this as you like).
 - When you create a new branch, please pull the dev branch into your branch before you start working on anything. This helps so that conflicts are less frequent and we are all working with the same file structure.
 - Please don't work in somebody else's branch if you are not going to clearly communicate with them. It is reccommended that each person has their own branch. 
 - If you have merged your branch and no longer need your branch, please delete it so that we don't have random floating branches
+
+
+## Prelim Usage
+
+**API**
+- Clone Repo
+```
+git clone https://github.com/u23608821/COS221_Assignment_5
+```
+- Swap to API branch
+```
+git checkout API
+```
+- Open a terminal in root
+- Make run.sh executable
+```
+chmod +x run.sh
+```
+- Run temporary server and API
+```
+./run.sh
+```
+- Use postman (or browser) to use API
+
+**API Commands**
+- Post to `http://localhost:3000/api`
+- Register
+```json
+{
+  "type": "Register",
+  "name": "name",
+  "surname": "surname",
+  "phone_number": "123 456 7890",
+  "email": "email@gmail.com",
+  "password":" P@s5w0rD",
+  "street_number" : "123",
+  "street_name": "street name",
+  "suburb": "suburb",
+  "city": "city",
+  "zip_code": "456",
+  "user_type": "type", //Customer or Admin
+  //Customer
+  "profile_picture": "path.path",
+  //Admin
+  "salary": 8000,
+  "Position": "Manager"
+}
+```
+
+- Login
+```json
+{
+  "type": "Login",
+  "email": "emailad@gmail.com",
+  "password":" P@s5w0rD" 
+}
+```
+
+- TestResponse
+```json
+{
+  "type": "Test",
+  "hello": "hello",
+  "world": "world"
+}
+```
 
