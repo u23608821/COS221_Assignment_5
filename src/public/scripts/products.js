@@ -102,7 +102,7 @@ async function loadProducts(searchTerm = '', category = '', sortBy = '', priceRa
     try {
         productsContainer.innerHTML = '<div class="loading-spinner">Loading products...</div>';
 
-        // Clean category param
+        // Clean category param - only send category if not "All Categories"
         category = category === "__all__" ? "" : category;
 
         // Determine if we need to filter on client-side
@@ -124,9 +124,9 @@ async function loadProducts(searchTerm = '', category = '', sortBy = '', priceRa
             body: JSON.stringify({
                 type: 'getAllProducts',
                 apikey: currentApiKey,
-                name: searchTerm,
-                category: category,
-                sort_by: sortBy
+                name: searchTerm || null,
+                category: category || null,
+                sort_by: sortBy || null
             })
         });
 
@@ -136,7 +136,7 @@ async function loadProducts(searchTerm = '', category = '', sortBy = '', priceRa
             let products = result.data;
 
             // Apply price filtering manually if needed
-            if (filteredClientSide) {
+            if (filteredClientSide && priceRange) {
                 products = products.filter(p =>
                     p.cheapest_price !== null &&
                     p.cheapest_price >= localFilterBy.minPrice &&
@@ -272,6 +272,7 @@ searchInput.addEventListener('keypress', function (e) {
     if (e.key === 'Enter') performSearch();
 });
 
+// Attach event listeners for filters - don't add duplicate listeners
 categoryFilter.addEventListener('change', performSearch);
 sortFilter.addEventListener('change', performSearch);
 priceFilter.addEventListener('change', performSearch);
@@ -281,7 +282,14 @@ function performSearch() {
     const category = categoryFilter.value;
     const sortBy = getSortValue(sortFilter.value);
     const priceRange = priceFilter.value;
-
+    
+    console.log('Filtering products by:', {
+        searchTerm: searchTerm || 'None',
+        category: category || 'All',
+        sortBy: sortBy || 'Default',
+        priceRange: priceRange || 'Any'
+    });
+    
     loadProducts(searchTerm, category, sortBy, priceRange);
 }
 
@@ -328,12 +336,3 @@ window.addEventListener("click", function (e) {
 });
 
 updateIcon();
-
-categoryFilter.addEventListener('change', () => {
-    if (categoryFilter.value === '__all__') {
-        searchInput.value = '';
-        sortFilter.selectedIndex = 0;
-        priceFilter.selectedIndex = 0;
-    }
-    performSearch();
-});
