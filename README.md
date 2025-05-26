@@ -3,6 +3,7 @@
 <p> A next-generation product price comparison website to track price fluctuations across websites. </p>
 
 ## Documentation
+* [Functional Requirements]()
 * [ER](https://github.com/u23608821/COS221_Assignment_5/blob/master/The%20Primary%20keys%20(E)ER_V3.drawio.pdf)
 * [EERD]()
 * [API](https://github.com/u23608821/COS221_Assignment_5/blob/master/API_Documentation.md)
