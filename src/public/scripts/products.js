@@ -168,56 +168,63 @@ async function displayProducts(products) {
     for (const product of products) {
         let averageRating = product.average_rating;
         let reviewCount = 0;
+try {
+    const detailResponse = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            type: 'getProductDetails',
+            apikey: currentApiKey,
+            product_id: product.product_id,
+            return: "Reviews"
+        })
+    });
 
-        try {
-            const detailResponse = await fetch(API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    type: 'getProductDetails',
-                    apikey: currentApiKey,
-                    product_id: product.product_id,
-                    return: "Reviews"
-                })
-            });
+       const detailResult = await detailResponse.json();
 
-            const detailResult = await detailResponse.json();
-      if (detailResult.status === 'success' && detailResult.data) {
-    const reviews = Array.isArray(detailResult.data.reviews) ? detailResult.data.reviews : [];
-    reviewCount = reviews.length;
-    averageRating = detailResult.data.average_review ?? null;
-} else {
-    console.warn(`No data for product ID ${product.product_id}`, detailResult);
-}
-
-        } catch (err) {
-            console.warn(`Details failed for product ID ${product.product_id}`, err);
+    if (detailResult.status === 'success') {
+        const reviews = Array.isArray(detailResult.data) ? detailResult.data : [];
+        reviewCount = reviews.length;
+        // Optional: estimate average rating if needed
+        if (reviews.length > 0) {
+            const total = reviews.reduce((sum, r) => sum + r.score, 0);
+            averageRating = total / reviews.length;
+        } else {
+            averageRating = null;
         }
+    } else {
+        console.warn(`No reviews for product ID ${product.product_id}`, detailResult);
+    }
+} catch (err) {
+    console.warn(`Details failed for product ID ${product.product_id}`, err);
+}
 
         const productBox = document.createElement('div');
         productBox.className = 'product-box';
 
-        let starsHtml = '';
-        if (averageRating) {
-            const fullStars = Math.floor(averageRating);
-            const hasHalfStar = averageRating % 1 >= 0.5;
+   let starsHtml = '';
+if (averageRating !== null) {
+    const fullStars = Math.floor(averageRating);
+    const hasHalfStar = averageRating % 1 >= 0.25 && averageRating % 1 < 0.75;
+    const totalStars = hasHalfStar ? fullStars + 1 : fullStars;
 
-            for (let i = 0; i < 5; i++) {
-                if (i < fullStars) {
-                    starsHtml += '<span class="material-symbols-outlined">star</span>';
-                } else if (i === fullStars && hasHalfStar) {
-                    starsHtml += '<span class="material-symbols-outlined">star_half</span>';
-                } else {
-                    starsHtml += '<span class="material-symbols-outlined">star</span>';
-                }
-            }
+    for (let i = 0; i < 5; i++) {
+        if (i < fullStars) {
+            starsHtml += '<span class="material-symbols-outlined">star</span>';
+        } else if (i === fullStars && hasHalfStar) {
+            starsHtml += '<span class="material-symbols-outlined">star_half</span>';
         } else {
-            for (let i = 0; i < 5; i++) {
-                starsHtml += '<span class="material-symbols-outlined">star</span>';
-            }
+            starsHtml += '<span class="material-symbols-outlined">star_border</span>';
         }
+    }
+} else {
+    // If no rating, show all empty
+    for (let i = 0; i < 5; i++) {
+        starsHtml += '<span class="material-symbols-outlined">star_border</span>';
+    }
+}
 
         productBox.innerHTML = `
             <div class="product-image">
@@ -249,13 +256,15 @@ async function displayProducts(products) {
     }
 
     // Add click events
-    document.querySelectorAll('.compare-btn').forEach(button => {
-        button.addEventListener('click', function () {
-            const productId = this.getAttribute('data-product-id');
-            console.log('Compare prices for product:', productId);
-            // Redirect or open modal here if needed
-        });
+ document.querySelectorAll('.compare-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const productId = this.getAttribute('data-product-id');
+        // Store the product ID in session storage
+        sessionStorage.setItem('currentProductId', productId);
+        // Navigate to view page
+        window.location.href = '../html/view.html';
     });
+});
 }
 
 // Event listeners for search and filters
