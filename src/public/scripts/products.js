@@ -1,6 +1,5 @@
 // Constants
 const API_URL = 'http://localhost:8000/api.php';
-const currentApiKey = 'c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef';
 
 // DOM Elements
 const accountBtn = document.getElementById("accountBtn");
@@ -15,6 +14,11 @@ const categoryFilter = document.querySelector(".filter-select:nth-of-type(1)");
 const sortFilter = document.querySelector(".filter-select:nth-of-type(2)");
 const priceFilter = document.querySelector(".filter-select:nth-of-type(3)");
 const productsContainer = document.getElementById("products-list");
+
+let currentApiKey =
+    localStorage.getItem('apikey') ||
+    sessionStorage.getItem('apikey') ||
+    getCookie('apikey');
 
 // Helper functions
 function setCookie(name, value, days) {
