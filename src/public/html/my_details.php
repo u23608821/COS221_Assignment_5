@@ -63,7 +63,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
     <div class="container">
       <div class="nav-left">
         <a href="../html/products.html" class="logo">
-          <img src="https://URL_HERE.co.za/" alt="Logo Placeholder" />
+          <img src="https://wheatley.cs.up.ac.za/u24634434/COS221/Images/Logo.png" alt="Logo Placeholder" />
         </a>
         <span class="menu-toggle" id="menuToggle">☰</span>
         <ul class="nav-links" id="navLinks">
