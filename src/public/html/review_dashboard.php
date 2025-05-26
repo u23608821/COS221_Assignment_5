@@ -112,7 +112,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
       <h2 class="tile-header">Review Aggregate Data</h2>
       <div class="aggregate-content">
         <div class="aggregate-number">
-          <span class="big-number">329</span>
+          <span class="big-number">0</span>
           <span class="aggregate-label">total reviews</span>
         </div>
         
@@ -125,7 +125,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
             <span class="material-symbols-outlined">star_half</span>
           </div>
           <div class="rating-text">
-            <span class="rating-value">4.2</span>
+            <span class="rating-value">0.0</span>
             <span class="aggregate-label">average rating</span>
           </div>
         </div>
@@ -140,7 +140,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
               <span class="material-symbols-outlined">star</span>
               <span class="material-symbols-outlined">star</span>
             </div>
-            <span class="rating-value">5.0</span>
+            <span class="rating-value">0.0</span>
           </div>
           
           <div class="range-item">
@@ -152,7 +152,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
               <span class="material-symbols-outlined">grade</span>
               <span class="material-symbols-outlined">grade</span>
             </div>
-            <span class="rating-value">1.5</span>
+            <span class="rating-value">0.0</span>
           </div>
         </div>
       </div>
@@ -171,6 +171,14 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
       </button>  
     </div>
   </footer>
+    <script>
+    // Set global variables for authentication
+    var WHEATLEY_USERNAME = "<?php echo $username; ?>";
+    var WHEATLEY_PASSWORD = "<?php echo $password; ?>";
+    console.log('Credentials loaded from PHP: ',
+      WHEATLEY_USERNAME ? 'Username found' : 'Username missing',
+      WHEATLEY_PASSWORD ? 'Password found' : 'Password missing');
+  </script>
 
    <script>
     // Set global variables for authentication
