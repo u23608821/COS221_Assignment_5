@@ -170,8 +170,94 @@ class Authorise
                 ResponseAPI::error("User type ({$user['user_type']}) not allowed to use this request", null, 403);
             }
         }
-    } //authenticate
-} //Authorise class
+    }//authenticate
+
+    public static function verifyCaptcha($token, $secretKey) {
+        // Verifies the Google reCAPTCHA token that is used on the client side (for Register and Login)
+        $url = 'https://www.google.com/recaptcha/api/siteverify';
+        $data = [
+            'secret' => $secretKey,
+            'response' => $token,
+            'remoteip' => $_SERVER['REMOTE_ADDR']
+        ];
+        $options = [
+            'http' => [
+                'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+                'method'  => 'POST',
+                'content' => http_build_query($data),
+                'timeout' => 5 // Timeout in seconds
+            ]
+        ];
+        $context  = stream_context_create($options);
+        $result = file_get_contents($url, false, $context);
+        if ($result === FALSE) {
+            return false;
+        }
+
+        $response = json_decode($result, true);
+        return ($response['success'] === true);
+
+    }//verifyCaptcha
+
+    public static function checkIfAPIKeyExists($apikey) {
+        //Checks if the API key exists in the database
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare('SELECT name FROM User WHERE apikey=?');
+        $stmt->bind_param('s', $apikey);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return ($result->num_rows > 0);
+    }//checkIfAPIKeyExists
+
+    public static function isRateLimitedDB($pdo, $ip, $endpoint, $windowSeconds = 60, $limit = 10) {
+        //ip_address: The IP address of the user
+        //endpoint: The endpoint being accessed
+        //request_count: The number of requests made by the user
+        //window_start: The start time of the current window
+        //last_request: The time of the last request made by the user
+
+        //Get the current request count and window start time for this IP and endpoint
+        $now = time();
+        $hexIp = bin2hex($ip);
+
+        // SELECT
+        $stmt = $pdo->prepare("SELECT request_count, window_start FROM rate_limits WHERE ip_address = ? AND endpoint = ?");
+        $stmt->bind_param("ss", $hexIp, $endpoint);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result ? $result->fetch_assoc() : null;
+        $stmt->close();
+
+        if ($row) {
+            $window_start = strtotime($row['window_start']);
+            if ($now - $window_start < $windowSeconds) {
+                if ($row['request_count'] >= $limit) {
+                    return true; // Rate limit exceeded
+                }
+                // UPDATE (ip and request combination found)
+                $stmt = $pdo->prepare("UPDATE rate_limits SET request_count = request_count + 1, last_request = NOW() WHERE ip_address = ? AND endpoint = ?");
+                $stmt->bind_param("ss", $hexIp, $endpoint);
+                $stmt->execute();
+                $stmt->close();
+            } else {
+                // RESET (ip and request combination found but window has expired)
+                $stmt = $pdo->prepare("UPDATE rate_limits SET request_count = 1, window_start = NOW(), last_request = NOW() WHERE ip_address = ? AND endpoint = ?");
+                $stmt->bind_param("ss", $hexIp, $endpoint);
+                $stmt->execute();
+                $stmt->close();
+            }
+        } else {
+            // INSERT // (ip and request combination not found)
+            $stmt = $pdo->prepare("INSERT INTO rate_limits (ip_address, endpoint, request_count, window_start, last_request) VALUES (?, ?, 1, NOW(), NOW())");
+            $stmt->bind_param("ss", $hexIp, $endpoint);
+            $stmt->execute();
+            $stmt->close();
+        }
+        return false;
+    }//isRateLimitedDB
+
+}//Authorise class
 
 class Tester
 {
@@ -279,8 +365,20 @@ class USER
         return true;
     }
 
-    public static function register($requestData)
-    {
+    public static function register($requestData) {
+        //Verifuing the reCAPTCHA token
+        //https://developers.google.com/recaptcha/docs/verify 
+        if (empty($requestData['recaptcha_token'])) {
+            ResponseAPI::error("recaptcha_token is required", null, 401); //401 Unauthorized
+        }
+        $secretKey = getenv('RECAPTCHA_SECRET_KEY');
+        if (empty($secretKey)) {
+            ResponseAPI::error("recaptcha_secret_key is not set in environment variables", null, 500); //500 Internal Server Error
+        }
+        if (!Authorise::verifyCaptcha($requestData['recaptcha_token'], $secretKey)) {
+            ResponseAPI::error("reCAPTCHA verification failed", null, 401); //401 Unauthorized
+        }
+
         $errors = [];
         $validFields = [];
 
@@ -295,9 +393,18 @@ class USER
                 }
             }
         }
+            if (isset(self::$validationRules[$field])) {
+                $validationResult = self::validateField($field, $value);
+                if ($validationResult !== true) {
+                    $errors[$field] = $validationResult;
+                } else {
+                    $validFields[$field] = trim($value);
+                }
+            }
+        }
 
-        // Check required fields are present
-        foreach (self::$validationRules as $field => $rule) {
+            // Check required fields are present
+            foreach (self::$validationRules as $field => $rule) {
             if ($rule['required'] && !array_key_exists($field, $requestData)) {
                 $errors[$field] = "Error: The $field field is required.";
             }
@@ -325,7 +432,9 @@ class USER
         $salt = bin2hex(random_bytes(16));
         $passwordWithSalt = $validFields['password'] . $salt;
         $hashedPassword = password_hash($passwordWithSalt, PASSWORD_DEFAULT);
-        $apikey = bin2hex(random_bytes(32));
+        do {
+            $apikey = bin2hex(random_bytes(32));
+        } while (Authorise::checkIfAPIKeyExists($apikey) === true);
 
         $validFields['apikey'] = $apikey;
         $validFields['salt'] = $salt;
@@ -384,8 +493,20 @@ class USER
         ], 201); //201 Created
     } //register
 
-    public static function login($requestData)
-    {
+    public static function login($requestData) {
+        //Verifuing the reCAPTCHA token
+        //https://developers.google.com/recaptcha/docs/verify 
+        if (empty($requestData['recaptcha_token'])) {
+            ResponseAPI::error("recaptcha_token is required", null, 401); //401 Unauthorized
+        }
+        $secretKey = getenv('RECAPTCHA_SECRET_KEY');
+        if (empty($secretKey)) {
+            ResponseAPI::error("recaptcha_secret_key is not set in environment variables", null, 500); //500 Internal Server Error
+        }
+        if (!Authorise::verifyCaptcha($requestData['recaptcha_token'], $secretKey)) {
+            ResponseAPI::error("reCAPTCHA verification failed", null, 401); //401 Unauthorized
+        }
+
         $errors = [];
         $validFields = [];
 
@@ -531,7 +652,9 @@ class ADMIN
         $salt = bin2hex(random_bytes(16));
         $passwordWithSalt = $fields['password'] . $salt;
         $hashedPassword = password_hash($passwordWithSalt, PASSWORD_DEFAULT);
-        $apikey = bin2hex(random_bytes(32));
+        do {
+            $apikey = bin2hex(random_bytes(32));
+        } while (Authorise::checkIfAPIKeyExists($apikey) === true);
 
         // Insert into User table
         $stmt = $conn->prepare("INSERT INTO User (name, surname, email, user_type, password, salt, apikey) VALUES (?, ?, ?, ?, ?, ?, ?)");
@@ -1291,7 +1414,9 @@ class ADMIN
         $salt = bin2hex(random_bytes(16));
         $passwordWithSalt = $fields['password'] . $salt;
         $hashedPassword = password_hash($passwordWithSalt, PASSWORD_DEFAULT);
-        $apikey = bin2hex(random_bytes(32));
+        do {
+            $apikey = bin2hex(random_bytes(32));
+        } while (Authorise::checkIfAPIKeyExists($apikey) === true);
 
         // Insert into User table
         $stmt = $conn->prepare("INSERT INTO User (name, surname, email, phone_number, user_type, password, salt, apikey) VALUES (?, ?, ?, ?, 'Admin', ?, ?, ?)");
@@ -3232,7 +3357,6 @@ class CUSTOMER
     }
 }
 
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $requestData = json_decode(file_get_contents('php://input'), true);
 
@@ -3246,7 +3370,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         $db = Database::getInstance();
+        $conn = $db->getConnection();
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $type = $requestData['type'];
 
+        // Set rate limits per endpoint (requests per X seconds)
+        $rateLimits = [
+            //Expensive
+            'getReviewStats_All' => [3, 60], // 3 per minute for all stats
+            'getReviewStats'     => [10, 60], // 10 per minute for single stat
+            'Register'           => [5, 60],
+            'Login'              => [5, 60],
+            'QuickAddUser'       => [5, 60],
+            'QuickEditProductPrice' => [10, 60],
+            'AddNewProduct'      => [5, 60],
+            'deleteProduct'      => [5, 60],
+            'AddRetailer'        => [5, 60],
+            'EditRetailer'       => [10, 60],
+            'deleteRetailer'     => [5, 60],
+            'AddNewStaff'        => [5, 60],
+            'editUser'           => [10, 60],
+            'deleteUser'         => [5, 60],
+            'deleteRating'       => [10, 60],
+
+            //Medium
+            'getAllProducts'     => [15, 60],
+            'getAllUsers'        => [10, 60],
+            'getAllCategories'   => [20, 60],
+            'AdminRecentReviews' => [10, 60],
+
+            //Customer endpoints
+            'getMyDetails'       => [20, 60],
+            'updateMyDetails'    => [10, 60],
+            'getMyReviews'       => [15, 60],
+            'writeReview'        => [10, 60],
+            'editMyReview'       => [10, 60],
+            'deleteMyReview'     => [10, 60],
+            'getProductDetails'  => [15, 60],
+            'addToWatchlist'     => [10, 60],
+            'removeFromWatchlist'=> [10, 60],
+            'getMyWatchlist'     => [15, 60],
+
+            //Test endpoint
+            'Test'               => [30, 60],
+        ];
+
+        // Determine the correct rate limit key for getReviewStats
+        if ($type === 'getReviewStats') {
+            $returnType = isset($requestData['return']) ? $requestData['return'] : 'All';
+            $rateKey = $returnType === 'All' ? 'getReviewStats_All' : 'getReviewStats';
+        } else {
+            $rateKey = $type;
+        }
+
+        // Default to 10/min if not specified
+        $limit = isset($rateLimits[$rateKey]) ? $rateLimits[$rateKey][0] : 10;
+        $window = isset($rateLimits[$rateKey]) ? $rateLimits[$rateKey][1] : 60;
+
+        //Apply rate limiting
+        if (Authorise::isRateLimitedDB($conn, $ip, $rateKey, $window, $limit)) {
+            ResponseAPI::error("Rate limit exceeded. Please try again later.", null, 429);
+        }
+        
         switch ($requestData['type']) {
             case 'Test':
                 Tester::handleTest($requestData);
@@ -3339,7 +3524,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ResponseAPI::error("Invalid API key or User not found", null, 401);
                 }
                 $stmt->close();
+                // Check user type
+                if (empty($requestData['apikey'])) {
+                    ResponseAPI::error("API key is required to authenticate user", null, 401);
+                }
+                // Get user type from API key
+                $db = Database::getInstance();
+                $conn = $db->getConnection();
+                $stmt = $conn->prepare('SELECT user_type FROM User WHERE apikey=?');
+                $stmt->bind_param('s', $requestData['apikey']);
+                $stmt->execute();
+                $stmt->bind_result($user_type);
+                if (!$stmt->fetch()) {
+                    $stmt->close();
+                    ResponseAPI::error("Invalid API key or User not found", null, 401);
+                }
+                $stmt->close();
 
+                if (strcasecmp($user_type, 'Admin') === 0) {
+                    ADMIN::getAllProducts($requestData);
+                } else if (strcasecmp($user_type, 'Customer') === 0) {
+                    CUSTOMER::getAllProducts($requestData);
+                } else {
+                    ResponseAPI::error("Unknown user type", null, 403); //403 Forbidden
+                }
+                break;
                 if (strcasecmp($user_type, 'Admin') === 0) {
                     ADMIN::getAllProducts($requestData);
                 } else if (strcasecmp($user_type, 'Customer') === 0) {
@@ -3397,8 +3606,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'getReviewStats':
                 CUSTOMER::getReviewStats($requestData);
                 break;
-
-            default:
+                
+            default:                
                 ResponseAPI::error("Invalid request type", null, 400);
         }
     } catch (Exception $e) {

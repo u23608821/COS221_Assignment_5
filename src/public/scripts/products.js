@@ -336,3 +336,12 @@ window.addEventListener("click", function (e) {
 });
 
 updateIcon();
+
+categoryFilter.addEventListener('change', () => {
+    if (categoryFilter.value === '__all__') {
+        searchInput.value = '';
+        sortFilter.selectedIndex = 0;
+        priceFilter.selectedIndex = 0;
+    }
+    performSearch();
+});
