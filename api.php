@@ -29,25 +29,7 @@
 
 */
 
-/* HTTP Status Codes
-200 OK
-201 Created
-204 No Content (Request was successful but no content to return)
-400 Bad Request
-401 Unauthorized
-403 Forbidden
-404 Not Found
-405 Method Not Allowed
-409 Conflict 
-422 Unprocessable Entity
-500 Internal Server Error
-501 Not Implemented
-503 Service Unavailable
-
-*/
-
 function loadEnv($path)
-//Function that loads the environment variables from the .env file
 //Function that loads the environment variables from the .env file
 {
     if (!file_exists($path))
@@ -136,21 +118,15 @@ class ResponseAPI
         $response = [
             'status' => $code < 400 ? 'success' : 'error',
             'timestamp' => time() * 1000,
-            'code' => $code,
-            'status' => $code < 400 ? 'success' : 'error',
-            'timestamp' => time() * 1000,
             'code' => $code
         ];
         if ($message !== null) {
             $response['message'] = $message;
         }
         if ($data !== null && $data !== []) {
-        }
-        if ($data !== null && $data !== []) {
             $response['data'] = $data;
         }
         echo json_encode($response);
-
 
         exit;
     }

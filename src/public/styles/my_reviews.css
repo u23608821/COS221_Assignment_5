@@ -530,3 +530,122 @@ main {
   margin: 0 4px;
 }
 
+/* Edit review textarea style */
+.edit-review-textarea {
+    width: 100%;
+    min-height: 80px;
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    border-radius: var(--radius);
+    border: 1px solid var(--gray);
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    resize: vertical;
+    background: #fff;
+    color: var(--text-dark);
+    box-sizing: border-box;
+}
+
+.dark .edit-review-textarea {
+    background: #374151;
+    color: #e5e7eb;
+    border: 1px solid #4b5563;
+}
+
+/* Cancel button style */
+.cancel-btn {
+    background-color: #e5e7eb;
+    color: #374151;
+    border: 1px solid #c7c7c7;
+    margin-left: 0.5rem;
+    border-radius: var(--radius);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cancel-btn:hover {
+    background-color: #d1d5db;
+    color: #111827;
+}
+
+.dark .cancel-btn {
+    background-color: #374151;
+    color: #e5e7eb;
+    border: 1px solid #4b5563;
+}
+
+.dark .cancel-btn:hover {
+    background-color: #2d3a4d;
+    color: #fff;
+}
+
+/* Delete confirmation popup */
+.delete-popup {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.delete-popup > div {
+    background: #fff;
+    padding: 2em 2.5em;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px #0003;
+    text-align: center;
+}
+
+.delete-popup button {
+    margin: 0 0.5em;
+    padding: 0.5em 1.5em;
+    border-radius: var(--radius);
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    background: #e5e7eb;
+    color: #374151;
+    transition: background 0.2s;
+}
+
+.delete-popup .popup-yes {
+    background: #ef4444;
+    color: #fff;
+}
+
+.delete-popup .popup-yes:hover {
+    background: #b91c1c;
+}
+
+.delete-popup .popup-no:hover {
+    background: #d1d5db;
+}
+
+.dark .delete-popup > div {
+    background: #374151;
+    color: #fff;
+}
+
+.dark .delete-popup button {
+    background: #2d3a4d;
+    color: #fff;
+}
+
+.dark .delete-popup .popup-yes {
+    background: #ef4444;
+    color: #fff;
+}
+
+.dark .delete-popup .popup-yes:hover {
+    background: #b91c1c;
+}
+
+.dark .delete-popup .popup-no:hover {
+    background: #4b5563;
+}

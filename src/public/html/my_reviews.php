@@ -37,15 +37,7 @@ $env = readEnvFile($envFile);
 // Get credentials
 $username = $env ? $env['WHEATLEY_USERNAME'] : getenv("WHEATLEY_USERNAME");
 $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
-
-
-
-// For debugging - comment these out in production
-// echo "Username from env: " . ($username ?: 'NOT FOUND') . "<br>";
-// echo "Password from env: " . ($password ? '********' : 'NOT FOUND') . "<br>";
 ?>
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -64,7 +56,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
     <div class="container">
       <div class="nav-left">
         <a href="../html/products.html" class="logo">
-          <img src="https://wheatley.cs.up.ac.za/u24634434/COS221/Images/Logo.png" alt="Logo Placeholder" />
+          <img src="https://URL_HERE.co.za/" alt="Logo Placeholder" />
         </a>
         <span class="menu-toggle" id="menuToggle">☰</span>
         <ul class="nav-links" id="navLinks">
@@ -95,7 +87,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 
   <main>
     <h1 class="page-header">My Reviews</h1>
-    <p class="page-subheader">All products reviews you have personally published can be viewed here. </p>
+    <p class="page-subheader">All products reviews you have personally published can be viewed, edited or deleted here. </p>
 
     <div class="reviews-container">
       <!-- Review 1 -->
@@ -254,15 +246,6 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
       </button>
     </div>
   </footer>
-
-   <script>
-    // Set global variables for authentication
-    var WHEATLEY_USERNAME = "<?php echo $username; ?>";
-    var WHEATLEY_PASSWORD = "<?php echo $password; ?>";
-    console.log('Credentials loaded from PHP: ',
-      WHEATLEY_USERNAME ? 'Username found' : 'Username missing',
-      WHEATLEY_PASSWORD ? 'Password found' : 'Password missing');
-  </script>
 
 </body>
 <script src="../scripts/my_reviews.js"></script>
