@@ -14,6 +14,7 @@ const productsContainer = document.getElementById("products-list");
 
 let currentApiKey =
     localStorage.getItem('apiKey') ||
+    
     sessionStorage.getItem('apiKey') ||
     getCookie('apiKey');
 
