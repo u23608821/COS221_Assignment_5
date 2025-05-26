@@ -55,18 +55,28 @@ function applySavedTheme() {
 // Product loading functions
 async function loadProducts(searchTerm = '') {
     try {
-        productsContainer.innerHTML = '<div class="loading-spinner">Loading products...</div>';
+        productsContainer.innerHTML = '<div class="loading-spinner">Loading top-rated products...</div>';
+
+        const requestPayload = {
+            type: 'getAllProducts',
+            apikey: currentApiKey,
+            sort_by: 'rating_desc',
+            filter_by: {
+                minimum_average_rating: 4.0
+            },
+            include_no_rating: false
+        };
+
+        if (searchTerm) {
+            requestPayload.name = searchTerm;
+        }
 
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                type: 'getAllProducts',
-                apikey: currentApiKey,
-                name: searchTerm
-            })
+            body: JSON.stringify(requestPayload)
         });
 
         const result = await response.json();
@@ -75,7 +85,7 @@ async function loadProducts(searchTerm = '') {
             displayProducts(result.data);
         } else {
             console.error('Error loading products:', result.message);
-            productsContainer.innerHTML = '<p class="error-message">Failed to load products. Please try again later.</p>';
+            productsContainer.innerHTML = '<p class="error-message">Failed to load top-rated products. Please try again later.</p>';
         }
 
     } catch (error) {
@@ -83,6 +93,7 @@ async function loadProducts(searchTerm = '') {
         productsContainer.innerHTML = '<p class="error-message">Network error. Please check your connection.</p>';
     }
 }
+
 
 async function displayProducts(products) {
     productsContainer.innerHTML = '';
