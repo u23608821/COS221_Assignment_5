@@ -17,7 +17,7 @@ let currentApiKey =
     sessionStorage.getItem('apiKey') ||
     getCookie('apiKey');
 
-// Helper functions
+// Cookie helpers
 function setCookie(name, value, days) {
     const d = new Date();
     d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
@@ -38,21 +38,18 @@ function getCookie(name) {
     return "";
 }
 
+// Theme logic
 function updateIcon() {
     themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
 }
 
 function applySavedTheme() {
     const savedTheme = getCookie("theme");
-    if (savedTheme === "dark") {
-        document.body.classList.add("dark");
-    } else {
-        document.body.classList.remove("dark");
-    }
+    document.body.classList.toggle("dark", savedTheme === "dark");
     updateIcon();
 }
 
-// Product loading functions
+// Product loading
 async function loadProducts(searchTerm = '') {
     try {
         productsContainer.innerHTML = '<div class="loading-spinner">Loading top-rated products...</div>';
@@ -67,15 +64,11 @@ async function loadProducts(searchTerm = '') {
             include_no_rating: false
         };
 
-        if (searchTerm) {
-            requestPayload.name = searchTerm;
-        }
+        if (searchTerm) requestPayload.name = searchTerm;
 
         const response = await fetch(API_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestPayload)
         });
 
@@ -94,7 +87,7 @@ async function loadProducts(searchTerm = '') {
     }
 }
 
-
+// Display each product
 async function displayProducts(products) {
     productsContainer.innerHTML = '';
 
@@ -107,12 +100,11 @@ async function displayProducts(products) {
         let averageRating = product.average_rating;
         let reviewCount = 0;
 
+        // Fetch detailed review stats
         try {
             const detailResponse = await fetch(API_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     type: 'getProductDetails',
                     apikey: currentApiKey,
@@ -122,12 +114,11 @@ async function displayProducts(products) {
             });
 
             const detailResult = await detailResponse.json();
+
             if (detailResult.status === 'success' && detailResult.data) {
                 const reviews = Array.isArray(detailResult.data.reviews) ? detailResult.data.reviews : [];
                 reviewCount = reviews.length;
                 averageRating = detailResult.data.average_review ?? null;
-            } else {
-                console.warn(`No data for product ID ${product.product_id}`, detailResult);
             }
 
         } catch (err) {
@@ -137,6 +128,7 @@ async function displayProducts(products) {
         const productBox = document.createElement('div');
         productBox.className = 'product-box';
 
+        // Generate stars
         let starsHtml = '';
         if (averageRating) {
             const fullStars = Math.floor(averageRating);
@@ -148,22 +140,26 @@ async function displayProducts(products) {
                 } else if (i === fullStars && hasHalfStar) {
                     starsHtml += '<span class="material-symbols-outlined">star_half</span>';
                 } else {
-                    starsHtml += '<span class="material-symbols-outlined">star</span>';
+                    starsHtml += '<span class="material-symbols-outlined">star_outline</span>';
                 }
             }
         } else {
             for (let i = 0; i < 5; i++) {
-                starsHtml += '<span class="material-symbols-outlined">star</span>';
+                starsHtml += '<span class="material-symbols-outlined">star_outline</span>';
             }
         }
 
+        const title = product.title || 'Unnamed Product';
+        const image = product.image_url || '/src/private/resources/default.png';
+        const price = product.cheapest_price ? `R${product.cheapest_price.toFixed(2)}` : null;
+
         productBox.innerHTML = `
             <div class="product-image">
-                <img src="${product.image_url}" alt="${product.title}">
+                <img src="${image}" alt="${title}">
             </div>
             <div class="product-content">
                 <div class="product-info">
-                    <h3 class="product-title">${product.title}</h3>
+                    <h3 class="product-title">${title}</h3>
                     <div class="product-rating">
                         ${starsHtml}
                         <span class="rating-text">
@@ -173,9 +169,9 @@ async function displayProducts(products) {
                     </div>
                 </div>
                 <div class="best-price">
-                    ${product.cheapest_price ? 
+                    ${price ? 
                         `<span class="best-price-label">Best Price</span>
-                         <span class="best-price-value">R${product.cheapest_price.toFixed(2)}</span>
+                         <span class="best-price-value">${price}</span>
                          <span class="retailer-label">From ${product.retailer_name}</span>` :
                         '<span class="no-price">No prices available</span>'}
                 </div>
@@ -186,39 +182,35 @@ async function displayProducts(products) {
         productsContainer.appendChild(productBox);
     }
 
-    // Add click events
+    // Compare button listeners
     document.querySelectorAll('.compare-btn').forEach(button => {
         button.addEventListener('click', function () {
             const productId = this.getAttribute('data-product-id');
             console.log('Compare prices for product:', productId);
-            // Redirect or open modal here if needed
+            // You can redirect or open a modal here
         });
     });
 }
 
-// Event listeners for search
-searchBtn.addEventListener('click', performSearch);
-searchInput.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') performSearch();
-});
-
+// Search handlers
 function performSearch() {
     const searchTerm = searchInput.value.trim();
     loadProducts(searchTerm);
 }
 
-// Initialize the page
-document.addEventListener('DOMContentLoaded', function() {
+searchBtn.addEventListener('click', performSearch);
+searchInput.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') performSearch();
+});
+
+// Initialization
+document.addEventListener('DOMContentLoaded', function () {
     applySavedTheme();
     loadProducts();
 });
 
-// Existing event listeners
-window.addEventListener("load", applySavedTheme);
-
-accountBtn.addEventListener("click", function () {
-    accountMenu.classList.toggle("show");
-});
+// Theme & menu handlers
+accountBtn.addEventListener("click", () => accountMenu.classList.toggle("show"));
 
 themeToggle.addEventListener("click", function () {
     document.body.classList.toggle("dark");
@@ -227,9 +219,7 @@ themeToggle.addEventListener("click", function () {
     updateIcon();
 });
 
-menuToggle.addEventListener("click", function () {
-    navLinks.classList.toggle("show");
-});
+menuToggle.addEventListener("click", () => navLinks.classList.toggle("show"));
 
 window.addEventListener("click", function (e) {
     if (!accountBtn.contains(e.target) && !accountMenu.contains(e.target)) {
@@ -237,4 +227,4 @@ window.addEventListener("click", function (e) {
     }
 });
 
-updateIcon();
+updateIcon(); // Ensure correct icon on first load
