@@ -16,9 +16,9 @@ const priceFilter = document.querySelector(".filter-select:nth-of-type(3)");
 const productsContainer = document.getElementById("products-list");
 
 let currentApiKey =
-    localStorage.getItem('apikey') ||
-    sessionStorage.getItem('apikey') ||
-    getCookie('apikey');
+    localStorage.getItem('apiKey') ||
+    sessionStorage.getItem('apiKey') ||
+    getCookie('apiKey');
 
 // Helper functions
 function setCookie(name, value, days) {
