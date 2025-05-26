@@ -5,7 +5,7 @@
 <p> A next-generation product price comparison website to track price fluctuations across websites. Find and compare products, visit product webpages, and more!</p>
 
 ## Documentation
-* [Research Document](https://github.com/u23608821/COS221_Assignment_5/blob/documentation-readme/ThePrimaryKeysResearch.pdf)
+* [Research Document](https://github.com/u23608821/COS221_Assignment_5/blob/documentation-readme/The%2BPrimary%2BKeys%2BResearch.pdf)
 * [Functional Requirements]()
 * [ER](https://github.com/u23608821/COS221_Assignment_5/blob/master/The%20Primary%20keys%20(E)ER_V3.drawio.pdf)
 * [EERD]()
