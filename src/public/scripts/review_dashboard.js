@@ -15,7 +15,7 @@ let pieChart = null;
 let barChart = null;
 
 document.addEventListener("DOMContentLoaded", async function () {
-  
+
   const response = await fetchReviewStats();
   if (response) {
     renderCharts(response.data.star_counts);
@@ -51,9 +51,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 
 async function fetchReviewStats() {
-  const apikey = localStorage.getItem(apikey);
-  if(!apikey)
-  {
+  const apikey = localStorage.getItem("apiKey");
+  if (!apikey) {
     alert("Session expired. Please log in again.");
     popup.remove();
     return;
@@ -86,11 +85,11 @@ async function fetchReviewStats() {
           console.log("Fetched starCounts:", starCounts);
           renderCharts(starCounts);
           updateAggregateTile({
-          totalReviews: response.data.total_reviews,
-          averageRating: response.data.average_review,
-          highestRating: getHighestRating(response.data.star_counts),
-          lowestRating: getLowestRating(response.data.star_counts)
-        });
+            totalReviews: response.data.total_reviews,
+            averageRating: response.data.average_review,
+            highestRating: getHighestRating(response.data.star_counts),
+            lowestRating: getLowestRating(response.data.star_counts)
+          });
         } catch (err) {
           console.error("Error parsing JSON response:", err);
         }
@@ -233,24 +232,21 @@ function updateAggregateTile({ totalReviews, averageRating, highestRating, lowes
 
 function updateStars(selector, rating) {
   const container = document.querySelector(selector);
-  container.innerHTML = ''; 
+  container.innerHTML = '';
 
   const fullStars = Math.floor(rating);
   const hasHalfStar = rating % 1 >= 0.25 && rating % 1 < 0.75;
   const remainingStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
 
-  for (let i = 0; i < fullStars; i++) 
-  {
+  for (let i = 0; i < fullStars; i++) {
     container.innerHTML += `<span class="material-symbols-outlined">star</span>`;
   }
 
-  if (hasHalfStar) 
-  {
+  if (hasHalfStar) {
     container.innerHTML += `<span class="material-symbols-outlined">star_half</span>`;
   }
 
-  for (let i = 0; i < remainingStars; i++) 
-  {
+  for (let i = 0; i < remainingStars; i++) {
     container.innerHTML += `<span class="material-symbols-outlined">grade</span>`;
   }
 }
