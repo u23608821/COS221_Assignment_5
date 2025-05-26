@@ -10,9 +10,6 @@ const menuToggle = document.getElementById("menuToggle");
 const navLinks = document.getElementById("navLinks");
 const searchInput = document.querySelector(".search-input");
 const searchBtn = document.querySelector(".search-btn");
-const categoryFilter = document.querySelector(".filter-select:nth-of-type(1)");
-const sortFilter = document.querySelector(".filter-select:nth-of-type(2)");
-const priceFilter = document.querySelector(".filter-select:nth-of-type(3)");
 const productsContainer = document.getElementById("products-list");
 
 let currentApiKey =
@@ -56,66 +53,10 @@ function applySavedTheme() {
 }
 
 // Product loading functions
-async function loadCategories() {
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                type: 'getAllCategories',
-                apikey: currentApiKey
-            })
-        });
-
-        const result = await response.json();
-        
-        if (result.status === 'success') {
-            populateCategoryFilter(result.data);
-        } else {
-            console.error('Error loading categories:', result.message);
-            // Show error to user if needed
-        }
-    } catch (error) {
-        console.error('Error loading categories:', error);
-    }
-}
-
-function populateCategoryFilter(categories) {
-    // Clear existing options except the first one
-    while (categoryFilter.options.length > 1) {
-        categoryFilter.remove(1);
-    }
-
-    // Add new categories
-    categories.forEach(category => {
-        const option = document.createElement('option');
-        option.value = category;
-        option.textContent = category;
-        categoryFilter.appendChild(option);
-    });
-}
-
-async function loadProducts(searchTerm = '', category = '', sortBy = '', priceRange = '') {
+async function loadProducts(searchTerm = '') {
     try {
         productsContainer.innerHTML = '<div class="loading-spinner">Loading products...</div>';
 
-        // Clean category param
-        category = category === "__all__" ? "" : category;
-
-        // Determine if we need to filter on client-side
-        let localFilterBy = {};
-        let filteredClientSide = false;
-
-        if (priceRange) {
-            const [min, max] = priceRange.split('-').map(str => parseFloat(str));
-            localFilterBy.minPrice = min;
-            localFilterBy.maxPrice = max;
-            filteredClientSide = true;
-        }
-
-        // 🔄 API request to get products
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
@@ -124,27 +65,14 @@ async function loadProducts(searchTerm = '', category = '', sortBy = '', priceRa
             body: JSON.stringify({
                 type: 'getAllProducts',
                 apikey: currentApiKey,
-                name: searchTerm,
-                category: category,
-                sort_by: sortBy
+                name: searchTerm
             })
         });
 
         const result = await response.json();
 
         if (result.status === 'success') {
-            let products = result.data;
-
-            // Apply price filtering manually if needed
-            if (filteredClientSide) {
-                products = products.filter(p =>
-                    p.cheapest_price !== null &&
-                    p.cheapest_price >= localFilterBy.minPrice &&
-                    p.cheapest_price <= localFilterBy.maxPrice
-                );
-            }
-
-            displayProducts(products);
+            displayProducts(result.data);
         } else {
             console.error('Error loading products:', result.message);
             productsContainer.innerHTML = '<p class="error-message">Failed to load products. Please try again later.</p>';
@@ -155,7 +83,6 @@ async function loadProducts(searchTerm = '', category = '', sortBy = '', priceRa
         productsContainer.innerHTML = '<p class="error-message">Network error. Please check your connection.</p>';
     }
 }
-
 
 async function displayProducts(products) {
     productsContainer.innerHTML = '';
@@ -184,13 +111,13 @@ async function displayProducts(products) {
             });
 
             const detailResult = await detailResponse.json();
-      if (detailResult.status === 'success' && detailResult.data) {
-    const reviews = Array.isArray(detailResult.data.reviews) ? detailResult.data.reviews : [];
-    reviewCount = reviews.length;
-    averageRating = detailResult.data.average_review ?? null;
-} else {
-    console.warn(`No data for product ID ${product.product_id}`, detailResult);
-}
+            if (detailResult.status === 'success' && detailResult.data) {
+                const reviews = Array.isArray(detailResult.data.reviews) ? detailResult.data.reviews : [];
+                reviewCount = reviews.length;
+                averageRating = detailResult.data.average_review ?? null;
+            } else {
+                console.warn(`No data for product ID ${product.product_id}`, detailResult);
+            }
 
         } catch (err) {
             console.warn(`Details failed for product ID ${product.product_id}`, err);
@@ -221,7 +148,7 @@ async function displayProducts(products) {
 
         productBox.innerHTML = `
             <div class="product-image">
-                <img src="${product.image_url }" alt="${product.title}">
+                <img src="${product.image_url}" alt="${product.title}">
             </div>
             <div class="product-content">
                 <div class="product-info">
@@ -258,40 +185,20 @@ async function displayProducts(products) {
     });
 }
 
-// Event listeners for search and filters
+// Event listeners for search
 searchBtn.addEventListener('click', performSearch);
 searchInput.addEventListener('keypress', function(e) {
     if (e.key === 'Enter') performSearch();
 });
 
-categoryFilter.addEventListener('change', performSearch);
-sortFilter.addEventListener('change', performSearch);
-priceFilter.addEventListener('change', performSearch);
-
 function performSearch() {
     const searchTerm = searchInput.value.trim();
-    const category = categoryFilter.value;
-    const sortBy = getSortValue(sortFilter.value);
-    const priceRange = priceFilter.value;
-    
-    loadProducts(searchTerm, category, sortBy, priceRange);
-}
-
-function getSortValue(selectValue) {
-    switch(selectValue) {
-        case 'price-low': return 'price_asc';
-        case 'price-high': return 'price_desc';
-        case 'rating': return 'rating_desc';
-        case 'name-asc': return 'name_asc';
-        case 'name-desc': return 'name_desc';
-        default: return 'name_asc';
-    }
+    loadProducts(searchTerm);
 }
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
     applySavedTheme();
-    loadCategories();
     loadProducts();
 });
 
@@ -320,12 +227,3 @@ window.addEventListener("click", function (e) {
 });
 
 updateIcon();
-
-categoryFilter.addEventListener('change', () => {
-    if (categoryFilter.value === '__all__') {
-        searchInput.value = '';
-        sortFilter.selectedIndex = 0;
-        priceFilter.selectedIndex = 0;
-    }
-    performSearch();
-});
