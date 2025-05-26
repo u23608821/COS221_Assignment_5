@@ -301,6 +301,7 @@ document.addEventListener('DOMContentLoaded', function () {
     applySavedTheme();
     loadCategories();
     loadProducts();
+    updateUserGreeting()
 });
 
 // Existing event listeners
@@ -337,3 +338,16 @@ categoryFilter.addEventListener('change', () => {
     }
     performSearch();
 });
+
+function updateUserGreeting() {
+    const firstName = localStorage.getItem('name'); // Changed from 'first_name' to 'name'
+    const userTextElement = document.querySelector('.user-text');
+    
+    if (userTextElement) {
+        if (firstName) {
+            userTextElement.textContent = `${firstName}`;
+        } else {
+            userTextElement.textContent = 'User';
+        }
+    }
+}

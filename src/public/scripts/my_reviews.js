@@ -63,3 +63,21 @@ function getCookie(name) {
     }
     return "";
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateUserGreeting();
+});
+
+
+function updateUserGreeting() {
+    const firstName = localStorage.getItem('name');
+    const userTextElement = document.querySelector('.user-text');
+    
+    if (userTextElement) {
+        if (firstName) {
+            userTextElement.textContent = `${firstName}`;
+        } else {
+            userTextElement.textContent = 'User';
+        }
+    }
+}

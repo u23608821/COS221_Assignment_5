@@ -187,6 +187,7 @@ async function displayProducts(products) {
 document.addEventListener('DOMContentLoaded', function () {
     applySavedTheme();
     loadProducts();
+    updateUserGreeting();
 
     // Only add event listeners if elements exist
     if (themeToggle) {
@@ -204,3 +205,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     updateIcon(); // Ensure correct icon on first load
 });
+
+
+function updateUserGreeting() {
+    const firstName = localStorage.getItem('name'); // Changed from 'first_name' to 'name'
+    const userTextElement = document.querySelector('.user-text');
+    
+    if (userTextElement) {
+        if (firstName) {
+            userTextElement.textContent = `${firstName}`;
+        } else {
+            userTextElement.textContent = 'User';
+        }
+    }
+}
