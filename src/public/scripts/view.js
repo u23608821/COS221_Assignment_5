@@ -1,4 +1,7 @@
-const API_URL = 'http://localhost:8000/api.php';
+const API_URL = "https://wheatley.cs.up.ac.za/u24634434/COS221/api.php"; // API base URL
+const headers = new Headers();
+headers.append("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
+headers.append("Content-Type", "application/json");
 
 // DOM Elements
 const productImage = document.querySelector('.product-image-large');
@@ -38,14 +41,15 @@ function getCookie(name) {
 async function loadProductDetails() {
   const productId = sessionStorage.getItem('currentProductId');
   if (!productId) {
-    window.location.href = '../html/products.html';
+    window.location.href = '../html/products.php';
     return;
   }
 
   try {
     const response = await fetch(API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headers,
+
       body: JSON.stringify({
         type: 'getProductDetails',
         apikey: currentApiKey,
@@ -68,7 +72,7 @@ async function loadProductDetails() {
 
 function displayProductDetails(product) {
   productImage.src = product.image_url || product.Image_url || '/fallback.png';
-productImage.alt = product.name || 'Product image';
+  productImage.alt = product.name || 'Product image';
   productTitle.textContent = product.name;
   productDescription.textContent = product.description;
   productCategory.textContent = product.category;

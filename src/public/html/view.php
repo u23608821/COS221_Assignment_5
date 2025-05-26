@@ -6,29 +6,29 @@ $envFile = $envPath . '/.env';
 // Simple function to read .env file
 function readEnvFile($path)
 {
-	if (!file_exists($path)) {
-		// echo "ENV file not found at: $path<br>";
-		return false;
-	}
+  if (!file_exists($path)) {
+    // echo "ENV file not found at: $path<br>";
+    return false;
+  }
 
-	// echo "ENV file found at: $path<br>";
-	$lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-	$env = [];
+  // echo "ENV file found at: $path<br>";
+  $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+  $env = [];
 
-	foreach ($lines as $line) {
-		if (strpos(trim($line), '#') === 0) continue; // Skip comments
-		if (empty(trim($line))) continue;             // Skip empty lines
+  foreach ($lines as $line) {
+    if (strpos(trim($line), '#') === 0) continue; // Skip comments
+    if (empty(trim($line))) continue;             // Skip empty lines
 
-		list($name, $value) = explode('=', $line, 2);
-		$name = trim($name);
-		$value = trim($value);
+    list($name, $value) = explode('=', $line, 2);
+    $name = trim($name);
+    $value = trim($value);
 
-		$env[$name] = $value;
-		// Optionally set as environment variable
-		putenv("$name=$value");
-	}
+    $env[$name] = $value;
+    // Optionally set as environment variable
+    putenv("$name=$value");
+  }
 
-	return $env;
+  return $env;
 }
 
 // Read environment variables from .env file
@@ -49,6 +49,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -57,17 +58,18 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link href="../styles/view.css" rel="stylesheet" />
 </head>
+
 <body class="light">
   <nav class="navbar">
     <div class="container">
       <div class="nav-left">
-        <a href="../html/products.html" class="logo">
-          <img src="https://URL_HERE.co.za/" alt="Pick 'n Price Logo" />
+        <a href="../html/products.php" class="logo">
+          <img src="../../private/resources/Logo.png" alt="Pick 'n Price Logo" />
         </a>
         <span class="menu-toggle" id="menuToggle">☰</span>
         <ul class="nav-links" id="navLinks">
-          <li><a href="../html/products.html">All Products</a></li>
-          <li><a href="../html/highest_rated.html">Top-Rated Products</a></li>
+          <li><a href="../html/products.php">All Products</a></li>
+          <li><a href="../html/highest_rated.php">Top-Rated Products</a></li>
         </ul>
       </div>
       <div class="nav-actions">
@@ -78,10 +80,10 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
             <span class="material-symbols-outlined arrow-icon">arrow_drop_down</span>
           </button>
           <div class="dropdown-menu" id="accountMenu">
-            <a href="../html/my_details.html"><span>My Details</span></a>
-            <a href="../html/my_reviews.html"><span>My Reviews</span></a>
+            <a href="../html/my_details.php"><span>My Details</span></a>
+            <a href="../html/my_reviews.php"><span>My Reviews</span></a>
             <div class="dropdown-divider"></div>
-            <a href="../html/login.html" class="signout"><span>Sign Out</span></a>
+            <a href="../html/login.php" class="signout"><span>Sign Out</span></a>
           </div>
         </div>
       </div>
@@ -116,7 +118,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
       <div class="retailer-prices"></div>
     </div>
 
-    <div class="reviews-section" >
+    <div class="reviews-section">
       <div class="reviews-header">
         <h2 class="reviews-title">Reviews</h2>
         <div class="star-rating">
@@ -164,4 +166,5 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   <script src="../scripts/global.js"></script>
   <script src="../scripts/view.js"></script>
 </body>
+
 </html>

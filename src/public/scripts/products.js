@@ -1,5 +1,7 @@
-// Constants
-const API_URL = 'http://localhost:8000/api.php';
+const API_URL = "https://wheatley.cs.up.ac.za/u24634434/COS221/api.php"; // API base URL
+const headers = new Headers();
+headers.append("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
+headers.append("Content-Type", "application/json");
 
 // DOM Elements
 const accountBtn = document.getElementById("accountBtn");
@@ -60,9 +62,8 @@ async function loadCategories() {
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: headers,
+
             body: JSON.stringify({
                 type: 'getAllCategories',
                 apikey: currentApiKey
@@ -70,7 +71,7 @@ async function loadCategories() {
         });
 
         const result = await response.json();
-        
+
         if (result.status === 'success') {
             populateCategoryFilter(result.data);
         } else {
@@ -118,9 +119,8 @@ async function loadProducts(searchTerm = '', category = '', sortBy = '', priceRa
         // 🔄 API request to get products
         const response = await fetch(API_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: headers,
+
             body: JSON.stringify({
                 type: 'getAllProducts',
                 apikey: currentApiKey,
@@ -168,67 +168,66 @@ async function displayProducts(products) {
     for (const product of products) {
         let averageRating = product.average_rating;
         let reviewCount = 0;
-try {
-    const detailResponse = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            type: 'getProductDetails',
-            apikey: currentApiKey,
-            product_id: product.product_id,
-            return: "Reviews"
-        })
-    });
+        try {
+            const detailResponse = await fetch(API_URL, {
+                method: 'POST',
+                headers: headers,
 
-       const detailResult = await detailResponse.json();
+                body: JSON.stringify({
+                    type: 'getProductDetails',
+                    apikey: currentApiKey,
+                    product_id: product.product_id,
+                    return: "Reviews"
+                })
+            });
 
-    if (detailResult.status === 'success') {
-        const reviews = Array.isArray(detailResult.data) ? detailResult.data : [];
-        reviewCount = reviews.length;
-        // Optional: estimate average rating if needed
-        if (reviews.length > 0) {
-            const total = reviews.reduce((sum, r) => sum + r.score, 0);
-            averageRating = total / reviews.length;
-        } else {
-            averageRating = null;
+            const detailResult = await detailResponse.json();
+
+            if (detailResult.status === 'success') {
+                const reviews = Array.isArray(detailResult.data) ? detailResult.data : [];
+                reviewCount = reviews.length;
+                // Optional: estimate average rating if needed
+                if (reviews.length > 0) {
+                    const total = reviews.reduce((sum, r) => sum + r.score, 0);
+                    averageRating = total / reviews.length;
+                } else {
+                    averageRating = null;
+                }
+            } else {
+                console.warn(`No reviews for product ID ${product.product_id}`, detailResult);
+            }
+        } catch (err) {
+            console.warn(`Details failed for product ID ${product.product_id}`, err);
         }
-    } else {
-        console.warn(`No reviews for product ID ${product.product_id}`, detailResult);
-    }
-} catch (err) {
-    console.warn(`Details failed for product ID ${product.product_id}`, err);
-}
 
         const productBox = document.createElement('div');
         productBox.className = 'product-box';
 
-   let starsHtml = '';
-if (averageRating !== null) {
-    const fullStars = Math.floor(averageRating);
-    const hasHalfStar = averageRating % 1 >= 0.25 && averageRating % 1 < 0.75;
-    const totalStars = hasHalfStar ? fullStars + 1 : fullStars;
+        let starsHtml = '';
+        if (averageRating !== null) {
+            const fullStars = Math.floor(averageRating);
+            const hasHalfStar = averageRating % 1 >= 0.25 && averageRating % 1 < 0.75;
+            const totalStars = hasHalfStar ? fullStars + 1 : fullStars;
 
-    for (let i = 0; i < 5; i++) {
-        if (i < fullStars) {
-            starsHtml += '<span class="material-symbols-outlined">star</span>';
-        } else if (i === fullStars && hasHalfStar) {
-            starsHtml += '<span class="material-symbols-outlined">star_half</span>';
+            for (let i = 0; i < 5; i++) {
+                if (i < fullStars) {
+                    starsHtml += '<span class="material-symbols-outlined">star</span>';
+                } else if (i === fullStars && hasHalfStar) {
+                    starsHtml += '<span class="material-symbols-outlined">star_half</span>';
+                } else {
+                    starsHtml += '<span class="material-symbols-outlined">star_border</span>';
+                }
+            }
         } else {
-            starsHtml += '<span class="material-symbols-outlined">star_border</span>';
+            // If no rating, show all empty
+            for (let i = 0; i < 5; i++) {
+                starsHtml += '<span class="material-symbols-outlined">star_border</span>';
+            }
         }
-    }
-} else {
-    // If no rating, show all empty
-    for (let i = 0; i < 5; i++) {
-        starsHtml += '<span class="material-symbols-outlined">star_border</span>';
-    }
-}
 
         productBox.innerHTML = `
             <div class="product-image">
-                <img src="${product.image_url }" alt="${product.title}">
+                <img src="${product.image_url}" alt="${product.title}">
             </div>
             <div class="product-content">
                 <div class="product-info">
@@ -242,11 +241,11 @@ if (averageRating !== null) {
                     </div>
                 </div>
                 <div class="best-price">
-                    ${product.cheapest_price ? 
-                        `<span class="best-price-label">Best Price</span>
+                    ${product.cheapest_price ?
+                `<span class="best-price-label">Best Price</span>
                          <span class="best-price-value">R${product.cheapest_price.toFixed(2)}</span>
                          <span class="retailer-label">From ${product.retailer_name}</span>` :
-                        '<span class="no-price">No prices available</span>'}
+                '<span class="no-price">No prices available</span>'}
                 </div>
                 <button class="compare-btn" data-product-id="${product.product_id}">Compare Prices</button>
             </div>
@@ -256,20 +255,20 @@ if (averageRating !== null) {
     }
 
     // Add click events
- document.querySelectorAll('.compare-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        const productId = this.getAttribute('data-product-id');
-        // Store the product ID in session storage
-        sessionStorage.setItem('currentProductId', productId);
-        // Navigate to view page
-        window.location.href = '../html/view.html';
+    document.querySelectorAll('.compare-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const productId = this.getAttribute('data-product-id');
+            // Store the product ID in session storage
+            sessionStorage.setItem('currentProductId', productId);
+            // Navigate to view page
+            window.location.href = '../html/view.php';
+        });
     });
-});
 }
 
 // Event listeners for search and filters
 searchBtn.addEventListener('click', performSearch);
-searchInput.addEventListener('keypress', function(e) {
+searchInput.addEventListener('keypress', function (e) {
     if (e.key === 'Enter') performSearch();
 });
 
@@ -282,12 +281,12 @@ function performSearch() {
     const category = categoryFilter.value;
     const sortBy = getSortValue(sortFilter.value);
     const priceRange = priceFilter.value;
-    
+
     loadProducts(searchTerm, category, sortBy, priceRange);
 }
 
 function getSortValue(selectValue) {
-    switch(selectValue) {
+    switch (selectValue) {
         case 'price-low': return 'price_asc';
         case 'price-high': return 'price_desc';
         case 'rating': return 'rating_desc';
@@ -298,7 +297,7 @@ function getSortValue(selectValue) {
 }
 
 // Initialize the page
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     applySavedTheme();
     loadCategories();
     loadProducts();

@@ -62,13 +62,13 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   <nav class="navbar">
     <div class="container">
       <div class="nav-left">
-        <a href="../html/products.html" class="logo">
-          <img src="https://wheatley.cs.up.ac.za/u24634434/COS221/Images/Logo.png" alt="Pick 'n Price Logo" />
+        <a href="../html/products.php" class="logo">
+          <img src="../../private/resources/Logo.png" alt="Pick 'n Price Logo" />
         </a>
         <span class="menu-toggle" id="menuToggle">☰</span>
         <ul class="nav-links" id="navLinks">
-          <li><a href="../html/products.html">All Products</a></li>
-          <li><a href="../html/highest_rated.html">Top-Rated Products</a></li>
+          <li><a href="../html/products.php">All Products</a></li>
+          <li><a href="../html/highest_rated.php">Top-Rated Products</a></li>
         </ul>
       </div>
       <div class="nav-actions">
@@ -79,10 +79,10 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
             <span class="material-symbols-outlined arrow-icon">arrow_drop_down</span>
           </button>
           <div class="dropdown-menu" id="accountMenu" aria-label="Account options">
-            <a href="../html/my_details.html"><span>My Details</span></a>
-            <a href="../html/my_reviews.html"><span>My Reviews</span></a>
+            <a href="../html/my_details.php"><span>My Details</span></a>
+            <a href="../html/my_reviews.php"><span>My Reviews</span></a>
             <div class="dropdown-divider"></div>
-            <a href="../html/login.html" class="signout"><span>Sign Out</span></a>
+            <a href="../html/login.php" class="signout"><span>Sign Out</span></a>
           </div>
         </div>
       </div>

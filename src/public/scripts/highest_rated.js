@@ -1,5 +1,8 @@
 // Constants
-const API_URL = 'http://localhost:8000/api.php';
+const API_URL = "https://wheatley.cs.up.ac.za/u24634434/COS221/api.php"; // API base URL
+const headers = new Headers();
+headers.append("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
+headers.append("Content-Type", "application/json");
 
 // DOM Elements - Only include elements that exist in highest_rated.html
 const productsContainer = document.getElementById("products-list");
@@ -66,7 +69,8 @@ async function loadProducts(searchTerm = '') {
 
         const response = await fetch(API_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers,
+
             body: JSON.stringify(requestPayload)
         });
 
@@ -120,7 +124,7 @@ async function displayProducts(products) {
         // Generate star rating display
         let starsHtml = '';
         const rating = safeProduct.average_rating;
-        
+
         if (rating > 0) {
             const fullStars = Math.floor(rating);
             const hasHalfStar = rating % 1 >= 0.5;
@@ -154,11 +158,11 @@ async function displayProducts(products) {
                     </div>
                 </div>
                 <div class="best-price">
-                    ${safeProduct.cheapest_price ? 
-                        `<span class="best-price-label">Best Price</span>
+                    ${safeProduct.cheapest_price ?
+                `<span class="best-price-label">Best Price</span>
                          <span class="best-price-value">R${safeProduct.cheapest_price.toFixed(2)}</span>
                          <span class="retailer-label">From ${safeProduct.retailer_name}</span>` :
-                        '<span class="no-price">No prices available</span>'}
+                '<span class="no-price">No prices available</span>'}
                 </div>
                 <button class="compare-btn" data-product-id="${safeProduct.product_id}">Compare Prices</button>
             </div>
@@ -168,22 +172,22 @@ async function displayProducts(products) {
     }
 
     // Add event listeners to compare buttons
-  document.querySelectorAll('.compare-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        const productId = this.getAttribute('data-product-id');
-        // Store the product ID in session storage
-        sessionStorage.setItem('currentProductId', productId);
-        // Navigate to view page
-        window.location.href = '../html/view.html';
+    document.querySelectorAll('.compare-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const productId = this.getAttribute('data-product-id');
+            // Store the product ID in session storage
+            sessionStorage.setItem('currentProductId', productId);
+            // Navigate to view page
+            window.location.href = '../html/view.php';
+        });
     });
-});
 }
 
 // Initialization
 document.addEventListener('DOMContentLoaded', function () {
     applySavedTheme();
     loadProducts();
-    
+
     // Only add event listeners if elements exist
     if (themeToggle) {
         themeToggle.addEventListener("click", function () {

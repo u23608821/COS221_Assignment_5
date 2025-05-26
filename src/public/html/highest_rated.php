@@ -55,20 +55,20 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="../styles/highest_rated.css">
-    
+
 </head>
 
 <body class="light">
   <nav class="navbar">
     <div class="container">
       <div class="nav-left">
-        <a href="../html/products.html" class="logo">
-          <img src="https://wheatley.cs.up.ac.za/u24634434/COS221/Images/Logo.png" alt="Pick 'n Price Logo" />
+        <a href="../html/products.php" class="logo">
+          <img src="../../private/resources/Logo.png" alt="Pick 'n Price Logo" />
         </a>
         <span class="menu-toggle" id="menuToggle">☰</span>
         <ul class="nav-links" id="navLinks">
-          <li><a href="../html/products.html">All Products</a></li>
-          <li><a href="../html/highest_rated.html">Top-Rated Products</a></li>
+          <li><a href="../html/products.php">All Products</a></li>
+          <li><a href="../html/highest_rated.php">Top-Rated Products</a></li>
         </ul>
       </div>
       <div class="nav-actions">
@@ -79,11 +79,11 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
             <span class="material-symbols-outlined arrow-icon">arrow_drop_down</span>
           </button>
           <div class="dropdown-menu" id="accountMenu" aria-label="Account options">
-            <a href="../html/my_details.html"><span>My Details</span></a>
-            <a href="../html/my_reviews.html"><span>My Reviews</span></a>
-            <a href="/my_watchlist.html"><span>My Watchlist</span></a>
+            <a href="../html/my_details.php"><span>My Details</span></a>
+            <a href="../html/my_reviews.php"><span>My Reviews</span></a>
+            <a href="/my_watchlist.php"><span>My Watchlist</span></a>
             <div class="dropdown-divider"></div>
-            <a href="../html/login.html" class="signout"><span>Sign Out</span></a>
+            <a href="../html/login.php" class="signout"><span>Sign Out</span></a>
           </div>
         </div>
       </div>
@@ -92,12 +92,12 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 
   <main>
     <h1 class="page-header">Top-Rated Products</h1>
-<p class="page-subheader">View products that received the highest ratings.</p>
+    <p class="page-subheader">View products that received the highest ratings.</p>
 
 
-   <div class="products-container" id="products-list">
-  <!-- Products will be loaded here dynamically -->
-</div>
+    <div class="products-container" id="products-list">
+      <!-- Products will be loaded here dynamically -->
+    </div>
 
   </main>
 
@@ -112,14 +112,14 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 
 </body>
 
- <script>
-    // Set global variables for authentication
-    var WHEATLEY_USERNAME = "<?php echo $username; ?>";
-    var WHEATLEY_PASSWORD = "<?php echo $password; ?>";
-    console.log('Credentials loaded from PHP: ',
-      WHEATLEY_USERNAME ? 'Username found' : 'Username missing',
-      WHEATLEY_PASSWORD ? 'Password found' : 'Password missing');
-  </script>
+<script>
+  // Set global variables for authentication
+  var WHEATLEY_USERNAME = "<?php echo $username; ?>";
+  var WHEATLEY_PASSWORD = "<?php echo $password; ?>";
+  console.log('Credentials loaded from PHP: ',
+    WHEATLEY_USERNAME ? 'Username found' : 'Username missing',
+    WHEATLEY_PASSWORD ? 'Password found' : 'Password missing');
+</script>
 
 <script src="../scripts/highest_rated.js"></script>
 <script src="../scripts/global.js"></script>
