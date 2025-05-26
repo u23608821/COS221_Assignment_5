@@ -8,6 +8,7 @@ Our API provides functionality for our price comparison website called "Prick `n
   - [Authentication and reCAPTCHA](#authentication-and-recaptcha)
   - [Rate Limiting](#rate-limiting)
     - [How Rate Limiting Works](#how-rate-limiting-works)
+  - [SQL Injection Prevention](#sql-injection-prevention)
   - [Request Format](#request-format)
   - [Response Format](#response-format)
   - [API Endpoints (USER)](#api-endpoints-user)
@@ -56,21 +57,20 @@ When using the API, the logged-in user's API key should be included as `apikey` 
 
 ## Rate Limiting
 
-To protect the API from abuse and ensure fair usage, **rate limiting** is enforced on all endpoints. If you exceed the allowed number of requests for a specific endpoint within a certain time window, you will receive a `429 Too Many Requests` error response.
+To protect the API from abuse and ensure fair usage, rate limiting is enforced on all endpoints. If you exceed the allowed number of requests for a specific endpoint within a certain time window, you will receive a `429 Too Many Requests` error response.
 
 **Important note:** The front-end should handle 429 errors gracefully by informing the user that they have exceeded the rate limit and should try again later.
 
 ### How Rate Limiting Works
 - **Database-Backed:**  Rate limiting is implemented using a dedicated `rate_limits` table in the database. This allows for accurate and persistent tracking of request counts and time windows to ensure that rate limits are enforced correctly.
-- **Per-IP and Per-Endpoint:**  Limits are tracked for each unique combination of IP address and the endpoint you are accessing. Each endpoint may have a different rate limit.
-- **Time Window:**  The time window for rate limiting is typically 60 seconds (1 minute), but may vary per endpoint.
-- **Limits:**  
-  The number of allowed requests per endpoint per minute varies based on how computationally expensive the endpoint is. For example:
+- **Per-IP and Per-Endpoint:**  Limits are tracked for each unique combination of IP address and the endpoint that this IP is accessing. Each endpoint may have a different rate limit.
+- **Time Window:** The time window for rate limiting is typically 60 seconds (1 minute), but may vary per endpoint.
+- **Limits:** The number of allowed requests per endpoint per minute varies based on how computationally expensive the endpoint is. For example:
   - `Register` and `Login`: 5 requests per minute per IP
   - `getReviewStats` (all stats): 3 requests per minute per IP
   - `getReviewStats` (single stat): 10 requests per minute per IP
   - Most other endpoints allow for 10–20 requests per minute per IP, depending on the endpoint's complexity.
-- **How it works (technical):**
+- **How it works:**
   - On each request, the API checks the `rate_limits` table for your IP and the endpoint.
   - If you have not exceeded the allowed number of requests in the current time window, your request proceeds and your request count is incremented.
   - If you exceed the limit, the API immediately returns a 429 error and does not process your request.
@@ -89,6 +89,18 @@ If you exceed the rate limit, you will receive a response like this:
 }
 ```
 
+## SQL Injection Prevention
+
+All API endpoints are protected against SQL injection attacks. The API uses prepared statements, parameter binding, and input validation to ensure that user input cannot manipulate SQL queries to perform unauthorized actions on the database.
+
+- **Prepared statements:** The API uses prepared statements with parameter binding (`?` placeholders) for all SQL queries that include user-supplied input. This ensures that user data is never directly inserted into SQL strings, but is instead safely passed to the database engine as parameters.
+- **Parameter Binding:**  
+  All user input is passed as parameters to prepared statements, which ensures that the database treats them as data, not executable code. This prevents attackers from injecting malicious SQL code through user input.
+- **Input Validation:**  
+  The API validates and sanitizes all input fields before using them in queries. This includes checking types, lengths, patterns, and allowed values for all parameters.
+
+Attackers cannot inject SQL code through API parameters, as all input is treated as data, not executable code. Even if a user submits special characters or SQL keywords in their input, these will not affect the query logic or compromise the database.
+
 ## Request Format
 
 All requests to the API should be made using the `POST` method. The request body should be in `JSON` format, and the content type should be set to `application/json`. Use a `type` parameter to specify the type of request being made. 
@@ -101,7 +113,7 @@ All responses from the API will be in `JSON` format. The response will include a
 
 - **Success Cases:**
   - If returning records/objects, a `data` field will be included. `message` may also be specified but will not contain usable data.
-  - If the operation is successful but does not return data, include a `message` field will be included without any `data`. This can occur when there isn't any records to return, such as in the case of a successful registration or login, or no product adheres to the search/filter criteria.
+  - If the operation is successful but does not return data, a `message` field will be included without any `data`. This can occur when there isn't any records to return, such as in the case of a successful registration or login, or when no product adheres to the search/filter criteria.
 
 - **Error Cases:**
   - Always includes a `message` field with description of the error.
@@ -1814,8 +1826,6 @@ The `editProduct` endpoint allows an admin to update the details of an existing 
 }
 ```
 
-
-
 ---
 
 ## API Endpoints (CUSTOMER)
@@ -1884,7 +1894,7 @@ The `getAllCategories` endpoint allows any authenticated user (Admin or Customer
 
 The `getAllProducts` endpoint allows a customer to retrieve a list of products for display on the Products and Top-rated pages. The API performs all filtering, sorting, and aggregation, returning each product's image, title, average rating, cheapest price, and the retailer's name and ID for that price. Products with no ratings or prices are handled according to the request parameters.
 
-**Only users with the `Customer` user_type (validated by their API key) can use this endpoint.**
+**Depending on the user type (as identified by their API key), the user will automatically be directed to their respective getAllProducts handler.**
 
 #### Request Parameters
 
