@@ -1,23 +1,18 @@
 // Constants
 const API_URL = 'http://localhost:8000/api.php';
 
-// DOM Elements
-const accountBtn = document.getElementById("accountBtn");
-const accountMenu = document.getElementById("accountMenu");
+// DOM Elements - Only include elements that exist in highest_rated.html
+const productsContainer = document.getElementById("products-list");
 const themeToggle = document.getElementById("themeToggle");
 const themeIcon = document.getElementById("themeIcon");
 const menuToggle = document.getElementById("menuToggle");
 const navLinks = document.getElementById("navLinks");
-const searchInput = document.querySelector(".search-input");
-const searchBtn = document.querySelector(".search-btn");
-const productsContainer = document.getElementById("products-list");
+
 
 let currentApiKey =
     localStorage.getItem('apiKey') ||
-    
     sessionStorage.getItem('apiKey') ||
     getCookie('apiKey');
-
 // Cookie helpers
 function setCookie(name, value, days) {
     const d = new Date();
@@ -41,7 +36,9 @@ function getCookie(name) {
 
 // Theme logic
 function updateIcon() {
-    themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
+    if (themeIcon) {
+        themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
+    }
 }
 
 function applySavedTheme() {
@@ -50,7 +47,6 @@ function applySavedTheme() {
     updateIcon();
 }
 
-// Product loading
 async function loadProducts(searchTerm = '') {
     try {
         productsContainer.innerHTML = '<div class="loading-spinner">Loading top-rated products...</div>';
@@ -61,11 +57,12 @@ async function loadProducts(searchTerm = '') {
             sort_by: 'rating_desc',
             filter_by: {
                 minimum_average_rating: 4.0
-            },
-            include_no_rating: false
+            }
         };
 
-        if (searchTerm) requestPayload.name = searchTerm;
+        if (searchTerm) {
+            requestPayload.name = searchTerm;
+        }
 
         const response = await fetch(API_URL, {
             method: 'POST',
@@ -74,66 +71,59 @@ async function loadProducts(searchTerm = '') {
         });
 
         const result = await response.json();
+        console.log('API Response:', result); // For debugging
 
         if (result.status === 'success') {
-            displayProducts(result.data);
+            // The API returns products directly in the data property
+            const products = result.data || [];
+            displayProducts(products);
         } else {
-            console.error('Error loading products:', result.message);
-            productsContainer.innerHTML = '<p class="error-message">Failed to load top-rated products. Please try again later.</p>';
+            const errorMessage = result.message || 'Failed to load top-rated products';
+            console.error('API Error:', errorMessage);
+            productsContainer.innerHTML = `<p class="error-message">${errorMessage}</p>`;
         }
 
     } catch (error) {
-        console.error('Error loading products:', error);
+        console.error('Network Error:', error);
         productsContainer.innerHTML = '<p class="error-message">Network error. Please check your connection.</p>';
     }
 }
 
-// Display each product
 async function displayProducts(products) {
     productsContainer.innerHTML = '';
 
-    if (products.length === 0) {
-        productsContainer.innerHTML = '<p class="no-products">No products found matching your criteria.</p>';
+    if (!Array.isArray(products)) {
+        productsContainer.innerHTML = '<p class="no-products">Invalid products data format</p>';
         return;
     }
 
+    if (products.length === 0) {
+        productsContainer.innerHTML = '<p class="no-products">No top-rated products found.</p>';
+        return;
+    }
+
+    // Process each product
     for (const product of products) {
-        let averageRating = product.average_rating;
-        let reviewCount = 0;
-
-        // Fetch detailed review stats
-        try {
-            const detailResponse = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    type: 'getProductDetails',
-                    apikey: currentApiKey,
-                    product_id: product.product_id,
-                    return: "Reviews"
-                })
-            });
-
-            const detailResult = await detailResponse.json();
-
-            if (detailResult.status === 'success' && detailResult.data) {
-                const reviews = Array.isArray(detailResult.data.reviews) ? detailResult.data.reviews : [];
-                reviewCount = reviews.length;
-                averageRating = detailResult.data.average_review ?? null;
-            }
-
-        } catch (err) {
-            console.warn(`Details failed for product ID ${product.product_id}`, err);
-        }
+        // Ensure product has required properties
+        const safeProduct = {
+            product_id: product.product_id || 'N/A',
+            title: product.title || 'Unnamed Product',
+            image_url: product.image_url || '/src/private/resources/default.png',
+            average_rating: product.average_rating || 0,
+            cheapest_price: product.cheapest_price || null,
+            retailer_name: product.retailer_name || 'Unknown retailer'
+        };
 
         const productBox = document.createElement('div');
         productBox.className = 'product-box';
 
-        // Generate stars
+        // Generate star rating display
         let starsHtml = '';
-        if (averageRating) {
-            const fullStars = Math.floor(averageRating);
-            const hasHalfStar = averageRating % 1 >= 0.5;
+        const rating = safeProduct.average_rating;
+        
+        if (rating > 0) {
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 >= 0.5;
 
             for (let i = 0; i < 5; i++) {
                 if (i < fullStars) {
@@ -145,87 +135,68 @@ async function displayProducts(products) {
                 }
             }
         } else {
-            for (let i = 0; i < 5; i++) {
-                starsHtml += '<span class="material-symbols-outlined">star_outline</span>';
-            }
+            // Show empty stars if no rating
+            starsHtml = '<span class="material-symbols-outlined">star_outline</span>'.repeat(5);
         }
-
-        const title = product.title || 'Unnamed Product';
-        const image = product.image_url || '/src/private/resources/default.png';
-        const price = product.cheapest_price ? `R${product.cheapest_price.toFixed(2)}` : null;
 
         productBox.innerHTML = `
             <div class="product-image">
-                <img src="${image}" alt="${title}">
+                <img src="${safeProduct.image_url}" alt="${safeProduct.title}" onerror="this.src='/src/private/resources/default.png'">
             </div>
             <div class="product-content">
                 <div class="product-info">
-                    <h3 class="product-title">${title}</h3>
+                    <h3 class="product-title">${safeProduct.title}</h3>
                     <div class="product-rating">
                         ${starsHtml}
                         <span class="rating-text">
-                            ${averageRating ? averageRating.toFixed(1) : 'No reviews'}
-                            ${reviewCount ? ` (${reviewCount})` : ''}
+                            ${rating ? rating.toFixed(1) : 'No rating'}
                         </span>
                     </div>
                 </div>
                 <div class="best-price">
-                    ${price ? 
+                    ${safeProduct.cheapest_price ? 
                         `<span class="best-price-label">Best Price</span>
-                         <span class="best-price-value">${price}</span>
-                         <span class="retailer-label">From ${product.retailer_name}</span>` :
+                         <span class="best-price-value">R${safeProduct.cheapest_price.toFixed(2)}</span>
+                         <span class="retailer-label">From ${safeProduct.retailer_name}</span>` :
                         '<span class="no-price">No prices available</span>'}
                 </div>
-                <button class="compare-btn" data-product-id="${product.product_id}">Compare Prices</button>
+                <button class="compare-btn" data-product-id="${safeProduct.product_id}">Compare Prices</button>
             </div>
         `;
 
         productsContainer.appendChild(productBox);
     }
 
-    // Compare button listeners
-    document.querySelectorAll('.compare-btn').forEach(button => {
-        button.addEventListener('click', function () {
-            const productId = this.getAttribute('data-product-id');
-            console.log('Compare prices for product:', productId);
-            // You can redirect or open a modal here
-        });
+    // Add event listeners to compare buttons
+  document.querySelectorAll('.compare-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const productId = this.getAttribute('data-product-id');
+        // Store the product ID in session storage
+        sessionStorage.setItem('currentProductId', productId);
+        // Navigate to view page
+        window.location.href = '../html/view.html';
     });
-}
-
-// Search handlers
-function performSearch() {
-    const searchTerm = searchInput.value.trim();
-    loadProducts(searchTerm);
-}
-
-searchBtn.addEventListener('click', performSearch);
-searchInput.addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') performSearch();
 });
+}
 
 // Initialization
 document.addEventListener('DOMContentLoaded', function () {
     applySavedTheme();
     loadProducts();
-});
-
-// Theme & menu handlers
-accountBtn.addEventListener("click", () => accountMenu.classList.toggle("show"));
-
-themeToggle.addEventListener("click", function () {
-    document.body.classList.toggle("dark");
-    const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
-    setCookie("theme", newTheme, 30);
-    updateIcon();
-});
-
-menuToggle.addEventListener("click", () => navLinks.classList.toggle("show"));
-
-window.addEventListener("click", function (e) {
-    if (!accountBtn.contains(e.target) && !accountMenu.contains(e.target)) {
-        accountMenu.classList.remove("show");
+    
+    // Only add event listeners if elements exist
+    if (themeToggle) {
+        themeToggle.addEventListener("click", function () {
+            document.body.classList.toggle("dark");
+            const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
+            setCookie("theme", newTheme, 30);
+            updateIcon();
+        });
     }
-});
 
-updateIcon(); // Ensure correct icon on first load
+    if (menuToggle && navLinks) {
+        menuToggle.addEventListener("click", () => navLinks.classList.toggle("show"));
+    }
+
+    updateIcon(); // Ensure correct icon on first load
+});

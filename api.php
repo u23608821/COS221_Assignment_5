@@ -48,7 +48,7 @@ loadEnv(__DIR__ . '/.env');
 // header("Access-Control-Allow-Origin: *"); //Wheatley already specifies this in the .htaccess file. Do not add it again
 // ======================added adriano===================
 //Sets the headers for the API
-header("Access-Control-Allow-Origin: http://127.0.0.1:5500");
+header("Access-Control-Allow-Origin: http://127.0.0.1:5501");
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
