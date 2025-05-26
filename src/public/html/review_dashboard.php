@@ -67,6 +67,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
         <ul class="nav-links" id="navLinks">
           <li><a href="../html/products.php">All Products</a></li>
           <li><a href="../html/highest_rated.php">Top-Rated Products</a></li>
+          <li><a href="../html/reviews_dashboard.php">Reviews Dashboard</a></li>
         </ul>
       </div>
       <div class="nav-actions">
