@@ -45,6 +45,11 @@ function clickLogin() {
                         localStorage.setItem("email", responseData.data.email);
                     }
 
+                    // Store first name if available
+                    if (responseData.data.name) {
+                        localStorage.setItem("name", responseData.data.name);
+                    }
+
                     // Store user_type if available
                     if (responseData.data.user_type) {
                         localStorage.setItem("user_type", responseData.data.user_type);

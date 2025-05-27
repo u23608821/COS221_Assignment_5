@@ -103,7 +103,11 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
     const WHEATLEY_USERNAME = '<?php echo addslashes($username); ?>';
     const WHEATLEY_PASSWORD = '<?php echo addslashes($password); ?>';
   </script>
+
+
   <script src="../scripts/my_reviews.js"></script>
   <script src="../scripts/global.js"></script>
+  
+  
 </body>
 </html>

@@ -117,6 +117,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     loadMyReviews(apiKey);
+    updateUserGreeting(); 
 });
 
 function loadMyReviews(apiKey) {
@@ -299,5 +300,18 @@ function deleteReview(apiKey, reviewId, reviewElement, popup) {
 function checkForEmptyReviews() {
     if (document.querySelectorAll('.review-box').length === 0) {
         showEmptyState("You haven't written any reviews yet.");
+    }
+}
+
+function updateUserGreeting() {
+    const firstName = localStorage.getItem('name'); // Changed from 'first_name' to 'name'
+    const userTextElement = document.querySelector('.user-text');
+    
+    if (userTextElement) {
+        if (firstName) {
+            userTextElement.textContent = `${firstName}`;
+        } else {
+            userTextElement.textContent = 'User';
+        }
     }
 }
