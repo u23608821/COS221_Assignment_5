@@ -89,19 +89,19 @@ function handleResponse(xhr, successCallback, errorCallback) {
         try {
             const response = JSON.parse(xhr.responseText);
             if (response.status === 'success') {
-                alert(response.message || "Operation successful");
-                if (successCallback) successCallback(response.data);
+                // Suppressed: alert(response.message || "Operation successful");
+                if (successCallback) successCallback(Array.isArray(response.data) ? response.data : []);
             } else {
-                alert('Error: ' + (response.message || 'Unknown error'));
+                // Suppressed: alert('Error: ' + (response.message || 'Unknown error'));
                 if (errorCallback) errorCallback();
             }
         } catch (e) {
             console.error("Error parsing response:", e);
-            alert("Error processing response from server.");
+            // Suppressed: alert("Error processing response from server.");
             if (errorCallback) errorCallback();
         }
     } else {
-        alert("Server error: " + xhr.status);
+        // Suppressed: alert("Server error: " + xhr.status);
         if (errorCallback) errorCallback();
     }
 }
@@ -134,7 +134,7 @@ function loadMyReviews(apiKey) {
 function displayMyReviews(reviews) {
     reviewsContainer.innerHTML = '';
 
-    if (reviews === null || reviews.length === 0) {
+    if (!Array.isArray(reviews) || reviews.length === 0){
         showEmptyState("You haven't written any reviews yet.");
         return;
     }
