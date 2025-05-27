@@ -63,3 +63,48 @@ function getCookie(name) {
     }
     return "";
 }
+
+function handleLogout() {
+    // Clear all relevant local storage items
+    localStorage.removeItem('apiKey');
+    localStorage.removeItem('name');
+    localStorage.removeItem('user_type'); 
+    // Redirect to login page
+    window.location.href = 'https://wheatley.cs.up.ac.za/u24634434/COS221/src/public/html/login.php';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    applySavedTheme();
+    updateUserGreeting(); // Ensure this runs on page load
+    
+    // Check if user is logged in!
+    const apiKey = localStorage.getItem('apiKey');
+    if (!apiKey && !window.location.pathname.includes('login.php')) {
+        window.location.href = 'https://wheatley.cs.up.ac.za/u24634434/COS221/src/public/index.html';
+    }
+
+    // Add click handler to all sign out links
+    const signOutLinks = document.querySelectorAll('.signout');
+    signOutLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            handleLogout();
+        });
+    });
+
+    
+});
+
+
+function updateUserGreeting() {
+    const firstName = localStorage.getItem('name'); // Changed from 'first_name' to 'name'
+    const userTextElement = document.querySelector('.user-text');
+    
+    if (userTextElement) {
+        if (firstName) {
+            userTextElement.textContent = `${firstName}`;
+        } else {
+            userTextElement.textContent = 'User';
+        }
+    }
+}

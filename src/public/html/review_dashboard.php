@@ -52,6 +52,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pick 'n Price—Review Visualisation Dashboard</title>
+  <link rel="icon" href="https://wheatley.cs.up.ac.za/u24634434/COS221/Images/Favicon.png" type="image/x-icon">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
   <link href="../styles/review_dashboard.css" rel="stylesheet">
@@ -93,7 +94,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   </nav>
 
   <main>
-    <h1 class="page-header">Review Visualisation Dashboard</h1>
+    <h1 class="page-header">Reviews Dashboard</h1>
     <p class="page-subheader">Visualise and interpret reviews data about all products here.</p>
 
     <div class="dashboard-grid">
