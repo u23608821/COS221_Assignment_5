@@ -97,6 +97,10 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
     <h1 class="page-header">Top-Rated Products</h1>
     <p class="page-subheader">View products that received the highest ratings.</p>
 
+     <!-- Full-width Rating Banner -->
+    <div class="fullwidth-rating-banner">
+      All products with more than 4 stars 
+    </div>
 
     <div class="products-container" id="products-list">
       <!-- Products will be loaded here dynamically -->

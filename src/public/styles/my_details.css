@@ -31,6 +31,10 @@
      flex-direction: column;
  }
 
+ .headings {
+     margin-right: 26rem;
+ }
+
  main {
      flex: 1;
      padding: 2rem;
@@ -41,6 +45,7 @@
      width: 100%;
      display: flex;
      flex-direction: column;
+     align-items: center;
  }
 
  .navbar {
@@ -244,55 +249,55 @@
      }
  }
 
- .footer {
-     position: fixed;
-     bottom: 0;
-     left: 0;
-     right: 0;
-     z-index: 1000;
-     background-color: #e5e7eb;
-     padding: 1rem 2rem;
-     font-family: 'Inter', sans-serif;
-     font-size: 16px;
-     border-top: #c7c7c7 0.5px solid;
-     box-shadow: 0 -1px 60px rgba(0, 0, 0, 0.16);
- }
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background-color: #e5e7eb;
+    padding: 1rem 2rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    border-top: #c7c7c7 0.5px solid;
+    box-shadow: 0 -1px 60px rgba(0, 0, 0, 0.16);
+}
 
- .footer-container {
-     display: flex;
-     justify-content: space-between;
-     align-items: center;
- }
+.footer-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
- .footer-left,
- .footer-right {
-     color: var(--text-dark);
- }
+.footer-left,
+.footer-right {
+    color: var(--text-dark);
+}
 
- .footer-right {
-     text-decoration: underline;
- }
+.footer-right {
+    text-decoration: underline;
+}
 
- .footer-right .material-symbols-outlined {
-     font-size: 18px;
-     margin-right: 6px;
-     vertical-align: middle;
- }
+.footer-right .material-symbols-outlined {
+    font-size: 18px;
+    margin-right: 6px;
+    vertical-align: middle;
+}
 
- .dark .footer-left,
- .dark .footer-right {
-     color: var(--text-light);
- }
+.dark .footer-left,
+.dark .footer-right {
+    color: var(--text-light);
+}
 
- .dark .footer {
-     background-color: #2d3a4d;
-     border-color: #374151;
-     padding: 1rem 2rem;
-     font-family: 'Inter', sans-serif;
-     font-size: 16px;
-     border-top: #4b5563 0.5px solid;
-     box-shadow: 0 -1px 60px rgba(0, 0, 0, 0.26);
- }
+.dark .footer {
+    background-color: #2d3a4d;
+    border-color: #374151;
+    padding: 1rem 2rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    border-top: #4b5563 0.5px solid;
+    box-shadow: 0 -1px 60px rgba(0, 0, 0, 0.26);
+}
 
  .page-header {
      font-size: 2rem;
@@ -329,9 +334,16 @@
      border-radius: var(--radius);
      box-shadow: var(--shadow);
      padding: 2rem 5rem;
-     max-width: 800px;
-     margin-left: 0;
-     margin-right: auto;
+     width: 38rem;
+
+     display: flex;
+     justify-content: center;
+ }
+
+ .group-all {
+     display: flex;
+     flex-direction: column;
+     width: 95%;
  }
 
  .form-row,
@@ -343,7 +355,9 @@
  }
 
  .form-group {
+     display: block;
      flex: 1;
+     width: 95%;
  }
 
  .form-group.small {
@@ -385,6 +399,8 @@
      cursor: pointer;
      margin-top: 1.5rem;
      transition: background-color 0.2s ease;
+     width: 10rem;
+     align-self: center;
  }
 
  .save-btn:hover {
@@ -423,37 +439,36 @@
 
 
  /* User button styles */
-.btn-user {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background-color: #4285f4;
-  color: white;
-  border: none;
-  border-radius: 24px;
-  font-family: 'Inter', sans-serif;
-  font-weight: 500;
-  font-size: 14px;
-  cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-}
+ .btn-user {
+     display: flex;
+     align-items: center;
+     gap: 8px;
+     padding: 8px 16px;
+     background-color: #4285f4;
+     color: white;
+     border: none;
+     border-radius: 24px;
+     font-family: 'Inter', sans-serif;
+     font-weight: 500;
+     font-size: 14px;
+     cursor: pointer;
+     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+     transition: all 0.3s ease;
+ }
 
-.btn-user:hover {
-  background-color: #3367d6;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
+ .btn-user:hover {
+     background-color: #3367d6;
+     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+ }
 
-.user-icon {
-  font-size: 20px;
-}
+ .user-icon {
+     font-size: 20px;
+ }
 
-.arrow-icon {
-  font-size: 20px;
-}
+ .arrow-icon {
+     font-size: 20px;
+ }
 
-.user-text {
-  margin: 0 4px;
-}
-
+ .user-text {
+     margin: 0 4px;
+ }
