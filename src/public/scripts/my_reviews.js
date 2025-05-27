@@ -1,73 +1,9 @@
-// DOM Elements
-
 const reviewsContainer = document.getElementById("reviewsContainer");
 
-// Theme Functions
-function updateIcon() {
-    themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
-}
-
-function applySavedTheme() {
-    const savedTheme = getCookie("theme");
-    if (savedTheme === "dark") {
-        document.body.classList.add("dark");
-    } else {
-        document.body.classList.remove("dark");
-    }
-    updateIcon();
-}
-
-// Initialize theme
-window.addEventListener("load", applySavedTheme);
-updateIcon();
-
-// Event Listeners
-accountBtn.addEventListener("click", function () {
-    accountMenu.classList.toggle("show");
-});
-
-themeToggle.addEventListener("click", function () {
-    document.body.classList.toggle("dark");
-    const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
-    setCookie("theme", newTheme, 30);
-    updateIcon();
-});
-
-menuToggle.addEventListener("click", function () {
-    navLinks.classList.toggle("show");
-});
-
-window.addEventListener("click", function (e) {
-    if (!accountBtn.contains(e.target) && !accountMenu.contains(e.target)) {
-        accountMenu.classList.remove("show");
-    }
-});
-
-// Cookie Functions
-function setCookie(name, value, days) {
-    const d = new Date();
-    d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
-    let expires = "expires=" + d.toUTCString();
-    document.cookie = name + "=" + value + ";" + expires + ";path=/";
-}
-
-function getCookie(name) {
-    let cname = name + "=";
-    let decodedCookie = decodeURIComponent(document.cookie);
-    let ca = decodedCookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i].trim();
-        if (c.indexOf(cname) === 0) {
-            return c.substring(cname.length, c.length);
-        }
-    }
-    return "";
-}
-
 // Main Review Functions
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     const apiKey = localStorage.getItem('apiKey');
-    
+
     if (!apiKey) {
         alert('Please log in to view your reviews');
         window.location.href = '../html/login.php';
@@ -79,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 function loadMyReviews(apiKey) {
     showLoadingState();
-    
+
     const xhr = new XMLHttpRequest();
     xhr.open('POST', API_URL, true);
     xhr.setRequestHeader("Content-Type", "application/json");
@@ -90,12 +26,12 @@ function loadMyReviews(apiKey) {
         apikey: apiKey
     };
 
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
         if (xhr.readyState === 4) {
             if (xhr.status === 200) {
                 try {
                     const response = JSON.parse(xhr.responseText);
-                    
+
                     if (response.status === 'success' && response.data) {
                         displayMyReviews(response.data);
                     } else {
@@ -116,7 +52,7 @@ function loadMyReviews(apiKey) {
         }
     };
 
-    xhr.onerror = function() {
+    xhr.onerror = function () {
         showErrorState("Network error. Please check your connection.");
     };
 
@@ -144,7 +80,7 @@ function createReviewBox(review) {
     reviewBox.className = 'review-box';
     reviewBox.dataset.reviewId = review.review_id;
     reviewBox.dataset.productId = review.product_id;
-    
+
     const starsHtml = createStarRating(review.score);
     const formattedDate = formatReviewDate(review.last_updated);
     const formattedPrice = formatPrice(review.cheapest_price);
@@ -170,7 +106,7 @@ function createReviewBox(review) {
             </div>
         </div>
     `;
-    
+
     return reviewBox;
 }
 
@@ -236,7 +172,7 @@ function attachDeleteHandlers() {
 function handleDeleteClick(e) {
     const reviewBox = e.target.closest('.review-box');
     const reviewId = reviewBox.dataset.reviewId;
-    
+
     showDeleteConfirmation(reviewId, reviewBox);
 }
 
@@ -254,11 +190,11 @@ function showDeleteConfirmation(reviewId, reviewElement) {
     `;
     document.body.appendChild(popup);
 
-    popup.querySelector('.popup-no').onclick = function() {
+    popup.querySelector('.popup-no').onclick = function () {
         popup.remove();
     };
-    
-    popup.querySelector('.popup-yes').onclick = function() {
+
+    popup.querySelector('.popup-yes').onclick = function () {
         const apiKey = localStorage.getItem('apiKey');
         if (!apiKey) {
             alert('Session expired. Please log in again.');
@@ -266,7 +202,7 @@ function showDeleteConfirmation(reviewId, reviewElement) {
             window.location.href = '../html/login.php';
             return;
         }
-        
+
         deleteReview(apiKey, reviewId, reviewElement, popup);
     };
 }
@@ -277,8 +213,8 @@ function deleteReview(apiKey, reviewId, reviewElement, popup) {
         apikey: apiKey,
         review_id: reviewId
     };
-    
-    sendReviewRequest(payload, 
+
+    sendReviewRequest(payload,
         () => {
             // Success callback
             popup.remove();
@@ -298,7 +234,7 @@ function sendReviewRequest(payload, successCallback, errorCallback) {
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
 
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
         if (xhr.readyState === 4) {
             if (xhr.status === 200) {
                 try {
@@ -322,7 +258,7 @@ function sendReviewRequest(payload, successCallback, errorCallback) {
         }
     };
 
-    xhr.onerror = function() {
+    xhr.onerror = function () {
         alert('Network Error: Could not connect to the server');
         if (errorCallback) errorCallback();
     };

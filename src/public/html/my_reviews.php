@@ -4,7 +4,8 @@ $envPath = dirname(dirname(dirname(dirname(__FILE__)))); // Go up 4 levels to re
 $envFile = $envPath . '/.env';
 
 // Read environment variables
-function readEnvFile($path) {
+function readEnvFile($path)
+{
   if (!file_exists($path)) {
     return false;
   }
@@ -102,7 +103,8 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
     const WHEATLEY_USERNAME = '<?php echo addslashes($username); ?>';
     const WHEATLEY_PASSWORD = '<?php echo addslashes($password); ?>';
   </script>
-  <script src="../scripts/my_reviews.js"></script>
   <script src="../scripts/global.js"></script>
+  <script src="../scripts/my_reviews.js"></script>
 </body>
+
 </html>
