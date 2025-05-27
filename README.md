@@ -21,6 +21,9 @@
   <span style="margin: 0 100 px;"><img src="https://github.com/u23608821/COS221_Assignment_5/blob/documentation-readme/src/public/images/phpmyadmin.jpg" width="120" height="70" alt="PHPMyAdmin"></span>
 </p>
 
+## GitHub
+  https://github.com/u23608821/COS221_Assignment_5
+
 
 ## Team Members
 | Name | GitHub | LinkedIn | Description |
