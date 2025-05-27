@@ -523,3 +523,13 @@
 .dark .rating-value {
   color: var(--text-light);
 }
+
+
+.stars i {
+    color: #FFD700;
+    font-size: 1.5rem;
+}
+
+.stars.small i {
+    font-size: 1rem;
+}
