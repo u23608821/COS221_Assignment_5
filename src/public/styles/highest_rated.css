@@ -1080,3 +1080,21 @@ main {
 .dark .rating-text {
     color: #d1d5db;
 }
+
+
+.fullwidth-rating-banner {
+  width: 100%;
+  background-color: #5b9afe;
+  color: #ffffff;
+  font-weight: 400;
+  text-align: center;
+  padding: 1rem 0;
+  font-size: 1.2rem;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 0.5rem;
+}
