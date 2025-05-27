@@ -189,22 +189,19 @@ async function displayProducts(products) {
         if (averageRating !== null) {
             const fullStars = Math.floor(averageRating);
             const hasHalfStar = averageRating % 1 >= 0.25 && averageRating % 1 < 0.75;
-            const totalStars = hasHalfStar ? fullStars + 1 : fullStars;
-
-            for (let i = 0; i < 5; i++) {
-                if (i < fullStars) {
-                    starsHtml += '<span class="material-symbols-outlined">star</span>';
-                } else if (i === fullStars && hasHalfStar) {
-                    starsHtml += '<span class="material-symbols-outlined">star_half</span>';
+            
+            for (let i = 1; i <= 5; i++) {
+                if (i <= fullStars) {
+                    starsHtml += '<i class="fas fa-star"></i>';
+                } else if (i === fullStars + 1 && hasHalfStar) {
+                    starsHtml += '<i class="fas fa-star-half-alt"></i>';
                 } else {
-                    starsHtml += '<span class="material-symbols-outlined">star_border</span>';
+                    starsHtml += '<i class="far fa-star"></i>';
                 }
             }
         } else {
             // If no rating, show all empty
-            for (let i = 0; i < 5; i++) {
-                starsHtml += '<span class="material-symbols-outlined">star_border</span>';
-            }
+            starsHtml = '<i class="far fa-star"></i>'.repeat(5);
         }
 
         productBox.innerHTML = `

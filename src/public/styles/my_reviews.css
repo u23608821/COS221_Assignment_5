@@ -439,17 +439,6 @@ main {
     background-color: rgb(30, 50, 80);
 }
 
-.edit-btn {
-    color: #3b82f6;
-}
-
-.edit-btn:hover {
-    background-color: #3b82f6;
-    color: white;
-    border: 1px solid #3b82f6;
-    box-shadow: var(#3b82f6);
-}
-
 .delete-btn {
     color: #ef4444;
 }

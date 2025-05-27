@@ -108,12 +108,24 @@ function displayProductDetails(product) {
     // Stars
     const fullStars = Math.floor(product.average_review);
     const hasHalf = product.average_review % 1 >= 0.5;
-    const starEls = starRating.querySelectorAll('.material-symbols-outlined');
-    starEls.forEach((star, i) => {
-      if (i < fullStars) star.textContent = 'star';
-      else if (i === fullStars && hasHalf) star.textContent = 'star_half';
-      else star.textContent = 'star';
-    });
+    const starsContainer = document.createElement('div');
+    starsContainer.className = 'star-rating';
+
+    for (let i = 1; i <= 5; i++) {
+        const star = document.createElement('i');
+        if (i <= fullStars) {
+            star.className = 'fas fa-star';
+        } else if (i === fullStars + 1 && hasHalf) {
+            star.className = 'fas fa-star-half-alt';
+        } else {
+            star.className = 'far fa-star';
+        }
+        starsContainer.appendChild(star);
+    }
+
+    // Replace the existing star rating container
+    const oldStarRating = document.querySelector('.star-rating');
+    oldStarRating.replaceWith(starsContainer);
 
     // Rating distribution
     const dist = [0, 0, 0, 0, 0];
@@ -140,16 +152,16 @@ function displayProductDetails(product) {
       const reviewEl = document.createElement('div');
       reviewEl.className = 'review';
       reviewEl.innerHTML = `
-        <div class="review-header">
+      <div class="review-header">
           <div class="review-stars">
-            ${'<span class="material-symbols-outlined">star</span>'.repeat(r.score)}
-            ${'<span class="material-symbols-outlined">star</span>'.repeat(5 - r.score)}
+              ${'<i class="fas fa-star"></i>'.repeat(r.score)}
+              ${'<i class="far fa-star"></i>'.repeat(5 - r.score)}
           </div>
           <div class="reviewer-name">${r.customer_name}</div>
           <div class="review-date">Reviewed on ${formatDate(r.updated_at)}</div>
-        </div>
-        <div class="review-content">${r.description}</div>
-      `;
+      </div>
+      <div class="review-content">${r.description}</div>
+  `;
       userReviews.appendChild(reviewEl);
     });
   } else {

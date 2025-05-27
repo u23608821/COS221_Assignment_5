@@ -740,3 +740,15 @@ main {
   text-align: justify; 
   color: grey; 
 }
+
+
+
+.star-rating i {
+    color: #ffc107;
+    font-size: 1.5rem;
+}
+
+.review-stars i {
+    color: #ffc107;
+    font-size: 1.2rem;
+}

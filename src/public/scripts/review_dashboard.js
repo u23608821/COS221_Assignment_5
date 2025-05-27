@@ -231,22 +231,21 @@ function updateAggregateTile({ totalReviews, averageRating, highestRating, lowes
 
 
 function updateStars(selector, rating) {
-  const container = document.querySelector(selector);
-  container.innerHTML = '';
+    const container = document.querySelector(selector);
+    container.innerHTML = '';
 
-  const fullStars = Math.floor(rating);
-  const hasHalfStar = rating % 1 >= 0.25 && rating % 1 < 0.75;
-  const remainingStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.25 && rating % 1 < 0.75;
 
-  for (let i = 0; i < fullStars; i++) {
-    container.innerHTML += `<span class="material-symbols-outlined">star</span>`;
-  }
-
-  if (hasHalfStar) {
-    container.innerHTML += `<span class="material-symbols-outlined">star_half</span>`;
-  }
-
-  for (let i = 0; i < remainingStars; i++) {
-    container.innerHTML += `<span class="material-symbols-outlined">grade</span>`;
-  }
+    for (let i = 1; i <= 5; i++) {
+        const star = document.createElement('i');
+        if (i <= fullStars) {
+            star.className = 'fas fa-star';
+        } else if (i === fullStars + 1 && hasHalfStar) {
+            star.className = 'fas fa-star-half-alt';
+        } else {
+            star.className = 'far fa-star';
+        }
+        container.appendChild(star);
+    }
 }
