@@ -246,9 +246,10 @@ main {
 }
 
 .footer {
-      margin-top: auto;
-  flex-shrink: 0;
-  width: 100%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
     z-index: 1000;
     background-color: #e5e7eb;
     padding: 1rem 2rem;
@@ -259,12 +260,9 @@ main {
 }
 
 .footer-container {
-     display: flex;
+    display: flex;
     justify-content: space-between;
     align-items: center;
-    max-width: 1200px;
-    margin: auto;
-    flex-wrap: wrap;
 }
 
 .footer-left,

@@ -119,21 +119,17 @@
      padding: 1rem 2rem;
      font-family: 'Inter', sans-serif;
      font-size: 16px;
-     width: 100%;
-     text-align: center;
  }
 
  .footer-container {
      display: flex;
-     justify-content: center;
+     justify-content: space-between;
      align-items: center;
-     
  }
 
  .footer-left,
  .footer-right {
      color: var(--text-dark);
-     text-align: center;
  }
 
  .footer-right {
@@ -182,18 +178,18 @@
 
 
  /* reCAPTCHA styling */
- .g-recaptcha {
-     margin: 1rem 0;
-     display: flex;
-     justify-content: center;
- }
+.g-recaptcha {
+    margin: 1rem 0;
+    display: flex;
+    justify-content: center;
+}
 
- /* Adjust the captcha container to fit properly */
- .g-recaptcha>div {
-     width: 100% !important;
- }
+/* Adjust the captcha container to fit properly */
+.g-recaptcha > div {
+    width: 100% !important;
+}
 
- /* Dark mode adjustments */
- .dark .g-recaptcha iframe {
-     filter: invert(1) hue-rotate(180deg);
- }
+/* Dark mode adjustments */
+.dark .g-recaptcha iframe {
+    filter: invert(1) hue-rotate(180deg);
+}

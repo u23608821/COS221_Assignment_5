@@ -39,10 +39,6 @@ $username = $env ? $env['WHEATLEY_USERNAME'] : getenv("WHEATLEY_USERNAME");
 $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 
 
-
-// For debugging - comment these out in production
-// echo "Username from env: " . ($username ?: 'NOT FOUND') . "<br>";
-// echo "Password from env: " . ($password ? '********' : 'NOT FOUND') . "<br>";
 ?>
 
 <!DOCTYPE html>
@@ -97,9 +93,9 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
     <h1 class="page-header">Top-Rated Products</h1>
     <p class="page-subheader">View products that received the highest ratings.</p>
 
-     <!-- Full-width Rating Banner -->
+    <!-- Full-width Rating Banner -->
     <div class="fullwidth-rating-banner">
-      All products with more than 4 stars 
+      All products with more than 4 stars
     </div>
 
     <div class="products-container" id="products-list">
@@ -128,8 +124,8 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
     WHEATLEY_PASSWORD ? 'Password found' : 'Password missing');
 </script>
 
-<script src="../scripts/global.js"></script>
 <script src="../scripts/highest_rated.js"></script>
+<script src="../scripts/global.js"></script>
 
 
 

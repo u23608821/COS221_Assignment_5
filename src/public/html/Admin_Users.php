@@ -40,9 +40,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 
 
 
-// For debugging - comment these out in production
-// echo "Username from env: " . ($username ?: 'NOT FOUND') . "<br>";
-// echo "Password from env: " . ($password ? '********' : 'NOT FOUND') . "<br>";
+
 ?>
 
 <!DOCTYPE html>
