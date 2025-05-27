@@ -54,6 +54,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>View Product</title>
+  <link rel="icon" href="https://wheatley.cs.up.ac.za/u24634434/COS221/Images/Favicon.png" type="image/x-icon">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
   <link href="../styles/view.css" rel="stylesheet" />
@@ -71,7 +72,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
         <ul class="nav-links" id="navLinks">
           <li><a href="../html/products.php">All Products</a></li>
           <li><a href="../html/highest_rated.php">Top-Rated Products</a></li>
-          <li><a href="../html/highest_rated.php">Review Dashboard</a></li>
+          <li><a href="../html/review_dashboard.php">Reviews Dashboard</a></li>
         </ul>
       </div>
       <div class="nav-actions">
@@ -84,6 +85,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
           <div class="dropdown-menu" id="accountMenu">
             <a href="../html/my_details.php"><span>My Details</span></a>
             <a href="../html/my_reviews.php"><span>My Reviews</span></a>
+            <a href="../html/my_watchlist.php"><span>My Watchlist</span></a>
             <div class="dropdown-divider"></div>
             <a href="../html/login.php" class="signout"><span>Sign Out</span></a>
           </div>
@@ -112,8 +114,9 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
           <span class="heading">Description</span>
           <span class="text"></span>
 
-          <span class="heading">Category</span>
-          <span class="text"></span>
+            <span class="heading">Category</span>
+  <span class="text"></span>
+  <button class="add-to-watchlist-btn">Add to Watchlist</button>
         </div>
       </div>
 
@@ -144,7 +147,6 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
       </div>
 
       <div class="user-reviews"></div>
-      <button class="view-more-reviews">View more reviews</button>
     </div>
   </main>
 
@@ -156,6 +158,27 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
       </button>
     </div>
   </footer>
+
+  <!-- Write a review box --> 
+  <div class="review-modal" id="reviewModal">
+    <div class="review-modal-content">
+      <span class="review-modal-close" id="closeReviewModal">&times;</span>
+      <h2 class="review-modal-title">Write a review</h2>
+      <div class="star-rating-picker">
+        <div class="stars" id="starRating">
+          <span class="star" data-value="1">★</span>
+          <span class="star" data-value="2">★</span>
+          <span class="star" data-value="3">★</span>
+          <span class="star" data-value="4">★</span>
+          <span class="star" data-value="5">★</span>
+        </div>
+        <span class="star-rating-value" id="starRatingValue">0 out of 5</span>
+      </div>
+      <label for="reviewText" class="review-text-label">Your review</label>
+      <textarea id="reviewText" class="review-textarea" placeholder="Write a review..."></textarea>
+      <button class="submit-review-btn" id="submitReviewBtn" disabled>Write review</button>
+    </div>
+  </div>
 
   <script>
     // Set global variables for authentication

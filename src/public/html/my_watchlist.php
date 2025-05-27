@@ -51,6 +51,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pick 'n Price—My Watchlist</title>
+  <link rel="icon" href="https://wheatley.cs.up.ac.za/u24634434/COS221/Images/Favicon.png" type="image/x-icon">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link href="../styles/my_watchlist.css" rel="stylesheet">
@@ -94,109 +95,6 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 
     <div class="watchlist-container">
       <!-- Watchlist Item 1 -->
-      <div class="watchlist-box">
-        <div class="product-image">
-          <img src="/src/private/resources/dummyHeadphones.avif" alt="Wireless Headphones">
-        </div>
-        <div class="watchlist-main-content">
-          <div class="watchlist-text-content">
-            <h3 class="watchlist-title">Sony WH-1000XM4 Headphones</h3>
-            <div class="best-price">
-              <span class="best-price-label">Best Price</span>
-              <span class="best-price-value">R348.00</span>
-              <span class="retailer-label">From Takealot</span>
-            </div>
-          </div>
-          <div class="watchlist-actions">
-            <button class="watchlist-btn view-btn">View</button>
-            <button class="watchlist-btn delete-btn">Delete</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Watchlist Item 2 -->
-      <div class="watchlist-box">
-        <div class="product-image">
-          <img src="/src/private/resources/dummyAppleWatch.png" alt="Smart Watch">
-        </div>
-        <div class="watchlist-main-content">
-          <div class="watchlist-text-content">
-            <h3 class="watchlist-title">Apple Watch Series 8</h3>
-            <div class="best-price">
-              <span class="best-price-label">Best Price</span>
-              <span class="best-price-value">R379.99</span>
-              <span class="retailer-label">From iStore</span>
-            </div>
-          </div>
-          <div class="watchlist-actions">
-            <button class="watchlist-btn view-btn">View</button>
-            <button class="watchlist-btn delete-btn">Delete</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Watchlist Item 3 -->
-      <div class="watchlist-box">
-        <div class="product-image">
-          <img src="/src/private/resources/dummyCoffee.jpg" alt="Coffee Maker">
-        </div>
-        <div class="watchlist-main-content">
-          <div class="watchlist-text-content">
-            <h3 class="watchlist-title">Ninja CE251 Brewer</h3>
-            <div class="best-price">
-              <span class="best-price-label">Best Price</span>
-              <span class="best-price-value">R89.00</span>
-              <span class="retailer-label">From Makro</span>
-            </div>
-          </div>
-          <div class="watchlist-actions">
-            <button class="watchlist-btn view-btn">View</button>
-            <button class="watchlist-btn delete-btn">Delete</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Watchlist Item 4 -->
-      <div class="watchlist-box">
-        <div class="product-image">
-          <img src="/src/private/resources/dummyLaptop.avif" alt="Laptop">
-        </div>
-        <div class="watchlist-main-content">
-          <div class="watchlist-text-content">
-            <h3 class="watchlist-title">Dell XPS 13 Touchscreen Laptop</h3>
-            <div class="best-price">
-              <span class="best-price-label">Best Price</span>
-              <span class="best-price-value">R1,099.00</span>
-              <span class="retailer-label">From Evetech</span>
-            </div>
-          </div>
-          <div class="watchlist-actions">
-            <button class="watchlist-btn view-btn">View</button>
-            <button class="watchlist-btn delete-btn">Delete</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Watchlist Item 5 -->
-      <div class="watchlist-box">
-        <div class="product-image">
-          <img src="/src/private/resources/dummySpeaker.jpg" alt="Bluetooth Speaker">
-        </div>
-        <div class="watchlist-main-content">
-          <div class="watchlist-text-content">
-            <h3 class="watchlist-title">JBL Flip 6 Bluetooth Speaker</h3>
-            <div class="best-price">
-              <span class="best-price-label">Best Price</span>
-              <span class="best-price-value">R249.99</span>
-              <span class="retailer-label">From Incredible Connection</span>
-            </div>
-          </div>
-          <div class="watchlist-actions">
-            <button class="watchlist-btn view-btn">View</button>
-            <button class="watchlist-btn delete-btn">Delete</button>
-          </div>
-        </div>
-      </div>
     </div>
   </main>
   

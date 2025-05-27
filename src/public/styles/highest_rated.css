@@ -1056,3 +1056,28 @@ main {
   font-size: 1rem; 
   margin-left: 32rem; 
 }
+
+
+
+/* Star rating styles */
+.product-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.product-rating i {
+    color: #f59e0b;
+    font-size: 1.2rem;
+}
+
+.rating-text {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-left: 0.5rem;
+}
+
+.dark .rating-text {
+    color: #d1d5db;
+}

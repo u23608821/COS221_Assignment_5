@@ -40,6 +40,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pick 'n Price—My Reviews</title>
+  <link rel="icon" href="https://wheatley.cs.up.ac.za/u24634434/COS221/Images/Favicon.png" type="image/x-icon">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="../styles/my_reviews.css">
@@ -97,14 +98,20 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
     </div>
   </footer>
 
+
   <script>
-    // Pass PHP variables to JavaScript safely
-    const API_URL = 'https://wheatley.cs.up.ac.za/u24634434/COS221/api.php';
-    const WHEATLEY_USERNAME = '<?php echo addslashes($username); ?>';
-    const WHEATLEY_PASSWORD = '<?php echo addslashes($password); ?>';
+    // Set global variables for authentication
+    var WHEATLEY_USERNAME = "<?php echo $username; ?>";
+    var WHEATLEY_PASSWORD = "<?php echo $password; ?>";
+    console.log('Credentials loaded from PHP: ',
+      WHEATLEY_USERNAME ? 'Username found' : 'Username missing',
+      WHEATLEY_PASSWORD ? 'Password found' : 'Password missing');
   </script>
-  <script src="../scripts/global.js"></script>
+
   <script src="../scripts/my_reviews.js"></script>
+  <script src="../scripts/global.js"></script>
+
+
 </body>
 
 </html>
