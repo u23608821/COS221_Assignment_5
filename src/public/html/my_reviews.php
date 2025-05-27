@@ -4,8 +4,7 @@ $envPath = dirname(dirname(dirname(dirname(__FILE__)))); // Go up 4 levels to re
 $envFile = $envPath . '/.env';
 
 // Read environment variables
-function readEnvFile($path)
-{
+function readEnvFile($path) {
   if (!file_exists($path)) {
     return false;
   }
@@ -40,6 +39,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pick 'n Price—My Reviews</title>
+  <link rel="icon" href="https://wheatley.cs.up.ac.za/u24634434/COS221/Images/Favicon.png" type="image/x-icon">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="../styles/my_reviews.css">
@@ -103,8 +103,11 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
     const WHEATLEY_USERNAME = '<?php echo addslashes($username); ?>';
     const WHEATLEY_PASSWORD = '<?php echo addslashes($password); ?>';
   </script>
-  <script src="../scripts/global.js"></script>
-  <script src="../scripts/my_reviews.js"></script>
-</body>
 
+
+  <script src="../scripts/my_reviews.js"></script>
+  <script src="../scripts/global.js"></script>
+  
+  
+</body>
 </html>

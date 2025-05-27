@@ -296,6 +296,20 @@ document.addEventListener('DOMContentLoaded', function () {
     // applySavedTheme handled by global.js
     loadCategories();
     loadProducts();
+    updateUserGreeting();
 });
 
 // Global UI event listeners handled by global.js
+
+function updateUserGreeting() {
+    const firstName = localStorage.getItem('name'); // Changed from 'first_name' to 'name'
+    const userTextElement = document.querySelector('.user-text');
+    
+    if (userTextElement) {
+        if (firstName) {
+            userTextElement.textContent = `${firstName}`;
+        } else {
+            userTextElement.textContent = 'User';
+        }
+    }
+}

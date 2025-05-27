@@ -1,9 +1,115 @@
+// DOM Elements
+const accountBtn = document.getElementById("accountBtn");
+const accountMenu = document.getElementById("accountMenu");
+const themeToggle = document.getElementById("themeToggle");
+const themeIcon = document.getElementById("themeIcon");
+const menuToggle = document.getElementById("menuToggle");
+const navLinks = document.getElementById("navLinks");
 const reviewsContainer = document.getElementById("reviewsContainer");
 
-// Main Review Functions
-document.addEventListener("DOMContentLoaded", function () {
-    const apiKey = localStorage.getItem('apiKey');
+// Theme Functions
+function updateIcon() {
+    themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
+}
 
+function applySavedTheme() {
+    const savedTheme = getCookie("theme");
+    document.body.classList.toggle("dark", savedTheme === "dark");
+    updateIcon();
+}
+
+// Initialize theme
+window.addEventListener("load", applySavedTheme);
+updateIcon();
+
+// Event Listeners
+accountBtn.addEventListener("click", () => {
+    accountMenu.classList.toggle("show");
+});
+
+themeToggle.addEventListener("click", () => {
+    document.body.classList.toggle("dark");
+    const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
+    setCookie("theme", newTheme, 30);
+    updateIcon();
+});
+
+menuToggle.addEventListener("click", () => {
+    navLinks.classList.toggle("show");
+});
+
+window.addEventListener("click", (e) => {
+    if (!accountBtn.contains(e.target) && !accountMenu.contains(e.target)) {
+        accountMenu.classList.remove("show");
+    }
+});
+
+// Cookie Functions
+function setCookie(name, value, days) {
+    const d = new Date();
+    d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = `${name}=${value}; expires=${d.toUTCString()}; path=/`;
+}
+
+function getCookie(name) {
+    const cname = `${name}=`;
+    const decodedCookie = decodeURIComponent(document.cookie);
+    const ca = decodedCookie.split(';');
+    for (let c of ca) {
+        c = c.trim();
+        if (c.indexOf(cname) === 0) return c.substring(cname.length, c.length);
+    }
+    return "";
+}
+
+// Utility function to create and send XHR requests
+function sendRequest(method, url, payload, successCallback, errorCallback) {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
+
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            handleResponse(xhr, successCallback, errorCallback);
+        }
+    };
+
+    xhr.onerror = function() {
+        alert("Network Error: Could not connect to the server");
+        if (errorCallback) errorCallback();
+    };
+
+    xhr.send(JSON.stringify(payload));
+}
+
+// Handle the response from the server
+function handleResponse(xhr, successCallback, errorCallback) {
+    if (xhr.status === 200) {
+        try {
+            const response = JSON.parse(xhr.responseText);
+            if (response.status === 'success') {
+                // Suppressed: alert(response.message || "Operation successful");
+                if (successCallback) successCallback(Array.isArray(response.data) ? response.data : []);
+            } else {
+                // Suppressed: alert('Error: ' + (response.message || 'Unknown error'));
+                if (errorCallback) errorCallback();
+            }
+        } catch (e) {
+            console.error("Error parsing response:", e);
+            // Suppressed: alert("Error processing response from server.");
+            if (errorCallback) errorCallback();
+        }
+    } else {
+        // Suppressed: alert("Server error: " + xhr.status);
+        if (errorCallback) errorCallback();
+    }
+}
+
+// Main Review Functions
+document.addEventListener("DOMContentLoaded", function() {
+    const apiKey = localStorage.getItem('apiKey');
+    
     if (!apiKey) {
         alert('Please log in to view your reviews');
         window.location.href = '../html/login.php';
@@ -11,58 +117,25 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     loadMyReviews(apiKey);
+    updateUserGreeting(); 
 });
 
 function loadMyReviews(apiKey) {
-    showLoadingState();
-
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', API_URL, true);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.setRequestHeader("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
-
     const payload = {
         type: "getMyReviews",
         apikey: apiKey
     };
 
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                try {
-                    const response = JSON.parse(xhr.responseText);
-
-                    if (response.status === 'success' && response.data) {
-                        displayMyReviews(response.data);
-                    } else {
-                        showEmptyState(response.message || 'No reviews found');
-                    }
-                } catch (e) {
-                    console.error("Error parsing response:", e);
-                    showErrorState("Error loading reviews. Please try again later.");
-                }
-            } else if (xhr.status === 401) {
-                showErrorState("Authentication failed. Please log in again.");
-                setTimeout(() => {
-                    window.location.href = '../html/login.php';
-                }, 2000);
-            } else {
-                showErrorState(`Server error: ${xhr.status}. Please try again later.`);
-            }
-        }
-    };
-
-    xhr.onerror = function () {
-        showErrorState("Network error. Please check your connection.");
-    };
-
-    xhr.send(JSON.stringify(payload));
+    sendRequest('POST', API_URL, payload,
+        (data) => displayMyReviews(data),
+        () => showErrorState("Failed to load reviews.")
+    );
 }
 
 function displayMyReviews(reviews) {
     reviewsContainer.innerHTML = '';
 
-    if (reviews.length === 0) {
+    if (!Array.isArray(reviews) || reviews.length === 0){
         showEmptyState("You haven't written any reviews yet.");
         return;
     }
@@ -79,8 +152,7 @@ function createReviewBox(review) {
     const reviewBox = document.createElement('div');
     reviewBox.className = 'review-box';
     reviewBox.dataset.reviewId = review.review_id;
-    reviewBox.dataset.productId = review.product_id;
-
+    
     const starsHtml = createStarRating(review.score);
     const formattedDate = formatReviewDate(review.last_updated);
     const formattedPrice = formatPrice(review.cheapest_price);
@@ -90,7 +162,6 @@ function createReviewBox(review) {
             <img src="${review.image_url || '../../private/resources/placeholder.png'}" 
                  alt="${review.product_name}" 
                  onerror="this.src='../../private/resources/placeholder.png'" />
-            <div class="price-badge">${formattedPrice} at ${review.retailer_name}</div>
         </div>
         <div class="review-main-content">
             <div class="review-text-content">
@@ -101,12 +172,11 @@ function createReviewBox(review) {
                 <div class="review-text">${review.description}</div>
             </div>
             <div class="review-actions">
-                <button class="review-btn edit-btn">Edit</button>
                 <button class="review-btn delete-btn">Delete</button>
             </div>
         </div>
     `;
-
+    
     return reviewBox;
 }
 
@@ -172,7 +242,7 @@ function attachDeleteHandlers() {
 function handleDeleteClick(e) {
     const reviewBox = e.target.closest('.review-box');
     const reviewId = reviewBox.dataset.reviewId;
-
+    
     showDeleteConfirmation(reviewId, reviewBox);
 }
 
@@ -190,11 +260,9 @@ function showDeleteConfirmation(reviewId, reviewElement) {
     `;
     document.body.appendChild(popup);
 
-    popup.querySelector('.popup-no').onclick = function () {
-        popup.remove();
-    };
-
-    popup.querySelector('.popup-yes').onclick = function () {
+    popup.querySelector('.popup-no').onclick = () => popup.remove();
+    
+    popup.querySelector('.popup-yes').onclick = () => {
         const apiKey = localStorage.getItem('apiKey');
         if (!apiKey) {
             alert('Session expired. Please log in again.');
@@ -202,72 +270,47 @@ function showDeleteConfirmation(reviewId, reviewElement) {
             window.location.href = '../html/login.php';
             return;
         }
-
+        
         deleteReview(apiKey, reviewId, reviewElement, popup);
     };
 }
 
 function deleteReview(apiKey, reviewId, reviewElement, popup) {
     const payload = {
-        type: "deleteReview",
+        type: "deleteMyReview",
         apikey: apiKey,
         review_id: reviewId
     };
+    
+    console.log("Sending payload:", JSON.stringify(payload)); // Debugging log
 
-    sendReviewRequest(payload,
+    sendRequest('POST', API_URL, payload, 
         () => {
-            // Success callback
             popup.remove();
             reviewElement.remove();
             checkForEmptyReviews();
         },
         () => {
-            // Error callback
             popup.remove();
         }
     );
 }
 
-function sendReviewRequest(payload, successCallback, errorCallback) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', API_URL, true);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.setRequestHeader("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
-
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                try {
-                    const response = JSON.parse(xhr.responseText);
-                    if (response.status === 'success') {
-                        alert(response.message || "Review deleted successfully");
-                        if (successCallback) successCallback();
-                    } else {
-                        alert('Failed: ' + (response.message || 'Unknown error'));
-                        if (errorCallback) errorCallback();
-                    }
-                } catch (e) {
-                    console.error("Error parsing response:", e);
-                    alert("Error processing response from server.");
-                    if (errorCallback) errorCallback();
-                }
-            } else {
-                alert("Server error: " + xhr.status);
-                if (errorCallback) errorCallback();
-            }
-        }
-    };
-
-    xhr.onerror = function () {
-        alert('Network Error: Could not connect to the server');
-        if (errorCallback) errorCallback();
-    };
-
-    xhr.send(JSON.stringify(payload));
-}
-
 function checkForEmptyReviews() {
     if (document.querySelectorAll('.review-box').length === 0) {
         showEmptyState("You haven't written any reviews yet.");
+    }
+}
+
+function updateUserGreeting() {
+    const firstName = localStorage.getItem('name'); // Changed from 'first_name' to 'name'
+    const userTextElement = document.querySelector('.user-text');
+    
+    if (userTextElement) {
+        if (firstName) {
+            userTextElement.textContent = `${firstName}`;
+        } else {
+            userTextElement.textContent = 'User';
+        }
     }
 }
