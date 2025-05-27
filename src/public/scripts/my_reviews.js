@@ -170,7 +170,6 @@ function createReviewBox(review) {
                 <div class="review-text">${review.description}</div>
             </div>
             <div class="review-actions">
-                <button class="review-btn edit-btn">Edit</button>
                 <button class="review-btn delete-btn">Delete</button>
             </div>
         </div>

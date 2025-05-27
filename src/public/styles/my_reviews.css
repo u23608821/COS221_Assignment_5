@@ -436,17 +436,6 @@ main {
     background-color: rgb(30, 50, 80);
 }
 
-.edit-btn {
-    color: #3b82f6;
-}
-
-.edit-btn:hover {
-    background-color: #3b82f6;
-    color: white;
-    border: 1px solid #3b82f6;
-    box-shadow: var(#3b82f6);
-}
-
 .delete-btn {
     color: #ef4444;
 }
@@ -528,28 +517,6 @@ main {
 
 .user-text {
   margin: 0 4px;
-}
-
-/* Edit review textarea style */
-.edit-review-textarea {
-    width: 100%;
-    min-height: 80px;
-    font-size: 1rem;
-    font-family: 'Inter', sans-serif;
-    border-radius: var(--radius);
-    border: 1px solid var(--gray);
-    padding: 0.75rem;
-    margin-bottom: 0.5rem;
-    resize: vertical;
-    background: #fff;
-    color: var(--text-dark);
-    box-sizing: border-box;
-}
-
-.dark .edit-review-textarea {
-    background: #374151;
-    color: #e5e7eb;
-    border: 1px solid #4b5563;
 }
 
 /* Cancel button style */
