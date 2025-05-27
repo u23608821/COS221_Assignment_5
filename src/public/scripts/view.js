@@ -1,224 +1,380 @@
-document.addEventListener("DOMContentLoaded", function () {
-    fetchProductDetails();
+const API_URL = "https://wheatley.cs.up.ac.za/u24634434/COS221/api.php";
+const headers = new Headers();
+headers.append("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
+headers.append("Content-Type", "application/json");
+
+// DOM Elements
+const productImage = document.querySelector('.product-image-large');
+const productTitle = document.querySelector('.product-title');
+const bestPriceValue = document.querySelector('.best-price-value');
+const retailerLabel = document.querySelector('.retailer-label');
+const productDescription = document.querySelectorAll('.product-info .text')[0];
+const productCategory = document.querySelectorAll('.product-info .text')[1];
+const retailersContainer = document.querySelector('.retailer-prices');
+const starRating = document.querySelector('.star-rating');
+const ratingValue = document.querySelector('.rating-value');
+const reviewCount = document.querySelector('.review-count');
+const ratingNumber = document.querySelector('.rating-number');
+const ratingBars = document.querySelector('.rating-bars');
+const userReviews = document.querySelector('.user-reviews');
+const addToWatchlistBtn = document.querySelector('.add-to-watchlist-btn');
+const backButton = document.querySelector('.back-button');
+
+// Authentication
+const currentApiKey = localStorage.getItem('apiKey') || 
+                      sessionStorage.getItem('apiKey') || 
+                      getCookie('apiKey');
+
+// Initialize the page
+document.addEventListener('DOMContentLoaded', () => {
+    if (backButton) {
+        backButton.addEventListener('click', () => window.history.back());
+    }
+    
+    if (addToWatchlistBtn) {
+        addToWatchlistBtn.addEventListener('click', handleAddToWatchlist);
+    }
+    
+    loadProductDetails();
+    setupReviewModal();
 });
 
-function fetchProductDetails() {
-    const apKey = "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef"; //getCookie("apiKey"); 
-    const productID = 1;
+// Helper Functions
+function getCookie(name) {
+    const cookieArr = document.cookie.split(';');
+    for (let c of cookieArr) {
+        const [key, val] = c.trim().split('=');
+        if (key === name) return decodeURIComponent(val);
+    }
+    return null;
+}
 
-    const payload = {
-        type: "getProductDetails",
-        apikey: apKey,
-        product_id: productID
-    };
+function formatDate(dateStr) {
+    return new Date(dateStr).toLocaleDateString('en-US', {
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric'
+    });
+}
 
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://wheatley.cs.up.ac.za/u24634434/COS221/api.php', true);
- //  xhr.open('POST', 'http://localhost:8000/api.php')
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.setRequestHeader("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
+// Product Loading Functions
+async function loadProductDetails() {
+    const productId = sessionStorage.getItem('currentProductId');
+    if (!productId) {
+        window.location.href = '../html/products.php';
+        return;
+    }
 
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                try {
-                    let responseText = xhr.responseText;
-                    let jsonStartIdx = responseText.indexOf('{');
-                    if (jsonStartIdx >= 0) responseText = responseText.substring(jsonStartIdx);
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({
+                type: 'getProductDetails',
+                apikey: currentApiKey,
+                product_id: parseInt(productId),
+                return: 'All'
+            })
+        });
 
-                    const response = JSON.parse(responseText);
+        const result = await response.json();
 
-                    if (response.status === 'success') {
-                        populateProductView(response.data);
-                    } else {
-                        alert('Failed to load product: ' + (response.message || 'Unknown error'));
-                    }
-                } catch (e) {
-                    console.error("Error parsing response:", e, xhr.responseText);
-                    alert("Error processing response from server.");
-                }
-            } else {
-                console.error("Server returned error status:", xhr.status);
-                alert("Server error: " + xhr.status);
+        if (result.status === 'success' && result.data) {
+            displayProductDetails(result.data);
+            if (currentApiKey) {
+                await checkIfInWatchlist(productId);
             }
+        } else {
+            console.error('Error loading product:', result.message);
         }
-    };
-
-    xhr.onerror = function (e) {
-        console.error('Network Error', e);
-        alert('Network Error: Could not connect to the server');
-    };
-
-    xhr.send(JSON.stringify(payload));
+    } catch (error) {
+        console.error('Network error:', error);
+    }
 }
 
-function populateProductView(data) {
-    // Populate main product info
-   // console.log(data);
-    document.getElementById("productName").textContent = data.name;
-    document.getElementById("productDescription").textContent = data.description;
-    document.getElementById("productImage").src = data.Image_url;
-   // document.getElementById("productCategory").textContent = data.category;
-    document.getElementById("productAvgReview").textContent = data.average_review ?? "N/A";
-    document.getElementById("productCheapestPrice").textContent = data.cheapest_price 
-        ? `R${data.cheapest_price.toFixed(2)} from ${data.cheapest_retailer}` 
-        : "Price not available";
+function displayProductDetails(product) {
+    // Basic product info
+    productImage.src = product.image_url || product.Image_url || '/fallback.png';
+    productImage.alt = product.name || 'Product image';
+    productTitle.textContent = product.name;
+    productDescription.textContent = product.description;
+    productCategory.textContent = product.category;
 
-    renderRetailerPrices(data.retailers);
-    updateReviewsSection(data); 
+    // Pricing info
+    if (product.cheapest_price) {
+        bestPriceValue.textContent = `R${product.cheapest_price.toFixed(2)}`;
+        retailerLabel.textContent = `From ${product.cheapest_retailer}`;
+    } else {
+        bestPriceValue.textContent = 'N/A';
+        retailerLabel.textContent = 'No retailer available';
+    }
+
+    // Retailers list
+    renderRetailers(product.retailers);
+
+    // Reviews section
+    if (product.average_review !== null) {
+        renderReviewSummary(product);
+        renderUserReviews(product.reviews);
+    } else {
+        showEmptyReviewsState();
+    }
 }
 
-function renderRetailerPrices(retailers) {
-    const container = document.getElementById("retailerPricesContainer");
-    container.innerHTML = ''; // Clear existing
-
-    retailers.forEach(({ retailer_name, price }) => {
-        const box = document.createElement("div");
-        box.className = "retailer-box";
-        box.innerHTML = `
-            <div class="retailer-name">${retailer_name}</div>
-            <div class="retailer-price">R${price.toFixed(2)}</div>
+function renderRetailers(retailers) {
+    const sortedRetailers = [...retailers].sort((a, b) => a.price - b.price);
+    retailersContainer.innerHTML = '';
+    
+    sortedRetailers.forEach((retailer, index) => {
+        const div = document.createElement('div');
+        div.className = `retailer-box ${index === 0 ? 'best-retailer' : ''}`;
+        div.innerHTML = `
+            <div class="retailer-name">${retailer.retailer_name}</div>
+            <div class="retailer-price">R${retailer.price.toFixed(2)}</div>
             <button class="buy-now-btn">Buy Now</button>
         `;
-        container.appendChild(box);
+        retailersContainer.appendChild(div);
     });
 }
 
-function updateReviewsSection(productData) {
-  const { average_review, reviews } = productData;
+function renderReviewSummary(product) {
+    ratingValue.textContent = `(${product.average_review.toFixed(1)})`;
+    ratingNumber.textContent = product.average_review.toFixed(1);
+    reviewCount.textContent = `${product.reviews.length} reviews`;
 
-  document.getElementById("productAvgReview").textContent = `(${average_review?.toFixed(1) || '0.0'})`;
-  document.querySelector(".review-count").textContent = `${reviews.length} reviews`;
-  document.querySelector(".rating-number").textContent = average_review?.toFixed(1) || '0.0';
+    // Star rating
+    const fullStars = Math.floor(product.average_review);
+    const hasHalf = product.average_review % 1 >= 0.5;
+    const starsContainer = document.createElement('div');
+    starsContainer.className = 'star-rating';
 
-  const starContainer = document.querySelector(".star-rating");
-  starContainer.querySelectorAll(".material-symbols-outlined").forEach(s => s.remove());
-
-  const fullStars = Math.floor(average_review || 0);
-  const halfStar = (average_review || 0) % 1 >= 0.5;
-
-  for (let i = 0; i < fullStars; i++) {
-    const star = document.createElement("span");
-    star.className = "material-symbols-outlined";
-    star.textContent = "star";
-    starContainer.insertBefore(star, starContainer.children[i]);
-  }
-
-  if (halfStar) {
-    const half = document.createElement("span");
-    half.className = "material-symbols-outlined";
-    half.textContent = "star_half";
-    starContainer.insertBefore(half, starContainer.children[fullStars]);
-  }
-
-  const distribution = [0, 0, 0, 0, 0]; // index 0 = 1 star, index 4 = 5 stars
-  reviews.forEach(({ score }) => {
-    if (score >= 1 && score <= 5) distribution[score - 1]++;
-  });
-  const total = reviews.length || 1;
-
-  const bars = document.querySelectorAll(".rating-bar");
-  for (let i = 5; i >= 1; i--) {
-    const count = distribution[i - 1];
-    const percentage = (count / total * 100).toFixed(1);
-    const bar = bars[5 - i]; 
-
-    bar.querySelector(".bar").style.width = `${percentage}%`;
-    bar.querySelector("span:last-child").textContent = count;
-  }
-
-  const container = document.getElementById("userReviewsContainer");
-  container.innerHTML = "";
-
-  reviews.forEach(({ customer_name, score, description, updated_at }) => {
-    const review = document.createElement("div");
-    review.className = "review";
-
-    const stars = Array.from({ length: 5 }, (_, i) =>
-      `<span class="material-symbols-outlined">${i < score ? 'star' : 'star_border'}</span>`
-    ).join("");
-
-    const reviewDate = new Date(updated_at).toLocaleDateString(undefined, {
-      year: "numeric", month: "long", day: "numeric"
-    });
-
-    review.innerHTML = `
-      <div class="review-header">
-        <div class="review-stars">${stars}</div>
-        <div class="reviewer-name">${customer_name}</div>
-        <div class="review-date">Reviewed on ${reviewDate}</div>
-      </div>
-      <div class="review-content">${description}</div>
-    `;
-    container.appendChild(review);
-  });
-}
-
-function getCookie(name) {
-    const cname = name + "=";
-    const decodedCookie = decodeURIComponent(document.cookie);
-    const ca = decodedCookie.split(';');
-    for (let c of ca) {
-        c = c.trim();
-        if (c.indexOf(cname) === 0) return c.substring(cname.length);
+    for (let i = 1; i <= 5; i++) {
+        const star = document.createElement('i');
+        if (i <= fullStars) {
+            star.className = 'fas fa-star';
+        } else if (i === fullStars + 1 && hasHalf) {
+            star.className = 'fas fa-star-half-alt';
+        } else {
+            star.className = 'far fa-star';
+        }
+        starsContainer.appendChild(star);
     }
-    return "";
+
+    starRating.replaceWith(starsContainer);
+
+    // Rating distribution
+    const dist = [0, 0, 0, 0, 0];
+    product.reviews.forEach(r => dist[r.score - 1]++);
+    ratingBars.innerHTML = '';
+    
+    for (let i = 5; i >= 1; i--) {
+        const count = dist[i - 1];
+        const percent = (count / product.reviews.length) * 100;
+        const bar = document.createElement('div');
+        bar.className = 'rating-bar';
+        bar.innerHTML = `
+            <span>${i} stars</span>
+            <div class="bar-container">
+                <div class="bar" style="width: ${percent}%;"></div>
+            </div>
+            <span>${count}</span>
+        `;
+        ratingBars.appendChild(bar);
+    }
 }
 
-function sendReview(payload)
-{
+function renderUserReviews(reviews) {
+    userReviews.innerHTML = '';
+    
+    reviews.forEach(review => {
+        const reviewEl = document.createElement('div');
+        reviewEl.className = 'review';
+        reviewEl.innerHTML = `
+            <div class="review-header">
+                <div class="review-stars">
+                    ${'<i class="fas fa-star"></i>'.repeat(review.score)}
+                    ${'<i class="far fa-star"></i>'.repeat(5 - review.score)}
+                </div>
+                <div class="reviewer-name">${review.customer_name}</div>
+                <div class="review-date">Reviewed on ${formatDate(review.updated_at)}</div>
+            </div>
+            <div class="review-content">${review.description}</div>
+        `;
+        userReviews.appendChild(reviewEl);
+    });
+}
 
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://wheatley.cs.up.ac.za/u24634434/COS221/api.php', true);
- //  xhr.open('POST', 'http://localhost:8000/api.php')
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.setRequestHeader("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
+function showEmptyReviewsState() {
+    reviewCount.textContent = 'No reviews yet';
+    ratingBars.innerHTML = '<p>No ratings available</p>';
+    userReviews.innerHTML = '<p>Be the first to review this product!</p>';
+}
 
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                try {
-                    let responseText = xhr.responseText;
-                    const response = JSON.parse(responseText);
+// Watchlist Functions
+async function handleAddToWatchlist() {
+    if (!addToWatchlistBtn) return;
+    
+    const productId = sessionStorage.getItem('currentProductId');
+    if (!productId || !currentApiKey) return;
 
-                    if (response.status === 'success') {
-                        alert("Wrote a review: " + (response.message || "Unkown error"));
-                    } else {
-                        alert('Failed to review product: ' + (response.message || 'Unknown error'));
-                    }
-                } catch (e) {
-                    console.error("Error parsing response:", e, xhr.responseText);
-                    alert("Error processing response from server.");
-                }
-            } else {
-                console.error("Server returned error status:", xhr.status);
-                alert("Server error: " + xhr.status);
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({
+                type: 'addToWatchlist',
+                apikey: currentApiKey,
+                product_id: parseInt(productId)
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            addToWatchlistBtn.textContent = 'In Watchlist';
+            addToWatchlistBtn.disabled = true;
+            console.log('Product added to your watchlist!');
+        } else {
+            console.error('Failed to add to watchlist: ' + (result.message || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error adding to watchlist:', error);
+        console.error('Error adding to watchlist. Please try again.');
+    }
+}
+
+async function checkIfInWatchlist(productId) {
+    if (!addToWatchlistBtn) return;
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({
+                type: 'getMyWatchlist',
+                apikey: currentApiKey
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.status === 'success' && result.data) {
+            const inWatchlist = result.data.some(item => item.product_id == productId);
+            if (inWatchlist) {
+                addToWatchlistBtn.textContent = 'In Watchlist';
+                addToWatchlistBtn.disabled = true;
             }
         }
-    };
-
-    xhr.onerror = function (e) {
-        console.error('Network Error', e);
-        alert('Network Error: Could not connect to the server');
-    };
-
-    xhr.send(JSON.stringify(payload));
+    } catch (error) {
+        console.error('Error checking watchlist:', error);
+    }
 }
 
-function writeReview()
-{
-    const payload = {
-        type: "writeReview",
-        apikey: "c9efa15677a63c3932d5d62794a13ff9021d75aaf6ff6b8fb45b15ac4e6987ef", //getCookie("apiKey"); 
-        product_id: 1,
-        score: 4,
-        description: "Defnitely a product its nice"
+
+
+
+// REVIEW FUNCTIONS 
+function writeReview() {
+    if (!currentApiKey) {
+        alert('Please sign in to write a review');
+        return;
     }
 
-    sendReview(payload);
+    const modal = document.getElementById('reviewModal');
+    modal.style.display = 'flex';
+    
+    // Reset form
+    document.getElementById('reviewText').value = '';
+    document.getElementById('submitReviewBtn').disabled = true;
+    document.getElementById('starRatingValue').textContent = '0 out of 5';
+    
+    // Reset stars
+    const stars = document.querySelectorAll('#starRating .star');
+    stars.forEach(star => {
+        star.classList.remove('active', 'hover');
+    });
 }
 
-function viewMoreReviews()
-{
-    alert("Yeah nah, ur done");
+function setupReviewModal() {
+    const modal = document.getElementById('reviewModal');
+    const closeBtn = document.getElementById('closeReviewModal');
+    const stars = document.querySelectorAll('#starRating .star');
+    const submitBtn = document.getElementById('submitReviewBtn');
+    const reviewText = document.getElementById('reviewText');
+    let selectedRating = 0;
+
+    // Close modal when clicking X or outside
+    closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    // Star rating interaction
+    stars.forEach(star => {
+        star.addEventListener('mouseover', (e) => {
+            const value = parseInt(e.target.getAttribute('data-value'));
+            highlightStars(value);
+        });
+
+        star.addEventListener('mouseout', () => {
+            highlightStars(selectedRating);
+        });
+
+        star.addEventListener('click', (e) => {
+            selectedRating = parseInt(e.target.getAttribute('data-value'));
+            document.getElementById('starRatingValue').textContent = `${selectedRating} out of 5`;
+            submitBtn.disabled = selectedRating === 0 || reviewText.value.trim().length < 10;
+        });
+    });
+
+    // Review text validation
+    reviewText.addEventListener('input', () => {
+        submitBtn.disabled = selectedRating === 0 || reviewText.value.trim().length < 10;
+    });
+
+    // Submit review
+    submitBtn.addEventListener('click', async () => {
+        const productId = sessionStorage.getItem('currentProductId');
+        const description = reviewText.value.trim();
+        
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({
+                    type: 'writeReview',
+                    apikey: currentApiKey,
+                    product_id: parseInt(productId),
+                    score: selectedRating,
+                    description: description
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                alert('Review submitted successfully!');
+                modal.style.display = 'none';
+                // Reload product details to show the new review
+                loadProductDetails();
+            } else {
+                alert('Failed to submit review: ' + (result.message || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error submitting review:', error);
+            alert('Error submitting review. Please try again.');
+        }
+    });
+}
+
+function highlightStars(count) {
+    const stars = document.querySelectorAll('#starRating .star');
+    stars.forEach((star, index) => {
+        star.classList.toggle('hover', index < count);
+    });
 }

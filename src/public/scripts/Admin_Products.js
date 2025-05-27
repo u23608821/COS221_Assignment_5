@@ -1,10 +1,5 @@
 
-const accountBtn = document.getElementById("accountBtn");
-const accountMenu = document.getElementById("accountMenu");
-const themeToggle = document.getElementById("themeToggle");
-const themeIcon = document.getElementById("themeIcon");
-const menuToggle = document.getElementById("menuToggle");
-const navLinks = document.getElementById("navLinks");
+
 const API_BASE_URL = "https://wheatley.cs.up.ac.za/u24634434/COS221/api.php"; // API base URL
 const headers = new Headers();
 headers.append("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));

@@ -246,10 +246,9 @@ main {
 }
 
 .footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+      margin-top: auto;
+  flex-shrink: 0;
+  width: 100%;
     z-index: 1000;
     background-color: #e5e7eb;
     padding: 1rem 2rem;
@@ -260,9 +259,12 @@ main {
 }
 
 .footer-container {
-    display: flex;
+     display: flex;
     justify-content: space-between;
     align-items: center;
+    max-width: 1200px;
+    margin: auto;
+    flex-wrap: wrap;
 }
 
 .footer-left,
@@ -783,6 +785,7 @@ main {
     height: 100%;
     object-fit: cover; /* instead of contain */
     padding: 0; /* remove padding */
+    max-width: 50%;
 }
 
 
@@ -1051,4 +1054,29 @@ main {
   transition: background-color 0.2s ease;
   font-size: 1rem; 
   margin-left: 32rem; 
+}
+
+
+
+/* Star rating styles */
+.product-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.product-rating i {
+    color: #f59e0b;
+    font-size: 1.2rem;
+}
+
+.rating-text {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-left: 0.5rem;
+}
+
+.dark .rating-text {
+    color: #d1d5db;
 }

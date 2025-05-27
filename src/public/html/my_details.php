@@ -52,6 +52,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pick 'n Price—My Details</title>
+  <link rel="icon" href="https://wheatley.cs.up.ac.za/u24634434/COS221/Images/Favicon.png" type="image/x-icon">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="../styles/my_details.css">
@@ -62,13 +63,14 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   <nav class="navbar">
     <div class="container">
       <div class="nav-left">
-        <a href="../html/products.html" class="logo">
-          <img src="https://wheatley.cs.up.ac.za/u24634434/COS221/Images/Logo.png" alt="Logo Placeholder" />
+        <a href="../html/products.php" class="logo">
+          <img src="../../private/resources/Logo.png" alt="Logo Placeholder" />
         </a>
         <span class="menu-toggle" id="menuToggle">☰</span>
         <ul class="nav-links" id="navLinks">
-          <li><a href="../html/products.html">All Products</a></li>
-          <li><a href="../html/highest_rated.html">Top-Rated Products</a></li>
+          <li><a href="../html/products.php">All Products</a></li>
+          <li><a href="../html/highest_rated.php">Top-Rated Products</a></li>
+          <li><a href="../html/review_dashboard.php">Reviews Dashboard</a></li>
         </ul>
       </div>
       <div class="nav-actions">
@@ -80,9 +82,9 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
             <span class="material-symbols-outlined arrow-icon">arrow_drop_down</span>
           </button>
           <div class="dropdown-menu" id="accountMenu" aria-label="Account options">
-            <a href="../html/my_details.html"><span>My Details</span></a>
-            <a href="../html/my_reviews.html"><span>My Reviews</span></a>
-            <a href="../html/my_watchlist.html"><span>My Watchlist</span></a>
+            <a href="../html/my_details.php"><span>My Details</span></a>
+            <a href="../html/my_reviews.php"><span>My Reviews</span></a>
+            <a href="../html/my_watchlist.php"><span>My Watchlist</span></a>
             <div class="dropdown-divider"></div>
             <a href="../html/login.php" class="signout"><span>Sign Out</span></a>
           </div>
@@ -93,65 +95,69 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
 
 
   <main>
-    <h1 class="page-header">My Details</h1>
-    <p class="page-subheader">View and edit your personal information here.</p>
+    <div class="headings">
+      <h1 class="page-header">My Details</h1>
+      <p class="page-subheader">View and edit your personal information here.</p>
+    </div>
+
 
     <div class="details-form">
       <form>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="firstName">First Name</label>
-            <input type="text" id="firstName" placeholder="John" />
+        <div class="group-all">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="firstName">First Name</label>
+              <input type="text" id="firstName" placeholder="John" />
+            </div>
+            <div class="form-group">
+              <label for="lastName">Last Name</label>
+              <input type="text" id="lastName" placeholder="Doe" />
+            </div>
           </div>
-          <div class="form-group">
-            <label for="lastName">Last Name</label>
-            <input type="text" id="lastName" placeholder="Doe" />
-          </div>
-        </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="phone">Phone Number</label>
-            <input type="tel" id="phone" placeholder="+27 12 345 6789" />
+          <div class="form-row">
+            <div class="form-group">
+              <label for="phone">Phone Number</label>
+              <input type="tel" id="phone" placeholder="0123456789" />
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" placeholder="john.doe@example.com" />
+            </div>
           </div>
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="email" placeholder="john.doe@example.com" />
-          </div>
-        </div>
 
-        <h4 class="address-heading">Address</h4>
+          <h4 class="address-heading">Address</h4>
 
-        <div class="address-row">
-          <div class="form-group small">
-            <label for="streetNumber">Street No.</label>
-            <input type="text" id="streetNumber" placeholder="123" />
+          <div class="address-row">
+            <div class="form-group small">
+              <label for="streetNumber">Street No.</label>
+              <input type="text" id="streetNumber" placeholder="123" />
+            </div>
+            <div class="form-group large">
+              <label for="streetName">Street Name</label>
+              <input type="text" id="streetName" placeholder="Main Street" />
+            </div>
           </div>
-          <div class="form-group large">
-            <label for="streetName">Street Name</label>
-            <input type="text" id="streetName" placeholder="Main Street" />
-          </div>
-        </div>
 
-        <div class="address-row">
-          <div class="form-group">
-            <label for="suburb">Suburb</label>
-            <input type="text" id="suburb" placeholder="Sunnyville" />
+          <div class="address-row">
+            <div class="form-group">
+              <label for="suburb">Suburb</label>
+              <input type="text" id="suburb" placeholder="Sunnyville" />
+            </div>
+            <div class="form-group">
+              <label for="city">City</label>
+              <input type="text" id="city" placeholder="Johannesburg" />
+            </div>
           </div>
-          <div class="form-group">
-            <label for="city">City</label>
-            <input type="text" id="city" placeholder="Johannesburg" />
-          </div>
-        </div>
 
-        <div class="address-row">
-          <div class="form-group small">
-            <label for="postalCode">Postal Code</label>
-            <input type="text" id="postalCode" placeholder="2000" />
+          <div class="address-row">
+            <div class="form-group small">
+              <label for="postalCode">Postal Code</label>
+              <input type="text" id="postalCode" placeholder="2000" />
+            </div>
           </div>
-        </div>
 
-        <button type="submit" class="save-btn">Save</button>
+          <button type="submit" class="save-btn">Save</button>
       </form>
     </div>
   </main>

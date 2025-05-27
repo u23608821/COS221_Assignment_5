@@ -21,7 +21,7 @@ function clickLogin() {
 
     // Configure the request
     xhr.open('POST', 'https://wheatley.cs.up.ac.za/u24634434/COS221/api.php', true);
-    
+
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.setRequestHeader("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
 
@@ -45,6 +45,11 @@ function clickLogin() {
                         localStorage.setItem("email", responseData.data.email);
                     }
 
+                    // Store first name if available
+                    if (responseData.data.name) {
+                        localStorage.setItem("name", responseData.data.name);
+                    }
+
                     // Store user_type if available
                     if (responseData.data.user_type) {
                         localStorage.setItem("user_type", responseData.data.user_type);
@@ -53,7 +58,7 @@ function clickLogin() {
                         // Redirect based on user type (case-insensitive comparison)
                         const userType = responseData.data.user_type.toLowerCase();
                         if (userType === 'customer') {
-                            window.location.href = 'products.html';
+                            window.location.href = 'products.php';
                         } else if (userType === 'admin') {
                             window.location.href = 'Admin.php';
                         } else {

@@ -1,11 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     // Initialize DOM elements
-    const accountBtn = document.getElementById("accountBtn");
-    const accountMenu = document.getElementById("accountMenu");
-    const themeToggle = document.getElementById("themeToggle");
-    const themeIcon = document.getElementById("themeIcon");
-    const menuToggle = document.getElementById("menuToggle");
-    const navLinks = document.getElementById("navLinks");
+ 
 
     function updateIcon() {
         themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
@@ -27,12 +22,6 @@ document.addEventListener('DOMContentLoaded', function () {
         accountMenu.classList.toggle("display");
     });
 
-    themeToggle.addEventListener("click", function () {
-        document.body.classList.toggle("dark");
-        const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
-        setCookie("theme", newTheme, 30);
-        updateIcon();
-    });
 
     menuToggle.addEventListener("click", function () {
         navLinks.classList.toggle("show");
