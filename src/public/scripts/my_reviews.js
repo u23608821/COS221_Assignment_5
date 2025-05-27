@@ -1,37 +1,48 @@
 // DOM Elements
-const accountBtn = document.getElementById("accountBtn");
-const accountMenu = document.getElementById("accountMenu");
-const themeToggle = document.getElementById("themeToggle");
-const themeIcon = document.getElementById("themeIcon");
-const menuToggle = document.getElementById("menuToggle");
-const navLinks = document.getElementById("navLinks");
 const reviewsContainer = document.getElementById("reviewsContainer");
+let themeToggle;
+let themeIcon;
 
 // Theme Functions
 function updateIcon() {
-    themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
+    if (themeIcon) {
+        themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
+    }
 }
 
 function applySavedTheme() {
     const savedTheme = getCookie("theme");
-    document.body.classList.toggle("dark", savedTheme === "dark");
+    if (savedTheme === "dark") {
+        document.body.classList.add("dark");
+    } else {
+        document.body.classList.remove("dark");
+    }
     updateIcon();
 }
 
-// Initialize theme
-window.addEventListener("load", applySavedTheme);
-updateIcon();
+// Initialize dark mode when DOM is loaded
+document.addEventListener('DOMContentLoaded', function () {
+    // Initialize theme elements
+    themeToggle = document.getElementById("themeToggle");
+    themeIcon = document.getElementById("themeIcon");
+
+    // Set up theme toggle
+    if (themeToggle) {
+        themeToggle.addEventListener("click", () => {
+            document.body.classList.toggle("dark");
+            const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
+            setCookie("theme", newTheme, 30);
+            updateIcon();
+        });
+    }
+
+    // Apply saved theme
+    applySavedTheme();
+});
 
 // Event Listeners
 accountBtn.addEventListener("click", () => {
     accountMenu.classList.toggle("show");
-});
-
-themeToggle.addEventListener("click", () => {
-    document.body.classList.toggle("dark");
-    const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
-    setCookie("theme", newTheme, 30);
-    updateIcon();
 });
 
 menuToggle.addEventListener("click", () => {
@@ -65,17 +76,17 @@ function getCookie(name) {
 // Utility function to create and send XHR requests
 function sendRequest(method, url, payload, successCallback, errorCallback) {
     const xhr = new XMLHttpRequest();
-    xhr.open(method, url, true);
+    xhr.open(method, "https://wheatley.cs.up.ac.za/u24634434/COS221/api.php", true);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
 
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
         if (xhr.readyState === 4) {
             handleResponse(xhr, successCallback, errorCallback);
         }
     };
 
-    xhr.onerror = function() {
+    xhr.onerror = function () {
         alert("Network Error: Could not connect to the server");
         if (errorCallback) errorCallback();
     };
@@ -107,9 +118,9 @@ function handleResponse(xhr, successCallback, errorCallback) {
 }
 
 // Main Review Functions
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     const apiKey = localStorage.getItem('apiKey');
-    
+
     if (!apiKey) {
         alert('Please log in to view your reviews');
         window.location.href = '../html/login.php';
@@ -117,7 +128,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     loadMyReviews(apiKey);
-    updateUserGreeting(); 
+    updateUserGreeting();
 });
 
 function loadMyReviews(apiKey) {
@@ -126,7 +137,7 @@ function loadMyReviews(apiKey) {
         apikey: apiKey
     };
 
-    sendRequest('POST', API_URL, payload,
+    sendRequest('POST', "https://wheatley.cs.up.ac.za/u24634434/COS221/api.php", payload,
         (data) => displayMyReviews(data),
         () => showErrorState("Failed to load reviews.")
     );
@@ -135,7 +146,7 @@ function loadMyReviews(apiKey) {
 function displayMyReviews(reviews) {
     reviewsContainer.innerHTML = '';
 
-    if (!Array.isArray(reviews) || reviews.length === 0){
+    if (!Array.isArray(reviews) || reviews.length === 0) {
         showEmptyState("You haven't written any reviews yet.");
         return;
     }
@@ -152,7 +163,7 @@ function createReviewBox(review) {
     const reviewBox = document.createElement('div');
     reviewBox.className = 'review-box';
     reviewBox.dataset.reviewId = review.review_id;
-    
+
     const starsHtml = createStarRating(review.score);
     const formattedDate = formatReviewDate(review.last_updated);
     const formattedPrice = formatPrice(review.cheapest_price);
@@ -176,7 +187,7 @@ function createReviewBox(review) {
             </div>
         </div>
     `;
-    
+
     return reviewBox;
 }
 
@@ -242,7 +253,7 @@ function attachDeleteHandlers() {
 function handleDeleteClick(e) {
     const reviewBox = e.target.closest('.review-box');
     const reviewId = reviewBox.dataset.reviewId;
-    
+
     showDeleteConfirmation(reviewId, reviewBox);
 }
 
@@ -261,7 +272,7 @@ function showDeleteConfirmation(reviewId, reviewElement) {
     document.body.appendChild(popup);
 
     popup.querySelector('.popup-no').onclick = () => popup.remove();
-    
+
     popup.querySelector('.popup-yes').onclick = () => {
         const apiKey = localStorage.getItem('apiKey');
         if (!apiKey) {
@@ -270,7 +281,7 @@ function showDeleteConfirmation(reviewId, reviewElement) {
             window.location.href = '../html/login.php';
             return;
         }
-        
+
         deleteReview(apiKey, reviewId, reviewElement, popup);
     };
 }
@@ -281,10 +292,10 @@ function deleteReview(apiKey, reviewId, reviewElement, popup) {
         apikey: apiKey,
         review_id: reviewId
     };
-    
+
     console.log("Sending payload:", JSON.stringify(payload)); // Debugging log
 
-    sendRequest('POST', API_URL, payload, 
+    sendRequest('POST', "https://wheatley.cs.up.ac.za/u24634434/COS221/api.php", payload,
         () => {
             popup.remove();
             reviewElement.remove();
@@ -305,7 +316,7 @@ function checkForEmptyReviews() {
 function updateUserGreeting() {
     const firstName = localStorage.getItem('name'); // Changed from 'first_name' to 'name'
     const userTextElement = document.querySelector('.user-text');
-    
+
     if (userTextElement) {
         if (firstName) {
             userTextElement.textContent = `${firstName}`;

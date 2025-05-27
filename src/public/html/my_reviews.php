@@ -4,7 +4,8 @@ $envPath = dirname(dirname(dirname(dirname(__FILE__)))); // Go up 4 levels to re
 $envFile = $envPath . '/.env';
 
 // Read environment variables
-function readEnvFile($path) {
+function readEnvFile($path)
+{
   if (!file_exists($path)) {
     return false;
   }
@@ -97,17 +98,20 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
     </div>
   </footer>
 
-  <script>
-    // Pass PHP variables to JavaScript safely
-    const API_URL = 'https://wheatley.cs.up.ac.za/u24634434/COS221/api.php';
-    const WHEATLEY_USERNAME = '<?php echo addslashes($username); ?>';
-    const WHEATLEY_PASSWORD = '<?php echo addslashes($password); ?>';
-  </script>
 
+  <script>
+    // Set global variables for authentication
+    var WHEATLEY_USERNAME = "<?php echo $username; ?>";
+    var WHEATLEY_PASSWORD = "<?php echo $password; ?>";
+    console.log('Credentials loaded from PHP: ',
+      WHEATLEY_USERNAME ? 'Username found' : 'Username missing',
+      WHEATLEY_PASSWORD ? 'Password found' : 'Password missing');
+  </script>
 
   <script src="../scripts/my_reviews.js"></script>
   <script src="../scripts/global.js"></script>
-  
-  
+
+
 </body>
+
 </html>
