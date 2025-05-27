@@ -4,18 +4,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pick 'n Price</title>
+    <title>Pick 'n Price - Welcome</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <link rel="stylesheet" href="index.css" />
 </head>
 
 <body>
-    <h1>Welcome to Pick 'n Price</h1>
+    <div class="landing-container">
+        <div class="logo-container">
+            <img src="../private/resources/Logo.png" alt="Pick 'n Price Logo">
+        </div>
 
-    <img src="../private/resources/Logo.png" alt="">
+        <h1>Welcome to Pick 'n Price</h1>
 
-    <p>To continue, please login or register.</p>
-    </p>
+        <p>Compare prices across different retailers, find the best deals, and share your experiences with our vibrant
+            community.</p>
 
+        <div class="buttons-container">
+            <a href="html/login.php" class="btn btn-primary">Login</a>
+            <a href="html/register.php" class="btn btn-outline">Register</a>
+        </div>
+    </div>
 
+    <div class="footer">
+        © 2025 Pick 'n Price, The Primary Keys Group
+    </div>
+
+    <script>
+        // Adding a subtle animation effect
+        document.addEventListener('DOMContentLoaded', function () {
+            const landingContainer = document.querySelector('.landing-container');
+            setTimeout(() => {
+                landingContainer.style.opacity = '1';
+            }, 100);
+        });
+    </script>
 </body>
 
 </html>

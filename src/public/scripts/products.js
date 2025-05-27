@@ -3,13 +3,7 @@ const headers = new Headers();
 headers.append("Authorization", "Basic " + btoa(WHEATLEY_USERNAME + ":" + WHEATLEY_PASSWORD));
 headers.append("Content-Type", "application/json");
 
-// DOM Elements
-const accountBtn = document.getElementById("accountBtn");
-const accountMenu = document.getElementById("accountMenu");
-const themeToggle = document.getElementById("themeToggle");
-const themeIcon = document.getElementById("themeIcon");
-const menuToggle = document.getElementById("menuToggle");
-const navLinks = document.getElementById("navLinks");
+// DOM Elements - page specific (global elements are in global.js)
 const searchInput = document.querySelector(".search-input");
 const searchBtn = document.querySelector(".search-btn");
 const categoryFilter = document.querySelector(".filter-select:nth-of-type(1)");
@@ -43,19 +37,7 @@ function getCookie(name) {
     return "";
 }
 
-function updateIcon() {
-    themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
-}
-
-function applySavedTheme() {
-    const savedTheme = getCookie("theme");
-    if (savedTheme === "dark") {
-        document.body.classList.add("dark");
-    } else {
-        document.body.classList.remove("dark");
-    }
-    updateIcon();
-}
+// Theme functions moved to global.js
 
 // Product loading functions
 async function loadCategories() {
@@ -102,7 +84,7 @@ async function loadProducts(searchTerm = '', category = '', sortBy = '', priceRa
     try {
         productsContainer.innerHTML = '<div class="loading-spinner">Loading products...</div>';
 
-        // Clean category param
+        // Clean category param - only send category if not "All Categories"
         category = category === "__all__" ? "" : category;
 
         // Determine if we need to filter on client-side
@@ -124,9 +106,9 @@ async function loadProducts(searchTerm = '', category = '', sortBy = '', priceRa
             body: JSON.stringify({
                 type: 'getAllProducts',
                 apikey: currentApiKey,
-                name: searchTerm,
-                category: category,
-                sort_by: sortBy
+                name: searchTerm || null,
+                category: category || null,
+                sort_by: sortBy || null
             })
         });
 
@@ -136,7 +118,7 @@ async function loadProducts(searchTerm = '', category = '', sortBy = '', priceRa
             let products = result.data;
 
             // Apply price filtering manually if needed
-            if (filteredClientSide) {
+            if (filteredClientSide && priceRange) {
                 products = products.filter(p =>
                     p.cheapest_price !== null &&
                     p.cheapest_price >= localFilterBy.minPrice &&
@@ -272,7 +254,16 @@ searchInput.addEventListener('keypress', function (e) {
     if (e.key === 'Enter') performSearch();
 });
 
-categoryFilter.addEventListener('change', performSearch);
+// Attach event listeners for filters - don't add duplicate listeners
+categoryFilter.addEventListener('change', function () {
+    // Reset other filters if "All Categories" is selected
+    if (categoryFilter.value === '__all__') {
+        searchInput.value = '';
+        sortFilter.selectedIndex = 0;
+        priceFilter.selectedIndex = 0;
+    }
+    performSearch();
+});
 sortFilter.addEventListener('change', performSearch);
 priceFilter.addEventListener('change', performSearch);
 
@@ -281,6 +272,13 @@ function performSearch() {
     const category = categoryFilter.value;
     const sortBy = getSortValue(sortFilter.value);
     const priceRange = priceFilter.value;
+
+    console.log('Filtering products by:', {
+        searchTerm: searchTerm || 'None',
+        category: category || 'All',
+        sortBy: sortBy || 'Default',
+        priceRange: priceRange || 'Any'
+    });
 
     loadProducts(searchTerm, category, sortBy, priceRange);
 }
@@ -298,56 +296,9 @@ function getSortValue(selectValue) {
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function () {
-    applySavedTheme();
+    // applySavedTheme handled by global.js
     loadCategories();
     loadProducts();
-    updateUserGreeting()
 });
 
-// Existing event listeners
-window.addEventListener("load", applySavedTheme);
-
-accountBtn.addEventListener("click", function () {
-    accountMenu.classList.toggle("show");
-});
-
-themeToggle.addEventListener("click", function () {
-    document.body.classList.toggle("dark");
-    const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
-    setCookie("theme", newTheme, 30);
-    updateIcon();
-});
-
-menuToggle.addEventListener("click", function () {
-    navLinks.classList.toggle("show");
-});
-
-window.addEventListener("click", function (e) {
-    if (!accountBtn.contains(e.target) && !accountMenu.contains(e.target)) {
-        accountMenu.classList.remove("show");
-    }
-});
-
-updateIcon();
-
-categoryFilter.addEventListener('change', () => {
-    if (categoryFilter.value === '__all__') {
-        searchInput.value = '';
-        sortFilter.selectedIndex = 0;
-        priceFilter.selectedIndex = 0;
-    }
-    performSearch();
-});
-
-function updateUserGreeting() {
-    const firstName = localStorage.getItem('name'); // Changed from 'first_name' to 'name'
-    const userTextElement = document.querySelector('.user-text');
-    
-    if (userTextElement) {
-        if (firstName) {
-            userTextElement.textContent = `${firstName}`;
-        } else {
-            userTextElement.textContent = 'User';
-        }
-    }
-}
+// Global UI event listeners handled by global.js

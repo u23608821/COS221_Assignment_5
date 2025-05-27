@@ -40,15 +40,10 @@ function clickLogin() {
                     // Store the API key in localStorage instead of cookies
                     localStorage.setItem("apiKey", responseData.data.apikey);
 
-                // Store email if available
-                if (responseData.data.email) {
-                    localStorage.setItem("email", responseData.data.email);
-                }
-
-                // Store first name if available
-                if (responseData.data.name) {
-                    localStorage.setItem("name", responseData.data.name);
-                }
+                    // Store email if available
+                    if (responseData.data.email) {
+                        localStorage.setItem("email", responseData.data.email);
+                    }
 
                     // Store user_type if available
                     if (responseData.data.user_type) {

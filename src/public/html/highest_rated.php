@@ -122,8 +122,6 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
     WHEATLEY_PASSWORD ? 'Password found' : 'Password missing');
 </script>
 
-
-
 <script src="../scripts/highest_rated.js"></script>
 <script src="../scripts/global.js"></script>
 

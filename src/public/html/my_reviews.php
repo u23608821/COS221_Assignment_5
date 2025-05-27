@@ -3,49 +3,36 @@
 $envPath = dirname(dirname(dirname(dirname(__FILE__)))); // Go up 4 levels to reach the project root
 $envFile = $envPath . '/.env';
 
-// Simple function to read .env file
+// Read environment variables
 function readEnvFile($path)
 {
   if (!file_exists($path)) {
-    // echo "ENV file not found at: $path<br>";
     return false;
   }
 
-  // echo "ENV file found at: $path<br>";
   $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
   $env = [];
 
   foreach ($lines as $line) {
-    if (strpos(trim($line), '#') === 0) continue; // Skip comments
-    if (empty(trim($line))) continue;             // Skip empty lines
+    if (strpos(trim($line), '#') === 0) continue;
+    if (empty(trim($line))) continue;
 
     list($name, $value) = explode('=', $line, 2);
     $name = trim($name);
     $value = trim($value);
 
     $env[$name] = $value;
-    // Optionally set as environment variable
     putenv("$name=$value");
   }
 
   return $env;
 }
 
-// Read environment variables from .env file
+// Read environment variables
 $env = readEnvFile($envFile);
-
-// Get credentials
 $username = $env ? $env['WHEATLEY_USERNAME'] : getenv("WHEATLEY_USERNAME");
 $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
-
-
-
-// For debugging - comment these out in production
-// echo "Username from env: " . ($username ?: 'NOT FOUND') . "<br>";
-// echo "Password from env: " . ($password ? '********' : 'NOT FOUND') . "<br>";
 ?>
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -56,7 +43,6 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="../styles/my_reviews.css">
-
 </head>
 
 <body class="light">
@@ -64,7 +50,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
     <div class="container">
       <div class="nav-left">
         <a href="../html/products.php" class="logo">
-          <img src="https://wheatley.cs.up.ac.za/u24634434/COS221/Images/Logo.png" alt="Logo Placeholder" />
+          <img src="../../private/resources/Logo.png" alt="Logo Placeholder" />
         </a>
         <span class="menu-toggle" id="menuToggle">☰</span>
         <ul class="nav-links" id="navLinks">
@@ -74,7 +60,6 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
         </ul>
       </div>
       <div class="nav-actions">
-
         <div class="dropdown">
           <button class="btn-user dropdown-toggle" id="accountBtn" aria-haspopup="true" aria-expanded="false">
             <span class="material-symbols-outlined user-icon">account_circle</span>
@@ -93,158 +78,14 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
     </div>
   </nav>
 
-
   <main>
     <h1 class="page-header">My Reviews</h1>
-    <p class="page-subheader">All products reviews you have personally published can be viewed here. </p>
+    <p class="page-subheader">All products reviews you have personally published can be viewed or deleted here.</p>
 
-    <div class="reviews-container">
-      <!-- Review 1 -->
-      <div class="review-box">
-        <div class="product-image">
-          <span>Product Image</span>
-        </div>
-        <div class="review-main-content">
-          <div class="review-text-content">
-            <h3 class="review-title">Wireless Headphones</h3>
-            <p class="review-date">Reviewed on 12 May 2025</p>
-            <div class="stars">
-              <span class="star filled">★</span>
-              <span class="star filled">★</span>
-              <span class="star filled">★</span>
-              <span class="star filled">★</span>
-              <span class="star">★</span>
-            </div>
-            <h4 class="review-heading">Review</h4>
-            <div class="review-text">
-              This product exceeded my expectations. The quality is outstanding and it arrived sooner than expected. I
-              would definitely recommend it to others looking for a reliable solution.
-            </div>
-          </div>
-          <div class="review-actions">
-            <button class="review-btn edit-btn">Edit</button>
-            <button class="review-btn delete-btn">Delete</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Review 2 -->
-      <div class="review-box">
-        <div class="product-image">
-          <span>Product Image</span>
-        </div>
-        <div class="review-main-content">
-          <div class="review-text-content">
-            <h3 class="review-title">Smart Watch</h3>
-            <p class="review-date">Reviewed on 10 May 2025</p>
-            <div class="stars">
-              <span class="star filled">★</span>
-              <span class="star filled">★</span>
-              <span class="star filled">★</span>
-              <span class="star">★</span>
-              <span class="star">★</span>
-            </div>
-            <h4 class="review-heading">Review</h4>
-            <div class="review-text">
-              Good product overall, but there were some minor issues with the packaging. The product itself works well
-              and meets my basic needs, though it could be improved in some areas.
-            </div>
-          </div>
-          <div class="review-actions">
-            <button class="review-btn edit-btn">Edit</button>
-            <button class="review-btn delete-btn">Delete</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Review 3 -->
-      <div class="review-box">
-        <div class="product-image">
-          <span>Product Image</span>
-        </div>
-        <div class="review-main-content">
-          <div class="review-text-content">
-            <h3 class="review-title">Bluetooth Speaker</h3>
-            <p class="review-date">Reviewed on 8 May 2025</p>
-            <div class="stars">
-              <span class="star filled">★</span>
-              <span class="star filled">★</span>
-              <span class="star filled">★</span>
-              <span class="star filled">★</span>
-              <span class="star filled">★</span>
-            </div>
-            <h4 class="review-heading">Review</h4>
-            <div class="review-text">
-              Absolutely perfect! This is exactly what I was looking for. The quality is exceptional and it has all the
-              features I need. Customer service was also very helpful when I had questions.
-            </div>
-          </div>
-          <div class="review-actions">
-            <button class="review-btn edit-btn">Edit</button>
-            <button class="review-btn delete-btn">Delete</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Review 4 -->
-      <div class="review-box">
-        <div class="product-image">
-          <span>Product Image</span>
-        </div>
-        <div class="review-main-content">
-          <div class="review-text-content">
-            <h3 class="review-title">Fitness Tracker</h3>
-            <p class="review-date">Reviewed on 5 May 2025</p>
-            <div class="stars">
-              <span class="star filled">★</span>
-              <span class="star filled">★</span>
-              <span class="star">★</span>
-              <span class="star">★</span>
-              <span class="star">★</span>
-            </div>
-            <h4 class="review-heading">Review</h4>
-            <div class="review-text">
-              The product is okay for the price, but I expected better quality. It serves its basic purpose but doesn't
-              feel very durable. Might consider other options next time.
-            </div>
-          </div>
-          <div class="review-actions">
-            <button class="review-btn edit-btn">Edit</button>
-            <button class="review-btn delete-btn">Delete</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Review 5 -->
-      <div class="review-box">
-        <div class="product-image">
-          <span>Product Image</span>
-        </div>
-        <div class="review-main-content">
-          <div class="review-text-content">
-            <h3 class="review-title">Wireless Earbuds</h3>
-            <p class="review-date">Reviewed on 2 May 2025</p>
-            <div class="stars">
-              <span class="star filled">★</span>
-              <span class="star filled">★</span>
-              <span class="star filled">★</span>
-              <span class="star filled">★</span>
-              <span class="star">★</span>
-            </div>
-            <h4 class="review-heading">Review</h4>
-            <div class="review-text">
-              Very satisfied with this purchase. It arrived quickly and was easy to set up. The product looks great and
-              functions perfectly. Only minor suggestion would be to include more detailed instructions.
-            </div>
-          </div>
-          <div class="review-actions">
-            <button class="review-btn edit-btn">Edit</button>
-            <button class="review-btn delete-btn">Delete</button>
-          </div>
-        </div>
-      </div>
+    <div class="reviews-container" id="reviewsContainer">
+      <!-- Reviews will be loaded dynamically by JavaScript -->
+      <div class="loading-message">Loading your reviews...</div>
     </div>
-
   </main>
 
   <footer class="footer">
@@ -256,17 +97,14 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
     </div>
   </footer>
 
-   <script>
-    // Set global variables for authentication
-    var WHEATLEY_USERNAME = "<?php echo $username; ?>";
-    var WHEATLEY_PASSWORD = "<?php echo $password; ?>";
-    console.log('Credentials loaded from PHP: ',
-      WHEATLEY_USERNAME ? 'Username found' : 'Username missing',
-      WHEATLEY_PASSWORD ? 'Password found' : 'Password missing');
+  <script>
+    // Pass PHP variables to JavaScript safely
+    const API_URL = 'https://wheatley.cs.up.ac.za/u24634434/COS221/api.php';
+    const WHEATLEY_USERNAME = '<?php echo addslashes($username); ?>';
+    const WHEATLEY_PASSWORD = '<?php echo addslashes($password); ?>';
   </script>
-
+  <script src="../scripts/global.js"></script>
+  <script src="../scripts/my_reviews.js"></script>
 </body>
-<script src="../scripts/my_reviews.js"></script>
-<script src="../scripts/global.js"></script>
 
 </html>

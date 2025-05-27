@@ -44,17 +44,6 @@ window.addEventListener("click", function (e) {
 
 updateIcon();
 
-document.addEventListener('DOMContentLoaded', function() {
-    applySavedTheme();
-    updateUserGreeting(); // Ensure this runs on page load
-    
-    // Check if user is logged in
-    const apiKey = localStorage.getItem('apiKey');
-    if (!apiKey && !window.location.pathname.includes('login.php')) {
-        window.location.href = '../html/login.php';
-    }
-});
-
 function setCookie(name, value, days) {
     const d = new Date();
     d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
@@ -73,18 +62,4 @@ function getCookie(name) {
         }
     }
     return "";
-}
-
-
-function updateUserGreeting() {
-    const firstName = localStorage.getItem('name'); // Changed from 'first_name' to 'name'
-    const userTextElement = document.querySelector('.user-text');
-    
-    if (userTextElement) {
-        if (firstName) {
-            userTextElement.textContent = `${firstName}`;
-        } else {
-            userTextElement.textContent = 'User';
-        }
-    }
 }
