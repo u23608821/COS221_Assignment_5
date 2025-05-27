@@ -1,6 +1,6 @@
 <h1 align="center"> Pick 'n Price </h1>
 <p align="center">
-<img src = "https://github.com/u23608821/COS221_Assignment_5/blob/documentation-readme/src/public/images/dummyLogo.png" alt="Logo" width="300" height="300">  
+<img src = "https://github.com/u23608821/COS221_Assignment_5/blob/master/src/public/images/Logo-3.png" alt="Logo" width="430" height="100">  
 </p>
 <p> A next-generation product price comparison website to track price fluctuations across websites. Find and compare products, visit product webpages, and more!</p>
 
@@ -26,9 +26,9 @@
 | Name | GitHub | LinkedIn | Description |
 |------|--------|----------|-------------|
 | Dewald Colesky | [![GitHub](https://img.shields.io/badge/GitHub-000?logo=github&logoColor=white)](https://github.com/amJohnnyma) | [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/dewald-colesky-165400217/) | API & Documentation |
-| Dewald Colesky | [![GitHub](https://img.shields.io/badge/GitHub-000?logo=github&logoColor=white)](https://github.com/amJohnnyma) | [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/dewald-colesky-165400217/) | API & Documentation |
-| Dewald Colesky | [![GitHub](https://img.shields.io/badge/GitHub-000?logo=github&logoColor=white)](https://github.com/amJohnnyma) | [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/dewald-colesky-165400217/) | API & Documentation |
-| Dewald Colesky | [![GitHub](https://img.shields.io/badge/GitHub-000?logo=github&logoColor=white)](https://github.com/amJohnnyma) | [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/dewald-colesky-165400217/) | API & Documentation |
-| Dewald Colesky | [![GitHub](https://img.shields.io/badge/GitHub-000?logo=github&logoColor=white)](https://github.com/amJohnnyma) | [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/dewald-colesky-165400217/) | API & Documentation |
-| Dewald Colesky | [![GitHub](https://img.shields.io/badge/GitHub-000?logo=github&logoColor=white)](https://github.com/amJohnnyma) | [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/dewald-colesky-165400217/) | API & Documentation |
+| Connor Bell | [![GitHub](https://img.shields.io/badge/GitHub-000?logo=github&logoColor=white)](https://github.com/u24569608) | [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/connorbellup/) | Customer-side UI/UX |
+| Zoë Joubert | [![GitHub](https://img.shields.io/badge/GitHub-000?logo=github&logoColor=white)](https://github.com/ZoeJ72005) | [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/zo%C3%AB-joubert-8b494835a/) | HTML, JS and CSS |
+| Megan Lai | [![GitHub](https://img.shields.io/badge/GitHub-000?logo=github&logoColor=white)](https://github.com/Megglez) | [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/megan-lai-720685368/) | API & Documentation |
+| Adriano Jorge  | [![GitHub](https://img.shields.io/badge/GitHub-000?logo=github&logoColor=white)](https://github.com/Adri4no098) | [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?logo=linkedin&logoColor=white)]() | Javascript implementation |
+| Inge Keyser | [![GitHub](https://img.shields.io/badge/GitHub-000?logo=github&logoColor=white)](https://github.com/u23544563) | [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/inge-k-a8b1b5266/) | Javascript Implementation & Documentation |
 | Dewald Colesky | [![GitHub](https://img.shields.io/badge/GitHub-000?logo=github&logoColor=white)](https://github.com/amJohnnyma) | [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/dewald-colesky-165400217/) | API & Documentation |
