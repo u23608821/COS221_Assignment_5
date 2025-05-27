@@ -7,12 +7,11 @@ headers.append("Content-Type", "application/json");
 // DOM Elements - Only include elements that exist in highest_rated.html
 const productsContainer = document.getElementById("products-list");
 
-
-
 let currentApiKey =
     localStorage.getItem('apiKey') ||
     sessionStorage.getItem('apiKey') ||
     getCookie('apiKey');
+
 // Cookie helpers
 function setCookie(name, value, days) {
     const d = new Date();
@@ -67,7 +66,6 @@ async function loadProducts(searchTerm = '') {
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: headers,
-
             body: JSON.stringify(requestPayload)
         });
 
@@ -182,22 +180,6 @@ async function displayProducts(products) {
 
 // Initialization
 document.addEventListener('DOMContentLoaded', function () {
-    applySavedTheme();
+    // Load products on page load
     loadProducts();
-
-    // Only add event listeners if elements exist
-    if (themeToggle) {
-        themeToggle.addEventListener("click", function () {
-            document.body.classList.toggle("dark");
-            const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
-            setCookie("theme", newTheme, 30);
-            updateIcon();
-        });
-    }
-
-    if (menuToggle && navLinks) {
-        menuToggle.addEventListener("click", () => navLinks.classList.toggle("show"));
-    }
-
-    updateIcon(); // Ensure correct icon on first load
 });
