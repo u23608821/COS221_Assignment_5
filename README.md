@@ -10,7 +10,7 @@
 * [EERD](https://github.com/u23608821/COS221_Assignment_5/blob/master/The%20Primary%20keys%20(E)ER_V6.drawio.pdf)
 * [Relational Mapping](https://github.com/u23608821/COS221_Assignment_5/blob/master/Relational%20mapping%20Updated.drawio.pdf)
 * [API Documentation](https://github.com/u23608821/COS221_Assignment_5/blob/master/API_Documentation.md)
-* [Demo slides]()
+* [Demo slides](https://github.com/u23608821/COS221_Assignment_5/blob/master/slides%20COS221%20P5.pptx)
 
 ## Technologies
 <p align="center">
