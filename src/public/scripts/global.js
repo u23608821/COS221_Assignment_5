@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check if user is logged in!
     const apiKey = localStorage.getItem('apiKey');
     if (!apiKey && !window.location.pathname.includes('login.php')) {
-        window.location.href = '../src/public/index.html';
+        window.location.href = 'https://wheatley.cs.up.ac.za/u24634434/COS221/src/public/index.html';
     }
 });
 
