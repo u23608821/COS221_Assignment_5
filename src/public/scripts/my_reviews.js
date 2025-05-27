@@ -134,7 +134,7 @@ function loadMyReviews(apiKey) {
 function displayMyReviews(reviews) {
     reviewsContainer.innerHTML = '';
 
-    if (reviews.length === 0) {
+    if (reviews === null || reviews.length === 0) {
         showEmptyState("You haven't written any reviews yet.");
         return;
     }
