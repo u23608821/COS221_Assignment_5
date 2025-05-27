@@ -54,6 +54,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>View Product</title>
+  <link rel="icon" href="https://wheatley.cs.up.ac.za/u24634434/COS221/Images/Favicon.png" type="image/x-icon">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
   <link href="../styles/view.css" rel="stylesheet" />
@@ -84,6 +85,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
           <div class="dropdown-menu" id="accountMenu">
             <a href="../html/my_details.php"><span>My Details</span></a>
             <a href="../html/my_reviews.php"><span>My Reviews</span></a>
+            <a href="../html/my_watchlist.php"><span>My Watchlist</span></a>
             <div class="dropdown-divider"></div>
             <a href="../html/login.php" class="signout"><span>Sign Out</span></a>
           </div>
@@ -112,8 +114,9 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
           <span class="heading">Description</span>
           <span class="text"></span>
 
-          <span class="heading">Category</span>
-          <span class="text"></span>
+            <span class="heading">Category</span>
+  <span class="text"></span>
+  <button class="add-to-watchlist-btn">Add to Watchlist</button>
         </div>
       </div>
 

@@ -36,16 +36,41 @@ function getCookie(name) {
 
 // Theme logic
 function updateIcon() {
-    if (themeIcon) {
-        themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
-    }
+  themeIcon.textContent = document.body.classList.contains("dark") ? "light_mode" : "dark_mode";
 }
 
 function applySavedTheme() {
-    const savedTheme = getCookie("theme");
-    document.body.classList.toggle("dark", savedTheme === "dark");
-    updateIcon();
+  const savedTheme = getCookie("theme");
+  if (savedTheme === "dark") {
+    document.body.classList.add("dark");
+  } else {
+    document.body.classList.remove("dark");
+  }
+  updateIcon();
 }
+
+window.addEventListener("load", applySavedTheme);
+
+accountBtn.addEventListener("click", function () {
+  accountMenu.classList.toggle("show");
+});
+
+themeToggle.addEventListener("click", function () {
+  document.body.classList.toggle("dark");
+  const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
+  setCookie("theme", newTheme, 30);
+  updateIcon();
+});
+
+menuToggle.addEventListener("click", function () {
+  navLinks.classList.toggle("show");
+});
+
+window.addEventListener("click", function (e) {
+  if (!accountBtn.contains(e.target) && !accountMenu.contains(e.target)) {
+    accountMenu.classList.remove("show");
+  }
+});
 
 async function loadProducts(searchTerm = '') {
     try {
@@ -126,18 +151,18 @@ async function displayProducts(products) {
             const fullStars = Math.floor(rating);
             const hasHalfStar = rating % 1 >= 0.5;
 
-            for (let i = 0; i < 5; i++) {
-                if (i < fullStars) {
-                    starsHtml += '<span class="material-symbols-outlined">star</span>';
-                } else if (i === fullStars && hasHalfStar) {
-                    starsHtml += '<span class="material-symbols-outlined">star_half</span>';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= fullStars) {
+                    starsHtml += '<i class="fas fa-star"></i>';
+                } else if (i === fullStars + 1 && hasHalfStar) {
+                    starsHtml += '<i class="fas fa-star-half-alt"></i>';
                 } else {
-                    starsHtml += '<span class="material-symbols-outlined">star_outline</span>';
+                    starsHtml += '<i class="far fa-star"></i>';
                 }
             }
         } else {
             // Show empty stars if no rating
-            starsHtml = '<span class="material-symbols-outlined">star_outline</span>'.repeat(5);
+            starsHtml = '<i class="far fa-star"></i>'.repeat(5);
         }
 
         productBox.innerHTML = `
@@ -156,10 +181,10 @@ async function displayProducts(products) {
                 </div>
                 <div class="best-price">
                     ${safeProduct.cheapest_price ?
-                `<span class="best-price-label">Best Price</span>
-                         <span class="best-price-value">R${safeProduct.cheapest_price.toFixed(2)}</span>
-                         <span class="retailer-label">From ${safeProduct.retailer_name}</span>` :
-                '<span class="no-price">No prices available</span>'}
+                    `<span class="best-price-label">Best Price</span>
+                    <span class="best-price-value">R${safeProduct.cheapest_price.toFixed(2)}</span>
+                    <span class="retailer-label">From ${safeProduct.retailer_name}</span>` :
+                    '<span class="no-price">No prices available</span>'}
                 </div>
                 <button class="compare-btn" data-product-id="${safeProduct.product_id}">Compare Prices</button>
             </div>

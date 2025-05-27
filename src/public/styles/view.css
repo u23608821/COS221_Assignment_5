@@ -749,3 +749,29 @@ main {
     color: #ffc107;
     font-size: 1.2rem;
 }
+
+.add-to-watchlist-btn {
+  background-color: #e5e7eb;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: var(--radius);
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: all 0.2s ease;
+}
+
+.add-to-watchlist-btn:hover {
+  background-color: #d1d5db;
+}
+
+.dark .add-to-watchlist-btn {
+  background-color: #4b5563;
+  color: #e5e7eb;
+  border-color: #6b7280;
+}
+
+.dark .add-to-watchlist-btn:hover {
+  background-color: #374151;
+}
