@@ -262,6 +262,9 @@ main {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    max-width: 1200px;
+    margin: auto;
+    flex-wrap: wrap;
 }
 
 .footer-left,
@@ -495,39 +498,39 @@ main {
     flex: 1;
 }
 
- /* User button styles */
+/* User button styles */
 .btn-user {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background-color: #4285f4;
-  color: white;
-  border: none;
-  border-radius: 24px;
-  font-family: 'Inter', sans-serif;
-  font-weight: 500;
-  font-size: 14px;
-  cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 24px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
 }
 
 .btn-user:hover {
-  background-color: #3367d6;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    background-color: #3367d6;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .user-icon {
-  font-size: 20px;
+    font-size: 20px;
 }
 
 .arrow-icon {
-  font-size: 20px;
+    font-size: 20px;
 }
 
 .user-text {
-  margin: 0 4px;
+    margin: 0 4px;
 }
 
 /* Edit review textarea style */
@@ -584,17 +587,20 @@ main {
 /* Delete confirmation popup */
 .delete-popup {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0,0,0,0.4);
+    background: rgba(0, 0, 0, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 9999;
 }
 
-.delete-popup > div {
+.delete-popup>div {
     background: #fff;
     padding: 2em 2.5em;
     border-radius: 8px;
@@ -627,7 +633,7 @@ main {
     background: #d1d5db;
 }
 
-.dark .delete-popup > div {
+.dark .delete-popup>div {
     background: #374151;
     color: #fff;
 }

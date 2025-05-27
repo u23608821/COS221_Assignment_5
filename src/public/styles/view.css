@@ -251,9 +251,12 @@ main {
 }
 
 .footer-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+   display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: auto;
+    flex-wrap: wrap;
 }
 
 .footer-left,
