@@ -1007,12 +1007,12 @@ main {
 
 
 .product-rating i {
-    color: #f59e0b;
-    font-size: 1.2rem;
+  color: #f59e0b;
+  font-size: 1.2rem;
 }
 
 /* For the stars in the rating bars */
 .stars i {
-    color: #f59e0b;
-    font-size: 1.5rem;
+  color: #f59e0b;
+  font-size: 1.5rem;
 }
