@@ -162,7 +162,6 @@ function createReviewBox(review) {
             <img src="${review.image_url || '../../private/resources/placeholder.png'}" 
                  alt="${review.product_name}" 
                  onerror="this.src='../../private/resources/placeholder.png'" />
-            <div class="price-badge">${formattedPrice} at ${review.retailer_name}</div>
         </div>
         <div class="review-main-content">
             <div class="review-text-content">

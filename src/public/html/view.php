@@ -160,6 +160,27 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
     </div>
   </footer>
 
+  <!-- Write a review box --> 
+  <div class="review-modal" id="reviewModal">
+    <div class="review-modal-content">
+      <span class="review-modal-close" id="closeReviewModal">&times;</span>
+      <h2 class="review-modal-title">Write a review</h2>
+      <div class="star-rating-picker">
+        <div class="stars" id="starRating">
+          <span class="star" data-value="1">★</span>
+          <span class="star" data-value="2">★</span>
+          <span class="star" data-value="3">★</span>
+          <span class="star" data-value="4">★</span>
+          <span class="star" data-value="5">★</span>
+        </div>
+        <span class="star-rating-value" id="starRatingValue">0 out of 5</span>
+      </div>
+      <label for="reviewText" class="review-text-label">Your review</label>
+      <textarea id="reviewText" class="review-textarea" placeholder="Write a review..."></textarea>
+      <button class="submit-review-btn" id="submitReviewBtn" disabled>Write review</button>
+    </div>
+  </div>
+
   <script>
     // Set global variables for authentication
     var WHEATLEY_USERNAME = "<?php echo $username; ?>";

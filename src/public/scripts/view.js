@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     loadProductDetails();
+    setupReviewModal();
 });
 
 // Helper Functions
@@ -267,4 +268,113 @@ async function checkIfInWatchlist(productId) {
     } catch (error) {
         console.error('Error checking watchlist:', error);
     }
+}
+
+
+
+
+// REVIEW FUNCTIONS 
+function writeReview() {
+    if (!currentApiKey) {
+        alert('Please sign in to write a review');
+        return;
+    }
+
+    const modal = document.getElementById('reviewModal');
+    modal.style.display = 'flex';
+    
+    // Reset form
+    document.getElementById('reviewText').value = '';
+    document.getElementById('submitReviewBtn').disabled = true;
+    document.getElementById('starRatingValue').textContent = '0 out of 5';
+    
+    // Reset stars
+    const stars = document.querySelectorAll('#starRating .star');
+    stars.forEach(star => {
+        star.classList.remove('active', 'hover');
+    });
+}
+
+function setupReviewModal() {
+    const modal = document.getElementById('reviewModal');
+    const closeBtn = document.getElementById('closeReviewModal');
+    const stars = document.querySelectorAll('#starRating .star');
+    const submitBtn = document.getElementById('submitReviewBtn');
+    const reviewText = document.getElementById('reviewText');
+    let selectedRating = 0;
+
+    // Close modal when clicking X or outside
+    closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    // Star rating interaction
+    stars.forEach(star => {
+        star.addEventListener('mouseover', (e) => {
+            const value = parseInt(e.target.getAttribute('data-value'));
+            highlightStars(value);
+        });
+
+        star.addEventListener('mouseout', () => {
+            highlightStars(selectedRating);
+        });
+
+        star.addEventListener('click', (e) => {
+            selectedRating = parseInt(e.target.getAttribute('data-value'));
+            document.getElementById('starRatingValue').textContent = `${selectedRating} out of 5`;
+            submitBtn.disabled = selectedRating === 0 || reviewText.value.trim().length < 10;
+        });
+    });
+
+    // Review text validation
+    reviewText.addEventListener('input', () => {
+        submitBtn.disabled = selectedRating === 0 || reviewText.value.trim().length < 10;
+    });
+
+    // Submit review
+    submitBtn.addEventListener('click', async () => {
+        const productId = sessionStorage.getItem('currentProductId');
+        const description = reviewText.value.trim();
+        
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({
+                    type: 'writeReview',
+                    apikey: currentApiKey,
+                    product_id: parseInt(productId),
+                    score: selectedRating,
+                    description: description
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                alert('Review submitted successfully!');
+                modal.style.display = 'none';
+                // Reload product details to show the new review
+                loadProductDetails();
+            } else {
+                alert('Failed to submit review: ' + (result.message || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error submitting review:', error);
+            alert('Error submitting review. Please try again.');
+        }
+    });
+}
+
+function highlightStars(count) {
+    const stars = document.querySelectorAll('#starRating .star');
+    stars.forEach((star, index) => {
+        star.classList.toggle('hover', index < count);
+    });
 }
