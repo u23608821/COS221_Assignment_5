@@ -186,7 +186,7 @@ function renderReviewSummary(product) {
 function renderUserReviews(reviews) {
     userReviews.innerHTML = '';
     
-    reviews.slice(0, 3).forEach(review => {
+    reviews.forEach(review => {
         const reviewEl = document.createElement('div');
         reviewEl.className = 'review';
         reviewEl.innerHTML = `

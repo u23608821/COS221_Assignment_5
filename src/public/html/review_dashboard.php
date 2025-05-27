@@ -94,7 +94,7 @@ $password = $env ? $env['WHEATLEY_PASSWORD'] : getenv("WHEATLEY_PASSWORD");
   </nav>
 
   <main>
-    <h1 class="page-header">Review Visualisation Dashboard</h1>
+    <h1 class="page-header">Reviews Dashboard</h1>
     <p class="page-subheader">Visualise and interpret reviews data about all products here.</p>
 
     <div class="dashboard-grid">
