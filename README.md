@@ -7,8 +7,8 @@
 ## Documentation
 * [Research Document](https://github.com/u23608821/COS221_Assignment_5/blob/documentation-readme/The%2BPrimary%2BKeys%2BResearch.pdf)
 * [Functional Requirements](https://github.com/u23608821/COS221_Assignment_5/blob/documentation-readme/COS221-FR.pdf)
-* [ER](https://github.com/u23608821/COS221_Assignment_5/blob/documentation-readme/The%20Primary%20keys%20(E)ER_V5.drawio.pdf)
-* [EERD]()
+* [EERD](https://github.com/u23608821/COS221_Assignment_5/blob/master/The%20Primary%20keys%20(E)ER_V6.drawio.pdf)
+* [Relational Mapping](https://github.com/u23608821/COS221_Assignment_5/blob/master/Relational%20mapping%20Updated.drawio.pdf)
 * [API Documentation](https://github.com/u23608821/COS221_Assignment_5/blob/master/API_Documentation.md)
 * [Demo slides]()
 
