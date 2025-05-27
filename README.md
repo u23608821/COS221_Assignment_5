@@ -1,6 +1,6 @@
 <h1 align="center"> Pick 'n Price </h1>
 <p align="center">
-<img src = "https://github.com/u23608821/COS221_Assignment_5/blob/dev/src/public/images/dummyLogo.png" alt="Logo" width="300" height="300">  
+<img src = "https://github.com/u23608821/COS221_Assignment_5/blob/documentation-readme/src/public/images/dummyLogo.png" alt="Logo" width="300" height="300">  
 </p>
 <p> A next-generation product price comparison website to track price fluctuations across websites. Find and compare products, visit product webpages, and more!</p>
 
