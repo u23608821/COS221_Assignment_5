@@ -9,7 +9,7 @@
 * [Functional Requirements](https://github.com/u23608821/COS221_Assignment_5/blob/documentation-readme/COS221-FR.pdf)
 * [ER](https://github.com/u23608821/COS221_Assignment_5/blob/documentation-readme/The%20Primary%20keys%20(E)ER_V5.drawio.pdf)
 * [EERD]()
-* [API](https://github.com/u23608821/COS221_Assignment_5/blob/master/API_Documentation.md)
+* [API Documentation](https://github.com/u23608821/COS221_Assignment_5/blob/master/API_Documentation.md)
 * [Demo slides]()
 
 ## Technologies
